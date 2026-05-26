@@ -45,7 +45,8 @@
       "mayInvoke": [
         "skill-security-hooks",
         "skill-supabase-rls",
-        "skill-saas-dast-recon"
+        "skill-saas-dast-recon",
+        "skill-github-mcp-automation"
       ],
       "rules": [
         "DAST requires explicit owned target or staging authorization.",
@@ -54,7 +55,8 @@
     },
     "skill-security-hooks": {
       "mayInvoke": [
-        "skill-saas-security-scan"
+        "skill-saas-security-scan",
+        "skill-github-mcp-automation"
       ]
     },
     "skill-supabase-rls": {
@@ -69,7 +71,8 @@
         "skill-aionui-cowork-orchestration",
         "skill-unified-analytics",
         "skill-google-workspace-sync",
-        "skill-elevenlabs-voice-cloning"
+        "skill-elevenlabs-voice-cloning",
+        "skill-n8n-whatsapp-claude"
       ]
     },
     "skill-multiagent-orchestration": {
@@ -79,7 +82,8 @@
         "skill-security-hooks",
         "skill-frontend-ux-guardrails",
         "skill-unified-analytics",
-        "skill-aionui-cowork-orchestration"
+        "skill-aionui-cowork-orchestration",
+        "skill-github-mcp-automation"
       ],
       "rules": [
         "Use only when workstreams are independent or the user explicitly asks for subagents/multiagents.",
@@ -103,7 +107,33 @@
     "skill-evolution-api": {
       "mayInvoke": [
         "skill-ai-orchestration",
+        "skill-n8n-whatsapp-claude",
         "skill-unified-analytics"
+      ]
+    },
+    "skill-n8n-whatsapp-claude": {
+      "mayInvoke": [
+        "skill-evolution-api",
+        "skill-ai-orchestration",
+        "skill-unified-analytics"
+      ],
+      "rules": [
+        "Use n8n as orchestration glue; keep provider keys, validation, quotas, and irreversible side effects behind server-side gateways where possible.",
+        "Load community n8n node configuration guidance only when editing concrete workflow nodes.",
+        "For WhatsApp side effects, require consent, idempotency, rate limits, and delivery audit before automation is considered complete."
+      ]
+    },
+    "skill-github-mcp-automation": {
+      "mayInvoke": [
+        "skill-security-hooks",
+        "skill-saas-security-scan",
+        "skill-multiagent-orchestration",
+        "skill-ai-orchestration"
+      ],
+      "rules": [
+        "Use read-only GitHub inspection before repository mutations.",
+        "Require explicit user authorization before push, merge, release, publish, permission, branch protection, secret, or webhook changes.",
+        "Keep GitHub-visible comments, PR bodies, issues, and release notes sanitized."
       ]
     },
     "skill-google-workspace-sync": {

@@ -56,7 +56,7 @@ Se a skill deve ser usada junto com outras, atualize `orquestrador/SKILL_CHAINS.
 
 Fonte principal editável. O sync copia essas skills para os espelhos compatíveis.
 
-Total: 22
+Total: 24
 
 | Skill | Categoria | Risco | O que faz |
 |---|---|---|---|
@@ -66,11 +66,13 @@ Total: 22
 | `skill-elevenlabs-voice-cloning` | ai | high | Use for ElevenLabs voice generation and voice cloning integrations, including Brazilian Portuguese TTS, explicit voice consent, server-side API keys, secure audio uploads, asynchronous jobs, validation, retryable synthesis, and safe handling of biometric voice data. |
 | `skill-evolution-api` | communication | medium | Use for WhatsApp automation with Evolution API, including instance lifecycle, QR pairing, inbound and outbound messages, webhooks, consent, tenant isolation, queues, idempotency, rate limits, retries, audit logs, and reliable delivery. |
 | `skill-frontend-ux-guardrails` | frontend | medium | Apply frontend UX quality gates for SaaS dashboards, product screens, modals, tables, forms, responsive layouts, overflow fixes, accessibility, visual validation, spelling, and reduction of UI rework. |
+| `skill-github-mcp-automation` | integrations | medium | Use for GitHub MCP automation around repositories, issues, pull requests, Actions, releases, code search, security findings, and repository maintenance with explicit permission gates. |
 | `skill-google-workspace-sync` | integrations | high | Use for Google Workspace integrations with OAuth, Calendar, Meet, FreeBusy, Drive, Sheets, webhooks, least-privilege scopes, encrypted refresh tokens, idempotent writes, reconciliation jobs, consent revocation, validation, and sync audit trails. |
 | `skill-live-processing` | media | medium | Use for live stream and VOD ingestion pipelines, including YouTube, Twitch, uploads, capture jobs, queues, transcription, clip generation, media storage, retries, idempotent workers, consent, validation, observability, and safe server-side provider credentials. |
 | `skill-manual-video-processing` | media | medium | Use for manual video or audio uploads in SaaS apps, including upload UX, direct storage, validation, malware checks, quota enforcement, asynchronous processing jobs, transcription, clip extraction, review flows, signed URLs, consent, and secure media access. |
 | `skill-modern-ui-patterns` | frontend | low | Use for professional SaaS UI implementation and refinement in React, TypeScript, Tailwind, dashboards, admin panels, tables, forms, settings, billing, onboarding, responsive layouts, component states, and design-system consistency. |
 | `skill-multiagent-orchestration` | orchestration | medium | Use when a task mentions subagents, multiagents, parallel agents, team execution, swarm, delegation, or requires dividing independent engineering work across agents while preserving integration safety and token efficiency. |
+| `skill-n8n-whatsapp-claude` | integrations | medium | Use for n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing. |
 | `skill-open-design-ui` | frontend | low | Apply open-design product UI workflow for premium visual redesigns, dashboards, landing pages, design tokens, component libraries, responsive product screens, visual QA, anti-generic styling, and professional frontend delivery. |
 | `skill-saas-admin-dashboard` | frontend | low | Build or improve SaaS admin dashboards, internal admin panels, user/customer screens, tenant/workspace screens, plan/payment/log views, sidebar layouts, metrics, filters, tables, support tools, and onboarding administration. |
 | `skill-saas-core-limits` | saas | medium | Implement SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, blocked accounts, usage counters, and access checks after AbacatePay, Stripe, webhook, or manual admin subscription changes. |
@@ -87,7 +89,7 @@ Total: 22
 
 Skills instaladas no diretório ativo do Codex. Inclui workflows OMX/Codex e espelho das skills canônicas.
 
-Total: 47
+Total: 49
 
 | Skill | Categoria | Risco | O que faz |
 |---|---|---|---|
@@ -116,11 +118,13 @@ Total: 47
 | `skill-elevenlabs-voice-cloning` | ai | high | Use for ElevenLabs voice generation and voice cloning integrations, including Brazilian Portuguese TTS, explicit voice consent, server-side API keys, secure audio uploads, asynchronous jobs, validation, retryable synthesis, and safe handling of biometric voice data. |
 | `skill-evolution-api` | communication | medium | Use for WhatsApp automation with Evolution API, including instance lifecycle, QR pairing, inbound and outbound messages, webhooks, consent, tenant isolation, queues, idempotency, rate limits, retries, audit logs, and reliable delivery. |
 | `skill-frontend-ux-guardrails` | frontend | medium | Apply frontend UX quality gates for SaaS dashboards, product screens, modals, tables, forms, responsive layouts, overflow fixes, accessibility, visual validation, spelling, and reduction of UI rework. |
+| `skill-github-mcp-automation` | integrations | medium | Use for GitHub MCP automation around repositories, issues, pull requests, Actions, releases, code search, security findings, and repository maintenance with explicit permission gates. |
 | `skill-google-workspace-sync` | integrations | high | Use for Google Workspace integrations with OAuth, Calendar, Meet, FreeBusy, Drive, Sheets, webhooks, least-privilege scopes, encrypted refresh tokens, idempotent writes, reconciliation jobs, consent revocation, validation, and sync audit trails. |
 | `skill-live-processing` | media | medium | Use for live stream and VOD ingestion pipelines, including YouTube, Twitch, uploads, capture jobs, queues, transcription, clip generation, media storage, retries, idempotent workers, consent, validation, observability, and safe server-side provider credentials. |
 | `skill-manual-video-processing` | media | medium | Use for manual video or audio uploads in SaaS apps, including upload UX, direct storage, validation, malware checks, quota enforcement, asynchronous processing jobs, transcription, clip extraction, review flows, signed URLs, consent, and secure media access. |
 | `skill-modern-ui-patterns` | frontend | low | Use for professional SaaS UI implementation and refinement in React, TypeScript, Tailwind, dashboards, admin panels, tables, forms, settings, billing, onboarding, responsive layouts, component states, and design-system consistency. |
 | `skill-multiagent-orchestration` | orchestration | medium | Use when a task mentions subagents, multiagents, parallel agents, team execution, swarm, delegation, or requires dividing independent engineering work across agents while preserving integration safety and token efficiency. |
+| `skill-n8n-whatsapp-claude` | integrations | medium | Use for n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing. |
 | `skill-open-design-ui` | frontend | low | Apply open-design product UI workflow for premium visual redesigns, dashboards, landing pages, design tokens, component libraries, responsive product screens, visual QA, anti-generic styling, and professional frontend delivery. |
 | `skill-saas-admin-dashboard` | frontend | low | Build or improve SaaS admin dashboards, internal admin panels, user/customer screens, tenant/workspace screens, plan/payment/log views, sidebar layouts, metrics, filters, tables, support tools, and onboarding administration. |
 | `skill-saas-core-limits` | saas | medium | Implement SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, blocked accounts, usage counters, and access checks after AbacatePay, Stripe, webhook, or manual admin subscription changes. |

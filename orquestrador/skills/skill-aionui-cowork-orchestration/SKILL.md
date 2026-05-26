@@ -17,6 +17,15 @@ Use this skill to evaluate, configure, or operate AionUi as an external cowork/t
 - AionUi is a coordination surface for multi-agent visibility, approvals, remote access, scheduled checks, and team runs.
 - Other agents such as Claude, Gemini, OpenCode, and AionUi built-in agents are specialists: research, review, verification, docs, UI critique, or isolated alternatives.
 
+## Core Workflow
+
+1. Confirm the user wants an external cowork/team surface instead of a normal Codex-only run.
+2. Read the Orquestrador router and choose only the skills needed by the current task.
+3. Define agent lanes, ownership, approval gates, and verification before launching coworkers.
+4. Keep Codex as integration owner unless the user explicitly appoints a different executor.
+5. Collect outputs as concise findings, changed paths, validation evidence, and unresolved risks.
+6. Run the local validation gate before claiming the coordinated run is complete.
+
 ## Safe Defaults
 
 - Do not enable YOLO/full-auto for code changes, production systems, payments, auth, secrets, migrations, RLS, cron jobs, or customer data.

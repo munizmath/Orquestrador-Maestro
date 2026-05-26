@@ -78,3 +78,16 @@ Prefer maintained primary sources when refreshing this skill:
 - Do not auto-fix dependencies or rotate secrets without a separate explicit request.
 - Do not print secret values. Keep redaction enabled and summarize only fingerprints, file paths, or scanner IDs.
 
+## Verification
+
+- Confirm the report states repository path, authorization, scan mode, tools run, skipped tools, and timestamps.
+- Confirm raw results are stored under `security-reports/` and do not contain unredacted secrets.
+- Manually verify high/critical findings before marking them confirmed.
+- Separate confirmed findings, false positives, unavailable tools, and residual risks.
+
+## Related Skills
+
+- `skill-security-hooks`
+- `skill-saas-dast-recon`
+- `skill-saas-factory`
+- `skill-supabase-rls`

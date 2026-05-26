@@ -221,6 +221,26 @@
       "triggers": ["google workspace", "google drive", "google sheets", "google calendar", "workspace sync", "oauth google"],
       "aliases": ["google workspace", "google calendar", "meet"],
       "status": "canonical"
+    },
+    "skill-n8n-whatsapp-claude": {
+      "description": "n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
+      "category": "integrations",
+      "risk": "medium",
+      "source": "local-integration-patterns",
+      "mirrorEverywhere": true,
+      "triggers": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp", "workflow n8n", "automacao whatsapp", "automação whatsapp"],
+      "aliases": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp"],
+      "status": "canonical"
+    },
+    "skill-github-mcp-automation": {
+      "description": "GitHub MCP automation around repositories, issues, pull requests, Actions, releases, code search, security findings, and repository maintenance with explicit permission gates.",
+      "category": "integrations",
+      "risk": "medium",
+      "source": "github-mcp-server-patterns",
+      "mirrorEverywhere": true,
+      "triggers": ["github mcp", "github automation", "github actions", "pull request automation", "pr automation", "issue triage", "repo maintenance", "repository maintenance"],
+      "aliases": ["github mcp", "github automation", "github actions", "pr automation", "issue triage"],
+      "status": "canonical"
     }
   }
 }

@@ -10,6 +10,7 @@ const manifestPath = path.join(orchestratorRoot, "SKILLS_MANIFEST.json");
 const routerPath = path.join(orchestratorRoot, "SKILLS_ROUTER.json");
 const aliasesPath = path.join(orchestratorRoot, "SKILL_ALIASES.json");
 const chainsPath = path.join(orchestratorRoot, "SKILL_CHAINS.json");
+const docsCatalogPath = path.join(repoRoot, "docs", "skill-catalog.md");
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -77,6 +78,23 @@ function readFrontmatter(skillFile) {
     result[pair[1]] = pair[2].trim().replace(/^["']|["']$/g, "");
   }
   return result;
+}
+
+function hasHeading(text, names) {
+  return names.some((name) => new RegExp(`^##\\s+.*${name}.*$`, "im").test(text));
+}
+
+function isGenericDescription(description) {
+  const normalized = String(description || "").trim().toLowerCase();
+  if (normalized.length < 48) return true;
+  return [
+    "use this skill",
+    "helps with tasks",
+    "general purpose",
+    "todo",
+    "placeholder",
+    "tbd",
+  ].some((marker) => normalized === marker || normalized.includes(`${marker}.`));
 }
 
 function createSkill(args) {
@@ -152,8 +170,10 @@ function validate() {
   const router = readJson(routerPath);
   const aliases = readJson(aliasesPath);
   const chains = readJson(chainsPath);
+  const docsCatalog = fs.existsSync(docsCatalogPath) ? fs.readFileSync(docsCatalogPath, "utf8") : "";
   const manifestSkills = manifest.skills || {};
   const routerSkills = router.skills || {};
+  const descriptions = new Map();
 
   for (const [name, entry] of Object.entries(manifestSkills)) {
     if (normalizeSkillName(name) !== name) issues.push(`manifest:${name}: name is not normalized`);
@@ -164,6 +184,15 @@ function validate() {
     }
     for (const field of ["description", "category", "risk", "source", "status"]) {
       if (!entry[field]) issues.push(`manifest:${name}: missing ${field}`);
+    }
+    if (isGenericDescription(entry.description)) {
+      issues.push(`manifest:${name}: description is too generic or too short`);
+    }
+    const normalizedDescription = String(entry.description || "").trim().toLowerCase();
+    if (normalizedDescription) {
+      const existing = descriptions.get(normalizedDescription) || [];
+      existing.push(name);
+      descriptions.set(normalizedDescription, existing);
     }
 
     const skillFile = path.join(skillsRoot, name, "SKILL.md");
@@ -185,7 +214,29 @@ function validate() {
     if (/[ÃÂâ][\s\S]{0,2}/.test(text)) {
       issues.push(`skills/${name}/SKILL.md: possible mojibake`);
     }
+    if (!hasHeading(text, ["Core Workflow", "Workflow", "Start Here", "Contract", "Expected Flow", "Core Rules", "Detection Contract"])) {
+      issues.push(`skills/${name}/SKILL.md: missing workflow section`);
+    }
+    if (!hasHeading(text, ["Verification", "Validation", "Done Criteria", "Acceptance Criteria", "Completion Gate"])) {
+      issues.push(`skills/${name}/SKILL.md: missing verification section`);
+    }
+    if (["medium", "high"].includes(String(entry.risk || "").toLowerCase()) &&
+      !hasHeading(text, ["Guardrails", "Contract", "Rules", "Policy", "Controls", "Security", "Safety", "Gate", "Hard Stops", "Safe Defaults", "Permission Gates"])) {
+      issues.push(`skills/${name}/SKILL.md: medium/high risk skill needs guardrails or contract section`);
+    }
+    if (!hasHeading(text, ["Related Skills", "Routing", "Local References"])) {
+      issues.push(`skills/${name}/SKILL.md: missing related skills or routing section`);
+    }
     if (!routerSkills[name]) issues.push(`router:${name}: missing router entry`);
+    if (docsCatalog && !docsCatalog.includes(`\`${name}\``)) {
+      issues.push(`docs/skill-catalog.md: missing ${name}`);
+    }
+  }
+
+  for (const [description, names] of descriptions.entries()) {
+    if (names.length > 1) {
+      issues.push(`manifest:${names.join(",")}: duplicate description "${description}"`);
+    }
   }
 
   for (const dirent of fs.readdirSync(skillsRoot, { withFileTypes: true })) {

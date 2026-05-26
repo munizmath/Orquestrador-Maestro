@@ -51,3 +51,10 @@ Prefer this baseline navigation unless the project already has a stronger one:
 - Check at least one authorized and one unauthorized admin route path.
 - Inspect mobile and desktop layouts for table overflow, clipped text, and broken navigation.
 
+## Related Skills
+
+- `skill-saas-factory`
+- `skill-saas-core-limits`
+- `skill-frontend-ux-guardrails`
+- `skill-modern-ui-patterns`
+- `skill-unified-analytics`

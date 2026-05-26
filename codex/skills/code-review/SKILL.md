@@ -26,6 +26,13 @@ This skill activates when:
 
 Delegates to the `code-reviewer` agent (THOROUGH tier) for deep analysis:
 
+## Multiagent Review Contract
+
+- Review the integrated diff, not only the lane output that looks familiar.
+- Check whether workers edited outside their assigned ownership or left unresolved handoff dependencies.
+- Treat missing verification evidence as a review finding, even when the implementation looks plausible.
+- Keep findings grounded in file/line evidence and avoid repeating worker summaries unless they affect the verdict.
+
 1. **Identify Changes**
    - Run `git diff` to find changed files
    - Determine scope of review (specific files or entire PR)

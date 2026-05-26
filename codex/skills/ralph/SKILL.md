@@ -35,6 +35,8 @@ Complex tasks often fail silently: partial implementations get declared "done", 
 - Always pass the `model` parameter explicitly when delegating to agents
 - Read `docs/shared/agent-tiers.md` before first delegation to select correct agent tiers
 - Deliver the full implementation: no scope reduction, no partial completion, no deleting tests to make them pass
+- Assign file ownership before parallel work and require every worker handoff to include changed files, tests run, blockers, and residual risk
+- Keep the Ralph lead responsible for final integration; do not treat worker completion as task completion
 - Default to concise, evidence-dense progress and completion reporting unless the user or risk level requires more detail
 - Treat newer user task updates as local overrides for the active workflow branch while preserving earlier non-conflicting constraints
 - If correctness depends on additional inspection, retrieval, execution, or verification, keep using the relevant tools until the execution loop is grounded

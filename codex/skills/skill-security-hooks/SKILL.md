@@ -70,3 +70,15 @@ Record:
 - Do not print secret values. Keep redaction enabled.
 - Do not install package managers, global tools, or CI workflows without explicit approval.
 
+## Verification
+
+- Confirm existing hooks or CI workflows were preserved or intentionally merged.
+- Run hook installation in dry-run or inspect mode when available before applying changes.
+- Trigger the configured hook or CI command with a harmless test path where feasible.
+- Confirm logs redact secrets and report skipped optional tools clearly.
+
+## Related Skills
+
+- `skill-saas-security-scan`
+- `skill-saas-dast-recon`
+- `skill-github-mcp-automation`

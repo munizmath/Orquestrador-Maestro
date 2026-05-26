@@ -177,6 +177,22 @@
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-google-workspace-sync/SKILL.md",
       "cost": "medium",
       "safety": "least-privilege-oauth-and-sync-audit"
+    },
+    "skill-n8n-whatsapp-claude": {
+      "description": "n8n workflows connecting WhatsApp automation with Claude/LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
+      "triggers": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp", "workflow n8n", "automacao whatsapp", "automação whatsapp"],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-n8n-whatsapp-claude/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-n8n-whatsapp-claude/SKILL.md",
+      "cost": "medium",
+      "safety": "server-side-secrets-consent-idempotency-and-validation"
+    },
+    "skill-github-mcp-automation": {
+      "description": "GitHub MCP automation for repositories, issues, pull requests, Actions, releases, code search, security findings, and maintenance with explicit permission gates.",
+      "triggers": ["github mcp", "github automation", "github actions", "pull request automation", "pr automation", "issue triage", "repo maintenance", "repository maintenance"],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-github-mcp-automation/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-github-mcp-automation/SKILL.md",
+      "cost": "medium",
+      "safety": "explicit-permission-gates-and-sanitized-github-visible-output"
     }
   }
 }

@@ -58,3 +58,9 @@ Use this skill when a screen needs a real visual upgrade, a cohesive product dir
 - Responsive layouts, interaction states, and copy quality are verified.
 - The result is distinctive without copying another product or adding unnecessary dependencies.
 
+## Related Skills
+
+- `skill-modern-ui-patterns`
+- `skill-frontend-ux-guardrails`
+- `skill-saas-factory`
+- `skill-saas-admin-dashboard`

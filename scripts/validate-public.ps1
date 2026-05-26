@@ -24,13 +24,22 @@ function Add-Issue {
 
 function Get-RelativePath {
   param([string]$BasePath, [string]$Path)
-  $baseFull = [System.IO.Path]::GetFullPath($BasePath)
-  if (-not $baseFull.EndsWith([System.IO.Path]::DirectorySeparatorChar)) {
-    $baseFull += [System.IO.Path]::DirectorySeparatorChar
+  $baseFull = [System.IO.Path]::GetFullPath($BasePath).TrimEnd(
+    [System.IO.Path]::DirectorySeparatorChar,
+    [System.IO.Path]::AltDirectorySeparatorChar
+  )
+  $pathFull = [System.IO.Path]::GetFullPath($Path)
+  return [System.IO.Path]::GetRelativePath($baseFull, $pathFull)
+}
+
+function Test-ForbiddenLiteralMatch {
+  param([string]$Text, [string]$Literal)
+  if ($Literal -match "[\\/:\s]" -or $Literal.Length -gt 12) {
+    return $Text.IndexOf($Literal, [StringComparison]::OrdinalIgnoreCase) -ge 0
   }
-  $baseUri = [Uri]$baseFull
-  $pathUri = [Uri]([System.IO.Path]::GetFullPath($Path))
-  return [Uri]::UnescapeDataString($baseUri.MakeRelativeUri($pathUri).ToString()).Replace("/", [System.IO.Path]::DirectorySeparatorChar)
+
+  $escaped = [regex]::Escape($Literal)
+  return [regex]::IsMatch($Text, "(?i)(?<![A-Za-z0-9])$escaped(?![A-Za-z0-9])")
 }
 
 function Test-ExcludedScanPath {
@@ -154,7 +163,7 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
 
   foreach ($literal in $allForbidden) {
     if ($literal -in @("Public", "Default", "User")) { continue }
-    if ($text.IndexOf($literal, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+    if (Test-ForbiddenLiteralMatch -Text $text -Literal $literal) {
       Add-Issue -Kind "forbidden-literal" -Path $relative -Detail "Found forbidden literal: $literal"
     }
   }

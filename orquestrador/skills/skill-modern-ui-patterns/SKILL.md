@@ -61,3 +61,9 @@ Use this skill when building or improving operational SaaS screens. Favor produc
 - Responsive behavior is verified.
 - Lint, typecheck, build, or targeted tests run when available.
 
+## Related Skills
+
+- `skill-frontend-ux-guardrails`
+- `skill-open-design-ui`
+- `skill-saas-admin-dashboard`
+- `skill-saas-factory`

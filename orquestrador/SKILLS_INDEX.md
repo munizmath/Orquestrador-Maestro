@@ -47,6 +47,8 @@ Then open only the selected `SKILL.md` files and their directly referenced files
 | Multiagent/subagent orchestration | `/skill:skill-multiagent-orchestration` |
 | AionUi cowork/team orchestration | `/skill:skill-aionui-cowork-orchestration` |
 | WhatsApp via Evolution API | `/skill:skill-evolution-api` |
+| GitHub MCP automation | `/skill:skill-github-mcp-automation` |
+| n8n + WhatsApp + Claude workflows | `/skill:skill-n8n-whatsapp-claude` |
 | Frontend UX guardrails | `/skill:skill-frontend-ux-guardrails` |
 | Modern SaaS UI patterns | `/skill:skill-modern-ui-patterns` |
 | Open-design UI workflow | `/skill:skill-open-design-ui` |

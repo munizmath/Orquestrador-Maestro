@@ -53,3 +53,9 @@ Use this skill to harden visible product UI before delivery. Treat it as a quali
 - Text is spelled correctly and UTF-8 safe.
 - Existing routes, form behavior, and analytics are preserved unless the task explicitly changes them.
 
+## Related Skills
+
+- `skill-modern-ui-patterns`
+- `skill-open-design-ui`
+- `skill-saas-admin-dashboard`
+- `skill-unified-analytics`

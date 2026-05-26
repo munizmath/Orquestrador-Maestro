@@ -35,7 +35,7 @@
     "audit": "node scripts/audit-dependencies.js audit",
     "outdated:all": "node scripts/audit-dependencies.js outdated",
     "pack:dry-run": "npm pack --dry-run",
-    "validate": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/validate-public.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1"
+    "validate": "node scripts/run-validate.js"
   },
   "config": {
     "telemetryEndpoint": ""

@@ -54,9 +54,11 @@ Agents should treat `SKILLS_ROUTER.json` as the automatic invocation layer:
 5. Chain provider-specific skills only when the task touches that provider and `SKILL_CHAINS.json` allows it.
 6. Use `skill-multiagent-orchestration` when the user asks for subagents/multiagents or when independent lanes clearly reduce time or risk.
 7. Use `skill-aionui-cowork-orchestration` when AionUi, cowork agents, Team Mode, or unified MCP/agent UI is in scope.
-8. Prefer local repository evidence over broad catalog loading.
-9. Append a usage log entry when the tool supports it.
-10. Run `doctor.ps1` after global skill or hook changes.
+8. Use `skill-n8n-whatsapp-claude` when n8n workflows connect WhatsApp automation with Claude or another LLM.
+9. Use `skill-github-mcp-automation` when GitHub MCP, issues, PRs, Actions, releases, or repository maintenance are in scope.
+10. Prefer local repository evidence over broad catalog loading.
+11. Append a usage log entry when the tool supports it.
+12. Run `doctor.ps1` after global skill or hook changes.
 
 ## Current External Baselines
 

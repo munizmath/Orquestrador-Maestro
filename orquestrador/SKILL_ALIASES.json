@@ -77,6 +77,15 @@
     "voz": "skill-elevenlabs-voice-cloning",
     "google workspace": "skill-google-workspace-sync",
     "google calendar": "skill-google-workspace-sync",
-    "meet": "skill-google-workspace-sync"
+    "meet": "skill-google-workspace-sync",
+    "n8n": "skill-n8n-whatsapp-claude",
+    "n8n whatsapp": "skill-n8n-whatsapp-claude",
+    "whatsapp claude": "skill-n8n-whatsapp-claude",
+    "claude whatsapp": "skill-n8n-whatsapp-claude",
+    "github mcp": "skill-github-mcp-automation",
+    "github automation": "skill-github-mcp-automation",
+    "github actions": "skill-github-mcp-automation",
+    "pr automation": "skill-github-mcp-automation",
+    "issue triage": "skill-github-mcp-automation"
   }
 }

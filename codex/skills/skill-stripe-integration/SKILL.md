@@ -51,3 +51,9 @@ source: official-docs-plus-local-saas-patterns
 - Check dashboard event deliveries before assuming frontend checkout failed.
 - Verify duplicate events do not duplicate payments, extend access twice, or create duplicate audit rows.
 
+## Related Skills
+
+- `skill-saas-factory`
+- `skill-saas-core-limits`
+- `skill-saas-admin-dashboard`
+- `skill-security-hooks`

@@ -57,6 +57,8 @@ Linux/macOS:
 | Subagents, multiagents, swarm, team execution, delegation | `/skill:skill-multiagent-orchestration` |
 | AionUi, cowork app, Team Mode, unified MCP/agent UI | `/skill:skill-aionui-cowork-orchestration` |
 | WhatsApp, Evolution API, message webhooks | `/skill:skill-evolution-api` |
+| GitHub MCP, issues, PRs, Actions, repo maintenance | `/skill:skill-github-mcp-automation` |
+| n8n workflows connecting WhatsApp and Claude/LLMs | `/skill:skill-n8n-whatsapp-claude` |
 | Frontend polish, responsive guardrails, layout QA | `/skill:skill-frontend-ux-guardrails` |
 | SaaS UI system or admin component patterns | `/skill:skill-modern-ui-patterns` |
 | Open-design visual upgrade or design tokens | `/skill:skill-open-design-ui` |
