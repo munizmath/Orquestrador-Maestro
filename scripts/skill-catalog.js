@@ -3,14 +3,23 @@
 const fs = require("fs");
 const path = require("path");
 
-const repoRoot = path.resolve(__dirname, "..");
-const orchestratorRoot = path.join(repoRoot, "orquestrador");
-const skillsRoot = path.join(orchestratorRoot, "skills");
-const manifestPath = path.join(orchestratorRoot, "SKILLS_MANIFEST.json");
-const routerPath = path.join(orchestratorRoot, "SKILLS_ROUTER.json");
-const aliasesPath = path.join(orchestratorRoot, "SKILL_ALIASES.json");
-const chainsPath = path.join(orchestratorRoot, "SKILL_CHAINS.json");
-const docsCatalogPath = path.join(repoRoot, "docs", "skill-catalog.md");
+const defaultRepoRoot = path.resolve(__dirname, "..");
+
+function getPaths(repoRoot = defaultRepoRoot) {
+  const orchestratorRoot = path.join(repoRoot, "orquestrador");
+  return {
+    repoRoot,
+    orchestratorRoot,
+    skillsRoot: path.join(orchestratorRoot, "skills"),
+    codexSkillsRoot: path.join(repoRoot, "codex", "skills"),
+    manifestPath: path.join(orchestratorRoot, "SKILLS_MANIFEST.json"),
+    routerPath: path.join(orchestratorRoot, "SKILLS_ROUTER.json"),
+    aliasesPath: path.join(orchestratorRoot, "SKILL_ALIASES.json"),
+    chainsPath: path.join(orchestratorRoot, "SKILL_CHAINS.json"),
+    docsCatalogPath: path.join(repoRoot, "docs", "skill-catalog.md"),
+    routeTestsPath: path.join(repoRoot, "tests", "routing-cases.json"),
+  };
+}
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -29,8 +38,10 @@ function parseArgs(argv) {
       continue;
     }
     const key = arg.slice(2);
-    if (key === "mirror-everywhere") {
-      args.mirrorEverywhere = true;
+    if (key === "mirror-everywhere" || key === "json" || key === "check-sync") {
+      if (key === "mirror-everywhere") args.mirrorEverywhere = true;
+      if (key === "json") args.json = true;
+      if (key === "check-sync") args.checkSync = true;
       continue;
     }
     const value = argv[index + 1];
@@ -41,6 +52,10 @@ function parseArgs(argv) {
     if (key === "trigger" || key === "alias") {
       args[key] = args[key] || [];
       args[key].push(value);
+    } else if (key === "priority-score") {
+      args.priorityScore = value;
+    } else if (key === "repo-root") {
+      args.repoRoot = value;
     } else {
       args[key] = value;
     }
@@ -98,6 +113,7 @@ function isGenericDescription(description) {
 }
 
 function createSkill(args) {
+  const paths = getPaths(args.repoRoot ? path.resolve(args.repoRoot) : defaultRepoRoot);
   const name = normalizeSkillName(args.name);
   assertSkillName(name);
 
@@ -115,7 +131,7 @@ function createSkill(args) {
     throw new Error("At least one --trigger is required.");
   }
 
-  const skillDir = path.join(skillsRoot, name);
+  const skillDir = path.join(paths.skillsRoot, name);
   const skillFile = path.join(skillDir, "SKILL.md");
   if (fs.existsSync(skillFile)) {
     throw new Error(`Skill already exists: ${skillFile}`);
@@ -128,22 +144,23 @@ function createSkill(args) {
     "utf8"
   );
 
-  const manifest = fs.existsSync(manifestPath)
-    ? readJson(manifestPath)
+  const manifest = fs.existsSync(paths.manifestPath)
+    ? readJson(paths.manifestPath)
     : { version: 1, purpose: "Canonical Orquestrador skill registry.", skills: {} };
   manifest.skills[name] = {
     description,
     category,
     risk,
     source,
+    priorityScore: Number(args.priorityScore || 3),
     mirrorEverywhere: Boolean(args.mirrorEverywhere),
     triggers,
     aliases,
     status: "canonical",
   };
-  writeJson(manifestPath, manifest);
+  writeJson(paths.manifestPath, manifest);
 
-  const router = readJson(routerPath);
+  const router = readJson(paths.routerPath);
   router.skills[name] = {
     description,
     triggers,
@@ -152,25 +169,68 @@ function createSkill(args) {
     cost: risk === "high" ? "high" : risk === "medium" ? "medium" : "low",
     safety: "task-specific-guardrails",
   };
-  writeJson(routerPath, router);
+  writeJson(paths.routerPath, router);
 
-  const aliasDoc = readJson(aliasesPath);
+  const aliasDoc = readJson(paths.aliasesPath);
   for (const alias of aliases) {
     aliasDoc.aliases[alias] = name;
   }
-  writeJson(aliasesPath, aliasDoc);
+  writeJson(paths.aliasesPath, aliasDoc);
 
-  console.log(`Created ${path.relative(repoRoot, skillFile)}`);
-  console.log(`Updated ${path.relative(repoRoot, manifestPath)}, SKILLS_ROUTER.json, and SKILL_ALIASES.json`);
+  console.log(`Created ${path.relative(paths.repoRoot, skillFile)}`);
+  console.log(`Updated ${path.relative(paths.repoRoot, paths.manifestPath)}, SKILLS_ROUTER.json, and SKILL_ALIASES.json`);
 }
 
-function validate() {
+function sameDirectoryContents(left, right) {
+  if (!fs.existsSync(left) || !fs.existsSync(right)) return false;
+  const leftEntries = fs.readdirSync(left, { withFileTypes: true })
+    .map((entry) => entry.name)
+    .filter((name) => name !== ".DS_Store")
+    .sort();
+  const rightEntries = fs.readdirSync(right, { withFileTypes: true })
+    .map((entry) => entry.name)
+    .filter((name) => name !== ".DS_Store")
+    .sort();
+  if (leftEntries.length !== rightEntries.length) return false;
+  for (let index = 0; index < leftEntries.length; index++) {
+    if (leftEntries[index] !== rightEntries[index]) return false;
+    const leftPath = path.join(left, leftEntries[index]);
+    const rightPath = path.join(right, rightEntries[index]);
+    const leftStat = fs.statSync(leftPath);
+    const rightStat = fs.statSync(rightPath);
+    if (leftStat.isDirectory() !== rightStat.isDirectory()) return false;
+    if (leftStat.isDirectory()) {
+      if (!sameDirectoryContents(leftPath, rightPath)) return false;
+    } else if (fs.readFileSync(leftPath, "utf8") !== fs.readFileSync(rightPath, "utf8")) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function scorePrompt(prompt, entry, aliases) {
+  const text = String(prompt || "").toLowerCase();
+  let score = 0;
+  for (const trigger of entry.triggers || []) {
+    if (text.includes(String(trigger).toLowerCase())) score += 3;
+  }
+  for (const alias of entry.aliases || []) {
+    if (text.includes(String(alias).toLowerCase())) score += 2;
+  }
+  for (const [alias, skill] of Object.entries(aliases || {})) {
+    if (skill === entry.name && text.includes(alias.toLowerCase())) score += 2;
+  }
+  return score + Number(entry.priorityScore || 0) / 100;
+}
+
+function validate(args = {}) {
+  const paths = getPaths(args.repoRoot ? path.resolve(args.repoRoot) : defaultRepoRoot);
   const issues = [];
-  const manifest = readJson(manifestPath);
-  const router = readJson(routerPath);
-  const aliases = readJson(aliasesPath);
-  const chains = readJson(chainsPath);
-  const docsCatalog = fs.existsSync(docsCatalogPath) ? fs.readFileSync(docsCatalogPath, "utf8") : "";
+  const manifest = readJson(paths.manifestPath);
+  const router = readJson(paths.routerPath);
+  const aliases = readJson(paths.aliasesPath);
+  const chains = readJson(paths.chainsPath);
+  const docsCatalog = fs.existsSync(paths.docsCatalogPath) ? fs.readFileSync(paths.docsCatalogPath, "utf8") : "";
   const manifestSkills = manifest.skills || {};
   const routerSkills = router.skills || {};
   const descriptions = new Map();
@@ -185,6 +245,9 @@ function validate() {
     for (const field of ["description", "category", "risk", "source", "status"]) {
       if (!entry[field]) issues.push(`manifest:${name}: missing ${field}`);
     }
+    if (!Number.isFinite(Number(entry.priorityScore)) || Number(entry.priorityScore) < 1 || Number(entry.priorityScore) > 5) {
+      issues.push(`manifest:${name}: priorityScore must be a number from 1 to 5`);
+    }
     if (isGenericDescription(entry.description)) {
       issues.push(`manifest:${name}: description is too generic or too short`);
     }
@@ -195,7 +258,7 @@ function validate() {
       descriptions.set(normalizedDescription, existing);
     }
 
-    const skillFile = path.join(skillsRoot, name, "SKILL.md");
+    const skillFile = path.join(paths.skillsRoot, name, "SKILL.md");
     if (!fs.existsSync(skillFile)) {
       issues.push(`skills/${name}: missing SKILL.md`);
       continue;
@@ -231,6 +294,14 @@ function validate() {
     if (docsCatalog && !docsCatalog.includes(`\`${name}\``)) {
       issues.push(`docs/skill-catalog.md: missing ${name}`);
     }
+    if (args.checkSync) {
+      const codexSkillDir = path.join(paths.codexSkillsRoot, name);
+      if (!fs.existsSync(path.join(codexSkillDir, "SKILL.md"))) {
+        issues.push(`codex/skills/${name}: missing mirrored skill`);
+      } else if (!sameDirectoryContents(path.dirname(skillFile), codexSkillDir)) {
+        issues.push(`codex/skills/${name}: differs from canonical skill`);
+      }
+    }
   }
 
   for (const [description, names] of descriptions.entries()) {
@@ -239,10 +310,10 @@ function validate() {
     }
   }
 
-  for (const dirent of fs.readdirSync(skillsRoot, { withFileTypes: true })) {
+  for (const dirent of fs.readdirSync(paths.skillsRoot, { withFileTypes: true })) {
     if (!dirent.isDirectory()) continue;
     const name = dirent.name;
-    if (!fs.existsSync(path.join(skillsRoot, name, "SKILL.md"))) continue;
+    if (!fs.existsSync(path.join(paths.skillsRoot, name, "SKILL.md"))) continue;
     if (!manifestSkills[name]) issues.push(`manifest:${name}: skill directory is not registered`);
   }
 
@@ -262,36 +333,101 @@ function validate() {
 
   for (const [skill, chain] of Object.entries(chains.chains || {})) {
     if (!manifestSkills[skill]) issues.push(`chains:${skill}: chain owner is not in manifest`);
+    if (!chain.reasons || typeof chain.reasons !== "object") {
+      issues.push(`chains:${skill}: missing reasons object`);
+    }
     for (const target of chain.mayInvoke || []) {
       if (!manifestSkills[target]) issues.push(`chains:${skill}: mayInvoke points to missing skill ${target}`);
+      if (!chain.reasons || !chain.reasons[target]) {
+        issues.push(`chains:${skill}: missing reason for ${target}`);
+      }
+    }
+  }
+
+  if (fs.existsSync(paths.routeTestsPath)) {
+    const routeTests = readJson(paths.routeTestsPath);
+    for (const testCase of routeTests.cases || []) {
+      const scores = Object.entries(manifestSkills).map(([name, entry]) => [
+        name,
+        scorePrompt(testCase.prompt, { ...entry, name }, aliases.aliases || {}),
+      ]).filter(([, score]) => score > 0).sort((a, b) => b[1] - a[1]);
+      const top = scores.slice(0, Number(testCase.top || 3)).map(([name]) => name);
+      for (const expected of testCase.expected || []) {
+        if (!top.includes(expected)) {
+          issues.push(`routing:${testCase.name || testCase.prompt}: expected ${expected} in top ${testCase.top || 3}, got ${top.join(", ") || "none"}`);
+        }
+      }
     }
   }
 
   if (issues.length > 0) {
-    console.error("Skill validation failed:");
-    for (const issue of issues.sort()) console.error(`  - ${issue}`);
-    process.exit(1);
+    return { ok: false, issues: issues.sort(), skillCount: Object.keys(manifestSkills).length };
   }
-  console.log(`Skill validation passed. Skills: ${Object.keys(manifestSkills).length}`);
+  return { ok: true, issues: [], skillCount: Object.keys(manifestSkills).length };
 }
 
-function printMirrorEverywhere() {
-  const manifest = readJson(manifestPath);
+function listSkills(args = {}) {
+  const paths = getPaths(args.repoRoot ? path.resolve(args.repoRoot) : defaultRepoRoot);
+  const manifest = readJson(paths.manifestPath);
+  return Object.entries(manifest.skills || {}).sort(([a], [b]) => a.localeCompare(b)).map(([name, entry]) => ({
+    name,
+    description: entry.description,
+    category: entry.category,
+    risk: entry.risk,
+    priorityScore: entry.priorityScore,
+    mirrorEverywhere: Boolean(entry.mirrorEverywhere),
+  }));
+}
+
+function printMirrorEverywhere(args = {}) {
+  const paths = getPaths(args.repoRoot ? path.resolve(args.repoRoot) : defaultRepoRoot);
+  const manifest = readJson(paths.manifestPath);
   for (const [name, entry] of Object.entries(manifest.skills || {})) {
     if (entry.mirrorEverywhere) console.log(name);
   }
 }
 
-const [command, ...rest] = process.argv.slice(2);
-try {
-  if (command === "new") createSkill(parseArgs(rest));
-  else if (command === "validate") validate();
-  else if (command === "mirror-everywhere") printMirrorEverywhere();
-  else {
-    console.error("Usage: skill-catalog.js <new|validate|mirror-everywhere> [options]");
-    process.exit(2);
+function runCli(argv = process.argv.slice(2)) {
+  const [command, ...rest] = argv;
+  try {
+    const args = parseArgs(rest);
+    if (command === "new") createSkill(args);
+    else if (command === "validate") {
+      const result = validate(args);
+      if (args.json) console.log(JSON.stringify(result, null, 2));
+      else if (result.ok) console.log(`Skill validation passed. Skills: ${result.skillCount}`);
+      else {
+        console.error("Skill validation failed:");
+        for (const issue of result.issues) console.error(`  - ${issue}`);
+      }
+      return result.ok ? 0 : 1;
+    } else if (command === "list") {
+      const skills = listSkills(args);
+      if (args.json) console.log(JSON.stringify({ skills }, null, 2));
+      else for (const skill of skills) console.log(`${skill.name}\t${skill.category}\t${skill.risk}\t${skill.priorityScore || ""}\t${skill.description}`);
+    } else if (command === "mirror-everywhere") printMirrorEverywhere(args);
+    else {
+      console.error("Usage: skill-catalog.js <new|validate|list|mirror-everywhere> [options]");
+      return 2;
+    }
+    return 0;
+  } catch (error) {
+    console.error(error.message);
+    return 1;
   }
-} catch (error) {
-  console.error(error.message);
-  process.exit(1);
 }
+
+if (require.main === module) {
+  process.exit(runCli());
+}
+
+module.exports = {
+  assertSkillName,
+  hasHeading,
+  isGenericDescription,
+  listSkills,
+  normalizeSkillName,
+  scorePrompt,
+  validate,
+  runCli,
+};

@@ -5,6 +5,8 @@ const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 
 const repoRoot = path.resolve(__dirname, "..");
+const wantsJson = process.argv.includes("--json");
+const checkSync = process.argv.includes("--check-sync");
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -47,6 +49,7 @@ const publicValidation = run(powerShell, [
   "Bypass",
   "-File",
   path.join(repoRoot, "scripts", "validate-public.ps1"),
+  ...(wantsJson ? ["-Json"] : []),
 ]);
 if (!publicValidation.ok) {
   process.exit(publicValidation.status || 1);
@@ -55,6 +58,8 @@ if (!publicValidation.ok) {
 const skillValidation = run(process.execPath, [
   path.join(repoRoot, "scripts", "skill-catalog.js"),
   "validate",
+  ...(wantsJson ? ["--json"] : []),
+  ...(checkSync ? ["--check-sync"] : []),
 ]);
 if (!skillValidation.ok) {
   process.exit(skillValidation.status || 1);

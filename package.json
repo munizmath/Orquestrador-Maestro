@@ -26,6 +26,7 @@
     "scripts/*.py",
     "scripts/*.ps1",
     "scripts/*.sh",
+    "src/",
     "skill-library/MANIFEST.json",
     "skill-library/community-skills/",
     "tool-profiles/",
@@ -35,6 +36,8 @@
     "audit": "node scripts/audit-dependencies.js audit",
     "outdated:all": "node scripts/audit-dependencies.js outdated",
     "pack:dry-run": "npm pack --dry-run",
+    "package:check": "node scripts/package-check.js",
+    "test": "node scripts/test-scripts.js && node scripts/test-public-validator.js && node scripts/test-architecture.js && npm run validate -- --check-sync && npm run package:check",
     "validate": "node scripts/run-validate.js"
   },
   "config": {

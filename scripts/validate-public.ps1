@@ -2,6 +2,8 @@
 param(
   [string]$RepoRoot = "",
   [string[]]$ForbiddenLiteral = @(),
+  [string[]]$AllowedLiteral = @(),
+  [switch]$Json,
   [switch]$SkipJsonValidation
 )
 
@@ -14,12 +16,39 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
 $issues = New-Object System.Collections.Generic.List[object]
 
 function Add-Issue {
-  param([string]$Kind, [string]$Path, [string]$Detail)
+  param([string]$Kind, [string]$Path, [string]$Detail, [int]$Line = 0, [string]$Snippet = "")
   $issues.Add([pscustomobject]@{
     Kind = $Kind
     Path = $Path
     Detail = $Detail
+    Line = $Line
+    Snippet = $Snippet
   })
+}
+
+function Get-LineInfo {
+  param([string]$Text, [int]$Index)
+  if ($Index -lt 0) {
+    return @{ Line = 0; Snippet = "" }
+  }
+  $prefix = $Text.Substring(0, [Math]::Min($Index, $Text.Length))
+  $line = ([regex]::Matches($prefix, "`n")).Count + 1
+  $lineStart = $Text.LastIndexOf("`n", [Math]::Max(0, $Index))
+  if ($lineStart -lt 0) { $lineStart = 0 } else { $lineStart += 1 }
+  $lineEnd = $Text.IndexOf("`n", $lineStart)
+  if ($lineEnd -lt 0) { $lineEnd = $Text.Length }
+  $snippet = $Text.Substring($lineStart, $lineEnd - $lineStart).Trim()
+  if ($snippet.Length -gt 160) { $snippet = $snippet.Substring(0, 157) + "..." }
+  return @{ Line = $line; Snippet = $snippet }
+}
+
+function Add-RegexIssue {
+  param([string]$Kind, [string]$Path, [string]$Detail, [string]$Text, [string]$Pattern)
+  $match = [regex]::Match($Text, $Pattern)
+  if (-not $match.Success) { return $false }
+  $info = Get-LineInfo -Text $Text -Index $match.Index
+  Add-Issue -Kind $Kind -Path $Path -Detail $Detail -Line $info.Line -Snippet $info.Snippet
+  return $true
 }
 
 function Get-RelativePath {
@@ -40,6 +69,18 @@ function Test-ForbiddenLiteralMatch {
 
   $escaped = [regex]::Escape($Literal)
   return [regex]::IsMatch($Text, "(?i)(?<![A-Za-z0-9])$escaped(?![A-Za-z0-9])")
+}
+
+function Get-ForbiddenLiteralIndex {
+  param([string]$Text, [string]$Literal)
+  if ($Literal -match "[\\/:\s]" -or $Literal.Length -gt 12) {
+    return $Text.IndexOf($Literal, [StringComparison]::OrdinalIgnoreCase)
+  }
+
+  $escaped = [regex]::Escape($Literal)
+  $match = [regex]::Match($Text, "(?i)(?<![A-Za-z0-9])$escaped(?![A-Za-z0-9])")
+  if ($match.Success) { return $match.Index }
+  return -1
 }
 
 function Test-ExcludedScanPath {
@@ -74,6 +115,9 @@ if (-not [string]::IsNullOrWhiteSpace($homeName)) {
 $allForbidden = @($defaultForbidden + $ForbiddenLiteral) |
   Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
   Select-Object -Unique
+$allowedLiteralSet = @($AllowedLiteral) |
+  Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+  ForEach-Object { $_.ToLowerInvariant() }
 
 $forbiddenDirs = @(
   "orquestrador\logs",
@@ -144,6 +188,9 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
   if ($leaf -like "*.bak*" -or $leaf -like "*.log" -or $leaf -like ".temp-*") {
     Add-Issue -Kind "forbidden-file-kind" -Path $relative -Detail "Backup/log/temp files must not be published."
   }
+  if ($leaf -like "*:Zone.Identifier" -or $leaf -like "*.crdownload" -or $leaf -like "*.crdownload:*") {
+    Add-Issue -Kind "forbidden-file-kind" -Path $relative -Detail "Downloaded browser/Windows metadata artifacts must not be published."
+  }
 
   if (-not (Test-TextFile -Path $file.FullName)) { continue }
 
@@ -154,30 +201,25 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
     continue
   }
 
-  if ($text -match "C:\\Users\\[A-Za-z0-9._-]+") {
-    Add-Issue -Kind "concrete-windows-home" -Path $relative -Detail "Use {{USER_HOME}} or %USERPROFILE% instead of a concrete user path."
-  }
-  if ($text -match "C:/Users/[A-Za-z0-9._-]+") {
-    Add-Issue -Kind "concrete-windows-home" -Path $relative -Detail "Use {{USER_HOME}} or %USERPROFILE% instead of a concrete user path."
-  }
+  [void](Add-RegexIssue -Kind "concrete-windows-home" -Path $relative -Detail "Use {{USER_HOME}} or %USERPROFILE% instead of a concrete user path." -Text $text -Pattern "C:\\Users\\[A-Za-z0-9._-]+")
+  [void](Add-RegexIssue -Kind "concrete-windows-home" -Path $relative -Detail "Use {{USER_HOME}} or %USERPROFILE% instead of a concrete user path." -Text $text -Pattern "C:/Users/[A-Za-z0-9._-]+")
 
   foreach ($literal in $allForbidden) {
     if ($literal -in @("Public", "Default", "User")) { continue }
-    if (Test-ForbiddenLiteralMatch -Text $text -Literal $literal) {
-      Add-Issue -Kind "forbidden-literal" -Path $relative -Detail "Found forbidden literal: $literal"
+    if ($allowedLiteralSet -contains $literal.ToLowerInvariant()) { continue }
+    $literalIndex = Get-ForbiddenLiteralIndex -Text $text -Literal $literal
+    if ($literalIndex -ge 0) {
+      $info = Get-LineInfo -Text $text -Index $literalIndex
+      Add-Issue -Kind "forbidden-literal" -Path $relative -Detail "Found forbidden literal: $literal" -Line $info.Line -Snippet $info.Snippet
     }
   }
 
   foreach ($name in $secretPatterns.Keys) {
-    if ([regex]::IsMatch($text, $secretPatterns[$name])) {
-      Add-Issue -Kind "possible-secret" -Path $relative -Detail $name
-    }
+    [void](Add-RegexIssue -Kind "possible-secret" -Path $relative -Detail $name -Text $text -Pattern $secretPatterns[$name])
   }
 
   foreach ($name in $operationalLeakPatterns.Keys) {
-    if ([regex]::IsMatch($text, $operationalLeakPatterns[$name])) {
-      Add-Issue -Kind "possible-operational-secret" -Path $relative -Detail $name
-    }
+    [void](Add-RegexIssue -Kind "possible-operational-secret" -Path $relative -Detail $name -Text $text -Pattern $operationalLeakPatterns[$name])
   }
 
   $mojibakeSequenceCodePoints = @(
@@ -188,17 +230,18 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
   foreach ($encodedSequence in $mojibakeSequenceCodePoints) {
     $sequence = -join ($encodedSequence.Split(",") | ForEach-Object { [string][char][Convert]::ToInt32($_, 16) })
     if ($text.Contains($sequence) -and ($relative -notmatch "validate-public\.ps1$")) {
-      Add-Issue -Kind "possible-mojibake" -Path $relative -Detail "Text contains common mojibake markers."
+      $info = Get-LineInfo -Text $text -Index $text.IndexOf($sequence, [StringComparison]::Ordinal)
+      Add-Issue -Kind "possible-mojibake" -Path $relative -Detail "Text contains common mojibake markers." -Line $info.Line -Snippet $info.Snippet
       break
     }
   }
 }
 
 if (-not $SkipJsonValidation) {
-  foreach ($json in Get-ChildItem -LiteralPath (Join-Path $repoRootFull "orquestrador") -Recurse -Filter "*.json" -File -ErrorAction SilentlyContinue) {
-    $relative = Get-RelativePath -BasePath $repoRootFull -Path $json.FullName
+  foreach ($jsonFile in Get-ChildItem -LiteralPath (Join-Path $repoRootFull "orquestrador") -Recurse -Filter "*.json" -File -ErrorAction SilentlyContinue) {
+    $relative = Get-RelativePath -BasePath $repoRootFull -Path $jsonFile.FullName
     try {
-      Get-Content -LiteralPath $json.FullName -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+      Get-Content -LiteralPath $jsonFile.FullName -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
     } catch {
       Add-Issue -Kind "invalid-json" -Path $relative -Detail $_.Exception.Message
     }
@@ -206,9 +249,17 @@ if (-not $SkipJsonValidation) {
 }
 
 if ($issues.Count -gt 0) {
-  "Public validation failed:"
-  $issues | Sort-Object Kind, Path | Format-Table -AutoSize
+  if ($Json) {
+    [pscustomobject]@{ ok = $false; issues = @($issues | Sort-Object Kind, Path, Line) } | ConvertTo-Json -Depth 5
+  } else {
+    "Public validation failed:"
+    $issues | Sort-Object Kind, Path, Line | Format-Table -AutoSize
+  }
   exit 1
 }
 
-"Public validation passed for $repoRootFull"
+if ($Json) {
+  [pscustomobject]@{ ok = $true; issues = @(); repoRoot = $repoRootFull } | ConvertTo-Json -Depth 5
+} else {
+  "Public validation passed for $repoRootFull"
+}

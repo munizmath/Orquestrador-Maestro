@@ -4,7 +4,33 @@
   "skills": {
     "skill-saas-factory": {
       "description": "Top-level SaaS construction and review workflow for dashboards, admin, Supabase, payments, security, infra, and production readiness.",
-      "triggers": ["criar saas", "novo saas", "saas factory", "dashboard saas", "admin dashboard", "painel admin", "landing saas", "pagina de login", "página de login", "cadastro saas", "sign up", "login saas", "onboarding saas", "auth saas", "assinatura", "subscription", "billing", "multi-tenant", "supabase saas", "abacatepay", "stripe", "plans", "planos", "entitlements", "limites"],
+      "triggers": [
+        "criar saas",
+        "novo saas",
+        "saas factory",
+        "dashboard saas",
+        "admin dashboard",
+        "painel admin",
+        "landing saas",
+        "pagina de login",
+        "página de login",
+        "cadastro saas",
+        "sign up",
+        "login saas",
+        "onboarding saas",
+        "auth saas",
+        "assinatura",
+        "subscription",
+        "billing",
+        "multi-tenant",
+        "supabase saas",
+        "abacatepay",
+        "stripe",
+        "plans",
+        "planos",
+        "entitlements",
+        "limites"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-factory/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-factory/SKILL.md",
       "cost": "low-first-then-progressive",
@@ -12,7 +38,17 @@
     },
     "skill-saas-admin-dashboard": {
       "description": "SaaS admin dashboard and internal panel patterns for users, plans, payments, logs, metrics, settings, and onboarding.",
-      "triggers": ["admin panel", "painel administrativo", "dashboard administrativo", "users admin", "pagamentos admin", "planos admin", "logs admin", "sidebar admin", "metrics dashboard"],
+      "triggers": [
+        "admin panel",
+        "painel administrativo",
+        "dashboard administrativo",
+        "users admin",
+        "pagamentos admin",
+        "planos admin",
+        "logs admin",
+        "sidebar admin",
+        "metrics dashboard"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-admin-dashboard/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-admin-dashboard/SKILL.md",
       "cost": "low",
@@ -20,7 +56,17 @@
     },
     "skill-abacatepay-integration": {
       "description": "AbacatePay PIX/card billing, CPF/CNPJ, BRL checkout, billing webhooks, and entitlement sync.",
-      "triggers": ["abacatepay", "pix", "cpf", "cnpj", "billing.paid", "cobranca", "cobrança", "brl checkout", "pagamento brasileiro"],
+      "triggers": [
+        "abacatepay",
+        "pix",
+        "cpf",
+        "cnpj",
+        "billing.paid",
+        "cobranca",
+        "cobrança",
+        "brl checkout",
+        "pagamento brasileiro"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-abacatepay-integration/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-abacatepay-integration/SKILL.md",
       "cost": "medium",
@@ -28,7 +74,16 @@
     },
     "skill-stripe-integration": {
       "description": "Stripe Checkout, Billing subscriptions, customer portal, webhook verification, and SaaS entitlement sync.",
-      "triggers": ["stripe", "stripe checkout", "stripe billing", "customer portal", "invoice.paid", "checkout.session.completed", "customer.subscription", "webhook stripe"],
+      "triggers": [
+        "stripe",
+        "stripe checkout",
+        "stripe billing",
+        "customer portal",
+        "invoice.paid",
+        "checkout.session.completed",
+        "customer.subscription",
+        "webhook stripe"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-stripe-integration/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-stripe-integration/SKILL.md",
       "cost": "medium",
@@ -36,7 +91,17 @@
     },
     "skill-saas-core-limits": {
       "description": "SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, and blocked account states.",
-      "triggers": ["limites saas", "entitlements", "quotas", "feature flags", "trial", "grace period", "blocked account", "plan limits", "uso do plano"],
+      "triggers": [
+        "limites saas",
+        "entitlements",
+        "quotas",
+        "feature flags",
+        "trial",
+        "grace period",
+        "blocked account",
+        "plan limits",
+        "uso do plano"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-core-limits/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-core-limits/SKILL.md",
       "cost": "low",
@@ -44,7 +109,14 @@
     },
     "skill-saas-security-scan": {
       "description": "Authorized local SaaS repository security scan using maintained OSS tools.",
-      "triggers": ["saas security scan", "sast", "secrets", "dependency audit", "repo security", "local scan"],
+      "triggers": [
+        "saas security scan",
+        "sast",
+        "secrets",
+        "dependency audit",
+        "repo security",
+        "local scan"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-security-scan/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-security-scan/SKILL.md",
       "cost": "medium",
@@ -52,7 +124,14 @@
     },
     "skill-saas-dast-recon": {
       "description": "Authorized staging/preview DAST and recon workflow for owned SaaS systems.",
-      "triggers": ["dast", "preview scan", "staging scan", "zap", "nuclei", "authorized url scan"],
+      "triggers": [
+        "dast",
+        "preview scan",
+        "staging scan",
+        "zap",
+        "nuclei",
+        "authorized url scan"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-dast-recon/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-dast-recon/SKILL.md",
       "cost": "high",
@@ -60,7 +139,13 @@
     },
     "skill-security-hooks": {
       "description": "Git hooks and CI security gates for SaaS repositories.",
-      "triggers": ["security hooks", "pre-commit", "pre-push", "ci security", "security gate"],
+      "triggers": [
+        "security hooks",
+        "pre-commit",
+        "pre-push",
+        "ci security",
+        "security gate"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-security-hooks/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-security-hooks/SKILL.md",
       "cost": "low",
@@ -68,7 +153,16 @@
     },
     "skill-supabase-rls": {
       "description": "Supabase/Postgres RLS design, tenant isolation, policies, indexes, and verification.",
-      "triggers": ["supabase", "rls", "row level security", "tenant isolation", "policies", "auth.uid", "service role", "storage policies"],
+      "triggers": [
+        "supabase",
+        "rls",
+        "row level security",
+        "tenant isolation",
+        "policies",
+        "auth.uid",
+        "service role",
+        "storage policies"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-supabase-rls/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-supabase-rls/SKILL.md",
       "cost": "medium",
@@ -76,7 +170,17 @@
     },
     "skill-ai-orchestration": {
       "description": "Server-side AI provider orchestration, routing, budgets, fallbacks, observability, and safe key handling.",
-      "triggers": ["ai orchestration", "llm router", "openai", "gemini", "claude", "model fallback", "token budget", "agent routing", "ai gateway"],
+      "triggers": [
+        "ai orchestration",
+        "llm router",
+        "openai",
+        "gemini",
+        "claude",
+        "model fallback",
+        "token budget",
+        "agent routing",
+        "ai gateway"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-ai-orchestration/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-ai-orchestration/SKILL.md",
       "cost": "medium",
@@ -84,7 +188,24 @@
     },
     "skill-multiagent-orchestration": {
       "description": "Multiagent and subagent orchestration for splitting independent engineering work, assigning ownership, reducing token waste, and integrating results safely.",
-      "triggers": ["multiagent", "multiagents", "subagent", "subagents", "multi agente", "multi agentes", "agentes paralelos", "parallel agents", "team execution", "swarm", "delegar", "delegacao", "delegação", "usar agentes", "use subagentes", "orquestrar agentes"],
+      "triggers": [
+        "multiagent",
+        "multiagents",
+        "subagent",
+        "subagents",
+        "multi agente",
+        "multi agentes",
+        "agentes paralelos",
+        "parallel agents",
+        "team execution",
+        "swarm",
+        "delegar",
+        "delegacao",
+        "delegação",
+        "usar agentes",
+        "use subagentes",
+        "orquestrar agentes"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-multiagent-orchestration/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-multiagent-orchestration/SKILL.md",
       "cost": "low-first-then-progressive",
@@ -92,7 +213,21 @@
     },
     "skill-aionui-cowork-orchestration": {
       "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the {{USER_NAME}} orchestrator without replacing the existing workflow.",
-      "triggers": ["aionui", "aion ui", "cowork app", "cowork agents", "team mode", "aionui team", "aionui codex", "aionui claude", "aionui gemini", "aionui opencode", "mcp unified management", "agent cowork", "multi-agent cowork"],
+      "triggers": [
+        "aionui",
+        "aion ui",
+        "cowork app",
+        "cowork agents",
+        "team mode",
+        "aionui team",
+        "aionui codex",
+        "aionui claude",
+        "aionui gemini",
+        "aionui opencode",
+        "mcp unified management",
+        "agent cowork",
+        "multi-agent cowork"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-aionui-cowork-orchestration/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-aionui-cowork-orchestration/SKILL.md",
       "cost": "low",
@@ -100,7 +235,15 @@
     },
     "skill-evolution-api": {
       "description": "Evolution API WhatsApp integration with webhook idempotency, queueing, consent, and rate limits.",
-      "triggers": ["evolution api", "whatsapp", "zap", "webhook whatsapp", "instancia whatsapp", "qr code whatsapp", "mensagens whatsapp"],
+      "triggers": [
+        "evolution api",
+        "whatsapp",
+        "zap",
+        "webhook whatsapp",
+        "instancia whatsapp",
+        "qr code whatsapp",
+        "mensagens whatsapp"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-evolution-api/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-evolution-api/SKILL.md",
       "cost": "medium",
@@ -108,7 +251,16 @@
     },
     "skill-frontend-ux-guardrails": {
       "description": "Frontend UX quality gates for responsive layouts, overflow, accessibility, and dashboard ergonomics.",
-      "triggers": ["ux guardrails", "frontend polish", "responsive", "overflow", "layout quebrado", "dashboard ux", "accessibility", "a11y"],
+      "triggers": [
+        "ux guardrails",
+        "frontend polish",
+        "responsive",
+        "overflow",
+        "layout quebrado",
+        "dashboard ux",
+        "accessibility",
+        "a11y"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-frontend-ux-guardrails/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-frontend-ux-guardrails/SKILL.md",
       "cost": "low",
@@ -116,7 +268,15 @@
     },
     "skill-modern-ui-patterns": {
       "description": "Modern SaaS UI composition, compact admin surfaces, component behavior, and polished interaction states.",
-      "triggers": ["modern ui", "ui patterns", "componentes", "design system", "saas ui", "admin ui", "layout moderno"],
+      "triggers": [
+        "modern ui",
+        "ui patterns",
+        "componentes",
+        "design system",
+        "saas ui",
+        "admin ui",
+        "layout moderno"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-modern-ui-patterns/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-modern-ui-patterns/SKILL.md",
       "cost": "low",
@@ -124,7 +284,14 @@
     },
     "skill-open-design-ui": {
       "description": "Open-design UI workflow for product screens, design tokens, components, and visual QA.",
-      "triggers": ["open design", "design tokens", "design ui", "visual qa", "component library", "brand ui"],
+      "triggers": [
+        "open design",
+        "design tokens",
+        "design ui",
+        "visual qa",
+        "component library",
+        "brand ui"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-open-design-ui/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-open-design-ui/SKILL.md",
       "cost": "low",
@@ -132,7 +299,14 @@
     },
     "skill-live-processing": {
       "description": "Live media processing pipeline with capture, queueing, worker state, retries, and observability.",
-      "triggers": ["live processing", "processamento ao vivo", "stream processing", "live video", "fila de video", "worker de video"],
+      "triggers": [
+        "live processing",
+        "processamento ao vivo",
+        "stream processing",
+        "live video",
+        "fila de video",
+        "worker de video"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-live-processing/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-live-processing/SKILL.md",
       "cost": "medium",
@@ -140,7 +314,14 @@
     },
     "skill-manual-video-processing": {
       "description": "Manual upload video processing with secure storage, validation, job states, and retryable workers.",
-      "triggers": ["manual video", "upload video", "processar video", "video processing", "transcode", "jobs de video"],
+      "triggers": [
+        "manual video",
+        "upload video",
+        "processar video",
+        "video processing",
+        "transcode",
+        "jobs de video"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-manual-video-processing/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-manual-video-processing/SKILL.md",
       "cost": "medium",
@@ -148,7 +329,14 @@
     },
     "skill-smart-clip-detection": {
       "description": "Smart clip candidate detection for video/audio using scored moments, metadata, and review workflows.",
-      "triggers": ["clip detection", "detectar cortes", "smart clips", "highlight detection", "viral clips", "recortar video"],
+      "triggers": [
+        "clip detection",
+        "detectar cortes",
+        "smart clips",
+        "highlight detection",
+        "viral clips",
+        "recortar video"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-smart-clip-detection/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-smart-clip-detection/SKILL.md",
       "cost": "medium",
@@ -156,7 +344,15 @@
     },
     "skill-unified-analytics": {
       "description": "Unified SaaS/product analytics event taxonomy, metrics, funnels, dashboards, and privacy guardrails.",
-      "triggers": ["analytics", "event tracking", "metrics", "funnels", "dashboard metrics", "kpis", "telemetria"],
+      "triggers": [
+        "analytics",
+        "event tracking",
+        "metrics",
+        "funnels",
+        "dashboard metrics",
+        "kpis",
+        "telemetria"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-unified-analytics/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-unified-analytics/SKILL.md",
       "cost": "low",
@@ -164,7 +360,14 @@
     },
     "skill-elevenlabs-voice-cloning": {
       "description": "ElevenLabs voice generation/cloning integration with consent, asset handling, and server-side API use.",
-      "triggers": ["elevenlabs", "voice cloning", "clonar voz", "tts", "text to speech", "voice generation"],
+      "triggers": [
+        "elevenlabs",
+        "voice cloning",
+        "clonar voz",
+        "tts",
+        "text to speech",
+        "voice generation"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-elevenlabs-voice-cloning/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-elevenlabs-voice-cloning/SKILL.md",
       "cost": "medium",
@@ -172,7 +375,14 @@
     },
     "skill-google-workspace-sync": {
       "description": "Google Workspace sync patterns for Drive/Sheets/Calendar data, OAuth scopes, webhooks, and reconciliation.",
-      "triggers": ["google workspace", "google drive", "google sheets", "google calendar", "workspace sync", "oauth google"],
+      "triggers": [
+        "google workspace",
+        "google drive",
+        "google sheets",
+        "google calendar",
+        "workspace sync",
+        "oauth google"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-google-workspace-sync/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-google-workspace-sync/SKILL.md",
       "cost": "medium",
@@ -180,7 +390,15 @@
     },
     "skill-n8n-whatsapp-claude": {
       "description": "n8n workflows connecting WhatsApp automation with Claude/LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
-      "triggers": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp", "workflow n8n", "automacao whatsapp", "automação whatsapp"],
+      "triggers": [
+        "n8n",
+        "n8n whatsapp",
+        "whatsapp claude",
+        "claude whatsapp",
+        "workflow n8n",
+        "automacao whatsapp",
+        "automação whatsapp"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-n8n-whatsapp-claude/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-n8n-whatsapp-claude/SKILL.md",
       "cost": "medium",
@@ -188,11 +406,35 @@
     },
     "skill-github-mcp-automation": {
       "description": "GitHub MCP automation for repositories, issues, pull requests, Actions, releases, code search, security findings, and maintenance with explicit permission gates.",
-      "triggers": ["github mcp", "github automation", "github actions", "pull request automation", "pr automation", "issue triage", "repo maintenance", "repository maintenance"],
+      "triggers": [
+        "github mcp",
+        "github automation",
+        "github actions",
+        "pull request automation",
+        "pr automation",
+        "issue triage",
+        "repo maintenance",
+        "repository maintenance"
+      ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-github-mcp-automation/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-github-mcp-automation/SKILL.md",
       "cost": "medium",
       "safety": "explicit-permission-gates-and-sanitized-github-visible-output"
+    },
+    "skill-quality-review": {
+      "description": "Review new or changed Orquestrador skills for actionable scope, compact structure, progressive disclosure, risk guardrails, verification, routing metadata, catalog coverage, and safe local/public boundaries before they enter the canonical registry.",
+      "triggers": [
+        "skill quality",
+        "review skill",
+        "nova skill",
+        "canonical skill",
+        "skill registry",
+        "validar skill"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-quality-review/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-review/SKILL.md",
+      "cost": "medium",
+      "safety": "skill-registry-quality-and-sanitization"
     }
   }
 }

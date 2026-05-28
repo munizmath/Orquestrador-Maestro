@@ -86,6 +86,9 @@
     "github automation": "skill-github-mcp-automation",
     "github actions": "skill-github-mcp-automation",
     "pr automation": "skill-github-mcp-automation",
-    "issue triage": "skill-github-mcp-automation"
+    "issue triage": "skill-github-mcp-automation",
+    "skill quality": "skill-quality-review",
+    "review skill": "skill-quality-review",
+    "validar skill": "skill-quality-review"
   }
 }

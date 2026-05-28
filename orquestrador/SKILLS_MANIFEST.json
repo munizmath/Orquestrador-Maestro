@@ -8,9 +8,47 @@
       "risk": "medium",
       "source": "local-project-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["criar saas", "novo saas", "saas factory", "dashboard saas", "admin dashboard", "painel admin", "landing saas", "pagina de login", "página de login", "cadastro saas", "sign up", "login saas", "onboarding saas", "auth saas", "assinatura", "subscription", "billing", "multi-tenant", "supabase saas", "abacatepay", "stripe", "plans", "planos", "entitlements", "limites"],
-      "aliases": ["criar saas", "novo saas", "saas", "landing saas", "pagina de login", "página de login", "cadastro saas", "login saas", "onboarding saas", "auth saas"],
-      "status": "canonical"
+      "triggers": [
+        "criar saas",
+        "novo saas",
+        "saas factory",
+        "dashboard saas",
+        "admin dashboard",
+        "painel admin",
+        "landing saas",
+        "pagina de login",
+        "página de login",
+        "cadastro saas",
+        "sign up",
+        "login saas",
+        "onboarding saas",
+        "auth saas",
+        "assinatura",
+        "subscription",
+        "billing",
+        "multi-tenant",
+        "supabase saas",
+        "abacatepay",
+        "stripe",
+        "plans",
+        "planos",
+        "entitlements",
+        "limites"
+      ],
+      "aliases": [
+        "criar saas",
+        "novo saas",
+        "saas",
+        "landing saas",
+        "pagina de login",
+        "página de login",
+        "cadastro saas",
+        "login saas",
+        "onboarding saas",
+        "auth saas"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-saas-admin-dashboard": {
       "description": "SaaS admin dashboard and internal panel patterns for users, plans, payments, logs, metrics, settings, and onboarding.",
@@ -18,9 +56,24 @@
       "risk": "medium",
       "source": "local-project-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["admin panel", "painel administrativo", "dashboard administrativo", "users admin", "pagamentos admin", "planos admin", "logs admin", "sidebar admin", "metrics dashboard"],
-      "aliases": ["dashboard", "painel admin", "admin"],
-      "status": "canonical"
+      "triggers": [
+        "admin panel",
+        "painel administrativo",
+        "dashboard administrativo",
+        "users admin",
+        "pagamentos admin",
+        "planos admin",
+        "logs admin",
+        "sidebar admin",
+        "metrics dashboard"
+      ],
+      "aliases": [
+        "dashboard",
+        "painel admin",
+        "admin"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-abacatepay-integration": {
       "description": "AbacatePay PIX/card billing, CPF/CNPJ, BRL checkout, billing webhooks, and entitlement sync.",
@@ -28,9 +81,24 @@
       "risk": "medium",
       "source": "local-payment-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["abacatepay", "pix", "cpf", "cnpj", "billing.paid", "cobranca", "cobrança", "brl checkout", "pagamento brasileiro"],
-      "aliases": ["abacatepay", "pix", "pagamento br"],
-      "status": "canonical"
+      "triggers": [
+        "abacatepay",
+        "pix",
+        "cpf",
+        "cnpj",
+        "billing.paid",
+        "cobranca",
+        "cobrança",
+        "brl checkout",
+        "pagamento brasileiro"
+      ],
+      "aliases": [
+        "abacatepay",
+        "pix",
+        "pagamento br"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-stripe-integration": {
       "description": "Stripe Checkout, Billing subscriptions, customer portal, webhook verification, and SaaS entitlement sync.",
@@ -38,9 +106,22 @@
       "risk": "medium",
       "source": "local-payment-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["stripe", "stripe checkout", "stripe billing", "customer portal", "invoice.paid", "checkout.session.completed", "customer.subscription", "webhook stripe"],
-      "aliases": ["stripe", "checkout"],
-      "status": "canonical"
+      "triggers": [
+        "stripe",
+        "stripe checkout",
+        "stripe billing",
+        "customer portal",
+        "invoice.paid",
+        "checkout.session.completed",
+        "customer.subscription",
+        "webhook stripe"
+      ],
+      "aliases": [
+        "stripe",
+        "checkout"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-saas-core-limits": {
       "description": "SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, and blocked account states.",
@@ -48,9 +129,24 @@
       "risk": "medium",
       "source": "local-project-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["limites saas", "entitlements", "quotas", "feature flags", "trial", "grace period", "blocked account", "plan limits", "uso do plano"],
-      "aliases": ["limites", "planos", "assinaturas"],
-      "status": "canonical"
+      "triggers": [
+        "limites saas",
+        "entitlements",
+        "quotas",
+        "feature flags",
+        "trial",
+        "grace period",
+        "blocked account",
+        "plan limits",
+        "uso do plano"
+      ],
+      "aliases": [
+        "limites",
+        "planos",
+        "assinaturas"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-saas-security-scan": {
       "description": "Authorized local SaaS repository security scan using maintained OSS tools.",
@@ -58,9 +154,21 @@
       "risk": "high",
       "source": "local-security-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["saas security scan", "sast", "secrets", "dependency audit", "repo security", "local scan"],
-      "aliases": ["security scan", "scan seguranca", "seguranca saas"],
-      "status": "canonical"
+      "triggers": [
+        "saas security scan",
+        "sast",
+        "secrets",
+        "dependency audit",
+        "repo security",
+        "local scan"
+      ],
+      "aliases": [
+        "security scan",
+        "scan seguranca",
+        "seguranca saas"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-saas-dast-recon": {
       "description": "Authorized staging/preview DAST and recon workflow for owned SaaS systems.",
@@ -68,9 +176,21 @@
       "risk": "high",
       "source": "local-security-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["dast", "preview scan", "staging scan", "zap", "nuclei", "authorized url scan"],
-      "aliases": ["dast", "zap", "nuclei"],
-      "status": "canonical"
+      "triggers": [
+        "dast",
+        "preview scan",
+        "staging scan",
+        "zap",
+        "nuclei",
+        "authorized url scan"
+      ],
+      "aliases": [
+        "dast",
+        "zap",
+        "nuclei"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-security-hooks": {
       "description": "Git hooks and CI security gates for SaaS repositories.",
@@ -78,9 +198,20 @@
       "risk": "medium",
       "source": "local-security-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["security hooks", "pre-commit", "pre-push", "ci security", "security gate"],
-      "aliases": ["hooks", "pre commit", "ci security"],
-      "status": "canonical"
+      "triggers": [
+        "security hooks",
+        "pre-commit",
+        "pre-push",
+        "ci security",
+        "security gate"
+      ],
+      "aliases": [
+        "hooks",
+        "pre commit",
+        "ci security"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-supabase-rls": {
       "description": "Supabase/Postgres RLS design, tenant isolation, policies, indexes, and verification.",
@@ -88,9 +219,23 @@
       "risk": "high",
       "source": "local-supabase-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["supabase", "rls", "row level security", "tenant isolation", "policies", "auth.uid", "service role", "storage policies"],
-      "aliases": ["supabase", "rls", "tenant isolation"],
-      "status": "canonical"
+      "triggers": [
+        "supabase",
+        "rls",
+        "row level security",
+        "tenant isolation",
+        "policies",
+        "auth.uid",
+        "service role",
+        "storage policies"
+      ],
+      "aliases": [
+        "supabase",
+        "rls",
+        "tenant isolation"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-ai-orchestration": {
       "description": "Server-side AI provider orchestration, routing, budgets, fallbacks, observability, and safe key handling.",
@@ -98,9 +243,25 @@
       "risk": "medium",
       "source": "local-ai-orchestration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["ai orchestration", "llm router", "openai", "gemini", "claude", "model fallback", "token budget", "agent routing", "ai gateway"],
-      "aliases": ["ia", "ai", "llm", "token budget"],
-      "status": "canonical"
+      "triggers": [
+        "ai orchestration",
+        "llm router",
+        "openai",
+        "gemini",
+        "claude",
+        "model fallback",
+        "token budget",
+        "agent routing",
+        "ai gateway"
+      ],
+      "aliases": [
+        "ia",
+        "ai",
+        "llm",
+        "token budget"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-multiagent-orchestration": {
       "description": "Multiagent and subagent orchestration for splitting independent engineering work, assigning ownership, reducing token waste, and integrating results safely.",
@@ -108,9 +269,37 @@
       "risk": "medium",
       "source": "local-orchestration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["multiagent", "multiagents", "subagent", "subagents", "multi agente", "multi agentes", "agentes paralelos", "parallel agents", "team execution", "swarm", "delegar", "delegacao", "delegação", "usar agentes", "use subagentes", "orquestrar agentes"],
-      "aliases": ["multiagent", "multiagents", "subagent", "subagents", "agentes paralelos", "team execution", "swarm", "delegar", "orquestrar agentes"],
-      "status": "canonical"
+      "triggers": [
+        "multiagent",
+        "multiagents",
+        "subagent",
+        "subagents",
+        "multi agente",
+        "multi agentes",
+        "agentes paralelos",
+        "parallel agents",
+        "team execution",
+        "swarm",
+        "delegar",
+        "delegacao",
+        "delegação",
+        "usar agentes",
+        "use subagentes",
+        "orquestrar agentes"
+      ],
+      "aliases": [
+        "multiagent",
+        "multiagents",
+        "subagent",
+        "subagents",
+        "agentes paralelos",
+        "team execution",
+        "swarm",
+        "delegar",
+        "orquestrar agentes"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-aionui-cowork-orchestration": {
       "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the user orchestrator without replacing the existing workflow.",
@@ -118,9 +307,32 @@
       "risk": "medium",
       "source": "local-orchestration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["aionui", "aion ui", "cowork app", "cowork agents", "team mode", "aionui team", "aionui codex", "aionui claude", "aionui gemini", "aionui opencode", "mcp unified management", "agent cowork", "multi-agent cowork"],
-      "aliases": ["aionui", "aion ui", "cowork app", "team mode", "aionui team", "multi-agent cowork", "mcp unified management"],
-      "status": "canonical"
+      "triggers": [
+        "aionui",
+        "aion ui",
+        "cowork app",
+        "cowork agents",
+        "team mode",
+        "aionui team",
+        "aionui codex",
+        "aionui claude",
+        "aionui gemini",
+        "aionui opencode",
+        "mcp unified management",
+        "agent cowork",
+        "multi-agent cowork"
+      ],
+      "aliases": [
+        "aionui",
+        "aion ui",
+        "cowork app",
+        "team mode",
+        "aionui team",
+        "multi-agent cowork",
+        "mcp unified management"
+      ],
+      "status": "canonical",
+      "priorityScore": 5
     },
     "skill-evolution-api": {
       "description": "Evolution API WhatsApp integration with webhook idempotency, queueing, consent, and rate limits.",
@@ -128,9 +340,21 @@
       "risk": "medium",
       "source": "local-integration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["evolution api", "whatsapp", "zap", "webhook whatsapp", "instancia whatsapp", "qr code whatsapp", "mensagens whatsapp"],
-      "aliases": ["whatsapp", "evolution api"],
-      "status": "canonical"
+      "triggers": [
+        "evolution api",
+        "whatsapp",
+        "zap",
+        "webhook whatsapp",
+        "instancia whatsapp",
+        "qr code whatsapp",
+        "mensagens whatsapp"
+      ],
+      "aliases": [
+        "whatsapp",
+        "evolution api"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-frontend-ux-guardrails": {
       "description": "Frontend UX quality gates for responsive layouts, overflow, accessibility, and dashboard ergonomics.",
@@ -138,9 +362,23 @@
       "risk": "medium",
       "source": "local-frontend-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["ux guardrails", "frontend polish", "responsive", "overflow", "layout quebrado", "dashboard ux", "accessibility", "a11y"],
-      "aliases": ["ux", "responsivo", "mobile quebrado"],
-      "status": "canonical"
+      "triggers": [
+        "ux guardrails",
+        "frontend polish",
+        "responsive",
+        "overflow",
+        "layout quebrado",
+        "dashboard ux",
+        "accessibility",
+        "a11y"
+      ],
+      "aliases": [
+        "ux",
+        "responsivo",
+        "mobile quebrado"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-modern-ui-patterns": {
       "description": "Modern SaaS UI composition, compact admin surfaces, component behavior, and polished interaction states.",
@@ -148,9 +386,21 @@
       "risk": "low",
       "source": "local-frontend-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["modern ui", "ui patterns", "componentes", "design system", "saas ui", "admin ui", "layout moderno"],
-      "aliases": ["ui moderna", "design system"],
-      "status": "canonical"
+      "triggers": [
+        "modern ui",
+        "ui patterns",
+        "componentes",
+        "design system",
+        "saas ui",
+        "admin ui",
+        "layout moderno"
+      ],
+      "aliases": [
+        "ui moderna",
+        "design system"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-open-design-ui": {
       "description": "Open-design UI workflow for product screens, design tokens, components, and visual QA.",
@@ -158,9 +408,20 @@
       "risk": "low",
       "source": "local-frontend-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["open design", "design tokens", "design ui", "visual qa", "component library", "brand ui"],
-      "aliases": ["open design", "visual qa"],
-      "status": "canonical"
+      "triggers": [
+        "open design",
+        "design tokens",
+        "design ui",
+        "visual qa",
+        "component library",
+        "brand ui"
+      ],
+      "aliases": [
+        "open design",
+        "visual qa"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-live-processing": {
       "description": "Live media processing pipeline with capture, queueing, worker state, retries, and observability.",
@@ -168,9 +429,20 @@
       "risk": "medium",
       "source": "local-media-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["live processing", "processamento ao vivo", "stream processing", "live video", "fila de video", "worker de video"],
-      "aliases": ["live video", "processamento ao vivo"],
-      "status": "canonical"
+      "triggers": [
+        "live processing",
+        "processamento ao vivo",
+        "stream processing",
+        "live video",
+        "fila de video",
+        "worker de video"
+      ],
+      "aliases": [
+        "live video",
+        "processamento ao vivo"
+      ],
+      "status": "canonical",
+      "priorityScore": 3
     },
     "skill-manual-video-processing": {
       "description": "Manual upload video processing with secure storage, validation, job states, and retryable workers.",
@@ -178,9 +450,20 @@
       "risk": "medium",
       "source": "local-media-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["manual video", "upload video", "processar video", "video processing", "transcode", "jobs de video"],
-      "aliases": ["upload video", "processar video"],
-      "status": "canonical"
+      "triggers": [
+        "manual video",
+        "upload video",
+        "processar video",
+        "video processing",
+        "transcode",
+        "jobs de video"
+      ],
+      "aliases": [
+        "upload video",
+        "processar video"
+      ],
+      "status": "canonical",
+      "priorityScore": 3
     },
     "skill-smart-clip-detection": {
       "description": "Smart clip candidate detection for video/audio using scored moments, metadata, and review workflows.",
@@ -188,9 +471,20 @@
       "risk": "medium",
       "source": "local-media-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["clip detection", "detectar cortes", "smart clips", "highlight detection", "viral clips", "recortar video"],
-      "aliases": ["clips", "cortes"],
-      "status": "canonical"
+      "triggers": [
+        "clip detection",
+        "detectar cortes",
+        "smart clips",
+        "highlight detection",
+        "viral clips",
+        "recortar video"
+      ],
+      "aliases": [
+        "clips",
+        "cortes"
+      ],
+      "status": "canonical",
+      "priorityScore": 3
     },
     "skill-unified-analytics": {
       "description": "Unified SaaS/product analytics event taxonomy, metrics, funnels, dashboards, and privacy guardrails.",
@@ -198,9 +492,22 @@
       "risk": "medium",
       "source": "local-analytics-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["analytics", "event tracking", "metrics", "funnels", "dashboard metrics", "kpis", "telemetria"],
-      "aliases": ["analytics", "metricas", "event tracking"],
-      "status": "canonical"
+      "triggers": [
+        "analytics",
+        "event tracking",
+        "metrics",
+        "funnels",
+        "dashboard metrics",
+        "kpis",
+        "telemetria"
+      ],
+      "aliases": [
+        "analytics",
+        "metricas",
+        "event tracking"
+      ],
+      "status": "canonical",
+      "priorityScore": 3
     },
     "skill-elevenlabs-voice-cloning": {
       "description": "ElevenLabs voice generation/cloning integration with consent, asset handling, and server-side API use.",
@@ -208,9 +515,20 @@
       "risk": "high",
       "source": "local-ai-orchestration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["elevenlabs", "voice cloning", "clonar voz", "tts", "text to speech", "voice generation"],
-      "aliases": ["elevenlabs", "voz"],
-      "status": "canonical"
+      "triggers": [
+        "elevenlabs",
+        "voice cloning",
+        "clonar voz",
+        "tts",
+        "text to speech",
+        "voice generation"
+      ],
+      "aliases": [
+        "elevenlabs",
+        "voz"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-google-workspace-sync": {
       "description": "Google Workspace sync patterns for Drive/Sheets/Calendar data, OAuth scopes, webhooks, and reconciliation.",
@@ -218,9 +536,21 @@
       "risk": "medium",
       "source": "local-integration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["google workspace", "google drive", "google sheets", "google calendar", "workspace sync", "oauth google"],
-      "aliases": ["google workspace", "google calendar", "meet"],
-      "status": "canonical"
+      "triggers": [
+        "google workspace",
+        "google drive",
+        "google sheets",
+        "google calendar",
+        "workspace sync",
+        "oauth google"
+      ],
+      "aliases": [
+        "google workspace",
+        "google calendar",
+        "meet"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-n8n-whatsapp-claude": {
       "description": "n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
@@ -228,9 +558,23 @@
       "risk": "medium",
       "source": "local-integration-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp", "workflow n8n", "automacao whatsapp", "automação whatsapp"],
-      "aliases": ["n8n", "n8n whatsapp", "whatsapp claude", "claude whatsapp"],
-      "status": "canonical"
+      "triggers": [
+        "n8n",
+        "n8n whatsapp",
+        "whatsapp claude",
+        "claude whatsapp",
+        "workflow n8n",
+        "automacao whatsapp",
+        "automação whatsapp"
+      ],
+      "aliases": [
+        "n8n",
+        "n8n whatsapp",
+        "whatsapp claude",
+        "claude whatsapp"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
     },
     "skill-github-mcp-automation": {
       "description": "GitHub MCP automation around repositories, issues, pull requests, Actions, releases, code search, security findings, and repository maintenance with explicit permission gates.",
@@ -238,8 +582,46 @@
       "risk": "medium",
       "source": "github-mcp-server-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["github mcp", "github automation", "github actions", "pull request automation", "pr automation", "issue triage", "repo maintenance", "repository maintenance"],
-      "aliases": ["github mcp", "github automation", "github actions", "pr automation", "issue triage"],
+      "triggers": [
+        "github mcp",
+        "github automation",
+        "github actions",
+        "pull request automation",
+        "pr automation",
+        "issue triage",
+        "repo maintenance",
+        "repository maintenance"
+      ],
+      "aliases": [
+        "github mcp",
+        "github automation",
+        "github actions",
+        "pr automation",
+        "issue triage"
+      ],
+      "status": "canonical",
+      "priorityScore": 4
+    },
+    "skill-quality-review": {
+      "description": "Review new or changed Orquestrador skills for actionable scope, compact structure, progressive disclosure, risk guardrails, verification, routing metadata, catalog coverage, and safe local/public boundaries before they enter the canonical registry.",
+      "category": "governance",
+      "risk": "medium",
+      "source": "local-skill-quality-patterns",
+      "priorityScore": 5,
+      "mirrorEverywhere": true,
+      "triggers": [
+        "skill quality",
+        "review skill",
+        "nova skill",
+        "canonical skill",
+        "skill registry",
+        "validar skill"
+      ],
+      "aliases": [
+        "skill quality",
+        "review skill",
+        "validar skill"
+      ],
       "status": "canonical"
     }
   }

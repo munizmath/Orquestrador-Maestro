@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "n8n WhatsApp Claude workflow",
+      "prompt": "criar workflow n8n para whatsapp claude com webhook e fila",
+      "expected": ["skill-n8n-whatsapp-claude"],
+      "top": 3
+    },
+    {
+      "name": "GitHub MCP PR automation",
+      "prompt": "usar github mcp para revisar pull request e ler github actions",
+      "expected": ["skill-github-mcp-automation"],
+      "top": 3
+    },
+    {
+      "name": "Canonical skill review",
+      "prompt": "validar skill nova antes de entrar no skill registry e catálogo",
+      "expected": ["skill-quality-review"],
+      "top": 3
+    },
+    {
+      "name": "SaaS admin dashboard",
+      "prompt": "melhorar dashboard administrativo com tabela de usuários e métricas",
+      "expected": ["skill-saas-admin-dashboard"],
+      "top": 3
+    },
+    {
+      "name": "Multiagent split",
+      "prompt": "orquestrar agentes paralelos com ownership e handoff",
+      "expected": ["skill-multiagent-orchestration"],
+      "top": 3
+    }
+  ]
+}

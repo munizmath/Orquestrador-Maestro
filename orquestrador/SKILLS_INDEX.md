@@ -49,6 +49,7 @@ Then open only the selected `SKILL.md` files and their directly referenced files
 | WhatsApp via Evolution API | `/skill:skill-evolution-api` |
 | GitHub MCP automation | `/skill:skill-github-mcp-automation` |
 | n8n + WhatsApp + Claude workflows | `/skill:skill-n8n-whatsapp-claude` |
+| Skill quality review | `/skill:skill-quality-review` |
 | Frontend UX guardrails | `/skill:skill-frontend-ux-guardrails` |
 | Modern SaaS UI patterns | `/skill:skill-modern-ui-patterns` |
 | Open-design UI workflow | `/skill:skill-open-design-ui` |

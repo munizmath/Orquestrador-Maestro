@@ -421,6 +421,7 @@ As skills canônicas ficam em `orquestrador/skills/` e são espelhadas para as p
 | `skill-evolution-api` | Guia automação WhatsApp com Evolution API: instâncias, QR, webhooks, consentimento, filas e rate limits. |
 | `skill-github-mcp-automation` | Guia automação GitHub via MCP com issues, PRs, Actions, releases, manutenção e gates explícitos de permissão. |
 | `skill-n8n-whatsapp-claude` | Orquestra workflows n8n conectando WhatsApp e Claude/LLMs com webhooks seguros, filas, idempotência, consentimento e validação. |
+| `skill-quality-review` | Revisa novas skills canônicas antes do catálogo: escopo, metadados, roteamento, verificação, guardrails e espelhos. |
 | `skill-frontend-ux-guardrails` | Aplica gates de UX: responsividade, overflow, acessibilidade, consistência visual e validação em telas. |
 | `skill-modern-ui-patterns` | Orienta UI SaaS/admin com React, TypeScript, Tailwind, estados de componentes e design system. |
 | `skill-open-design-ui` | Guia redesign visual, tokens, biblioteca de componentes e QA visual. |

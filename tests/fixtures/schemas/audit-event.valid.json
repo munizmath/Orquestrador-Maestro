@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "eventId": "event_fixture",
+  "type": "validation.completed",
+  "timestamp": "2026-01-01T00:00:00.000Z",
+  "source": "fixture",
+  "actor": "local-user",
+  "status": "succeeded",
+  "safeSummary": "Validation passed",
+  "redactedDetails": {
+    "validator": "public"
+  },
+  "classification": "public-safe",
+  "retention": "default"
+}

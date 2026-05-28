@@ -2,6 +2,8 @@
 
 Este radar registra fontes externas avaliadas para aumentar o ROI do Orquestrador-Maestro. Ele deve orientar curadoria, não importação em massa.
 
+Modo atual: `local-only`. Entradas deste radar orientam a instalação local e o worktree atual até o usuário pedir explicitamente publicação, release ou sincronização pública.
+
 ## Fontes Avaliadas
 
 | Fonte | Link | Categoria | ROI | Status | Itens Absorvidos | Itens Rejeitados | Última Revisão | Próximo Passo |

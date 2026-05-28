@@ -56,7 +56,7 @@ Se a skill deve ser usada junto com outras, atualize `orquestrador/SKILL_CHAINS.
 
 Fonte principal editável. O sync copia essas skills para os espelhos compatíveis.
 
-Total: 24
+Total: 25
 
 | Skill | Categoria | Risco | O que faz |
 |---|---|---|---|
@@ -74,6 +74,7 @@ Total: 24
 | `skill-multiagent-orchestration` | orchestration | medium | Use when a task mentions subagents, multiagents, parallel agents, team execution, swarm, delegation, or requires dividing independent engineering work across agents while preserving integration safety and token efficiency. |
 | `skill-n8n-whatsapp-claude` | integrations | medium | Use for n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing. |
 | `skill-open-design-ui` | frontend | low | Apply open-design product UI workflow for premium visual redesigns, dashboards, landing pages, design tokens, component libraries, responsive product screens, visual QA, anti-generic styling, and professional frontend delivery. |
+| `skill-quality-review` | governance | medium | Review new or changed Orquestrador skills for actionable scope, compact structure, progressive disclosure, risk guardrails, verification, routing metadata, catalog coverage, and safe local/public boundaries before they enter the canonical registry. |
 | `skill-saas-admin-dashboard` | frontend | low | Build or improve SaaS admin dashboards, internal admin panels, user/customer screens, tenant/workspace screens, plan/payment/log views, sidebar layouts, metrics, filters, tables, support tools, and onboarding administration. |
 | `skill-saas-core-limits` | saas | medium | Implement SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, blocked accounts, usage counters, and access checks after AbacatePay, Stripe, webhook, or manual admin subscription changes. |
 | `skill-saas-dast-recon` | security | high | Run defensive, explicitly authorized SaaS DAST and recon with scope controls. Use when asked to scan an owned local, staging, preview, or approved production URL, API endpoint, SaaS app, tenant boundary, public web surface, auth flow, exposed files, headers, TLS, or OWASP Top 10 behavior using tools such as ZAP, Nuclei, Katana, httpx, and Subfinder. |

@@ -31,7 +31,24 @@
         "Use payment skills only when a provider or billing workflow is present.",
         "Use Supabase RLS when database, tenancy, auth, policies, or browser-side data access are present.",
         "Use security scan/hooks before production or when the user asks for audit, hardening, or SaaS security."
-      ]
+      ],
+      "reasons": {
+        "skill-saas-admin-dashboard": "Use when the SaaS work includes operator dashboards, tables, metrics, plans, users, or support workflows.",
+        "skill-saas-core-limits": "Use when plans, quotas, trials, entitlements, grace periods, or blocked states affect behavior.",
+        "skill-frontend-ux-guardrails": "Use when visible UI needs responsive, accessibility, overflow, state, or copy verification.",
+        "skill-modern-ui-patterns": "Use when SaaS/admin UI needs component, dashboard, table, form, or interaction patterns.",
+        "skill-open-design-ui": "Use when a stronger visual direction, design tokens, or visual QA are required.",
+        "skill-supabase-rls": "Use when Supabase, Postgres RLS, tenant isolation, policies, or storage access are in scope.",
+        "skill-abacatepay-integration": "Use when Brazilian PIX/card checkout, AbacatePay webhooks, or BRL billing are in scope.",
+        "skill-stripe-integration": "Use when Stripe Checkout, Billing, subscriptions, Customer Portal, or webhooks are in scope.",
+        "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
+        "skill-security-hooks": "Use when adding or maintaining local hooks, CI gates, or GitHub Actions security automation.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-multiagent-orchestration": "Use when independent work lanes, subagents, ownership, handoff, or integration gates are needed.",
+        "skill-aionui-cowork-orchestration": "Use when AionUi or external cowork/team coordination is explicitly in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-saas-admin-dashboard": {
       "mayInvoke": [
@@ -39,7 +56,13 @@
         "skill-modern-ui-patterns",
         "skill-unified-analytics",
         "skill-saas-core-limits"
-      ]
+      ],
+      "reasons": {
+        "skill-frontend-ux-guardrails": "Use when visible UI needs responsive, accessibility, overflow, state, or copy verification.",
+        "skill-modern-ui-patterns": "Use when SaaS/admin UI needs component, dashboard, table, form, or interaction patterns.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-saas-core-limits": "Use when plans, quotas, trials, entitlements, grace periods, or blocked states affect behavior."
+      }
     },
     "skill-saas-security-scan": {
       "mayInvoke": [
@@ -51,19 +74,33 @@
       "rules": [
         "DAST requires explicit owned target or staging authorization.",
         "Hooks require explicit local repository authorization."
-      ]
+      ],
+      "reasons": {
+        "skill-security-hooks": "Use when adding or maintaining local hooks, CI gates, or GitHub Actions security automation.",
+        "skill-supabase-rls": "Use when Supabase, Postgres RLS, tenant isolation, policies, or storage access are in scope.",
+        "skill-saas-dast-recon": "Use only for explicitly authorized staging, preview, local, or owned URL DAST/recon work.",
+        "skill-github-mcp-automation": "Use when GitHub MCP, PRs, issues, Actions, releases, or repository maintenance are in scope."
+      }
     },
     "skill-security-hooks": {
       "mayInvoke": [
         "skill-saas-security-scan",
         "skill-github-mcp-automation"
-      ]
+      ],
+      "reasons": {
+        "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
+        "skill-github-mcp-automation": "Use when GitHub MCP, PRs, issues, Actions, releases, or repository maintenance are in scope."
+      }
     },
     "skill-supabase-rls": {
       "mayInvoke": [
         "skill-saas-security-scan",
         "skill-saas-core-limits"
-      ]
+      ],
+      "reasons": {
+        "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
+        "skill-saas-core-limits": "Use when plans, quotas, trials, entitlements, grace periods, or blocked states affect behavior."
+      }
     },
     "skill-ai-orchestration": {
       "mayInvoke": [
@@ -73,7 +110,15 @@
         "skill-google-workspace-sync",
         "skill-elevenlabs-voice-cloning",
         "skill-n8n-whatsapp-claude"
-      ]
+      ],
+      "reasons": {
+        "skill-multiagent-orchestration": "Use when independent work lanes, subagents, ownership, handoff, or integration gates are needed.",
+        "skill-aionui-cowork-orchestration": "Use when AionUi or external cowork/team coordination is explicitly in scope.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-google-workspace-sync": "Use when Google Drive, Sheets, Calendar, OAuth scopes, webhooks, or reconciliation are in scope.",
+        "skill-elevenlabs-voice-cloning": "Use when ElevenLabs voice generation/cloning, consent, or server-side voice API use is in scope.",
+        "skill-n8n-whatsapp-claude": "Use when n8n workflows connect WhatsApp automation with Claude or other LLMs."
+      }
     },
     "skill-multiagent-orchestration": {
       "mayInvoke": [
@@ -89,7 +134,16 @@
         "Use only when workstreams are independent or the user explicitly asks for subagents/multiagents.",
         "Assign file/module ownership before implementation agents edit files.",
         "Keep integration and final verification with the lead agent."
-      ]
+      ],
+      "reasons": {
+        "skill-saas-factory": "Use when skill-saas-factory is directly evidenced by the task.",
+        "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
+        "skill-security-hooks": "Use when adding or maintaining local hooks, CI gates, or GitHub Actions security automation.",
+        "skill-frontend-ux-guardrails": "Use when visible UI needs responsive, accessibility, overflow, state, or copy verification.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-aionui-cowork-orchestration": "Use when AionUi or external cowork/team coordination is explicitly in scope.",
+        "skill-github-mcp-automation": "Use when GitHub MCP, PRs, issues, Actions, releases, or repository maintenance are in scope."
+      }
     },
     "skill-aionui-cowork-orchestration": {
       "mayInvoke": [
@@ -102,14 +156,27 @@
         "Use AionUi as coordination UI, not as the source of truth.",
         "Do not enable YOLO/full-auto for risky code, secrets, payments, auth, production, RLS, migrations, cron, or customer data.",
         "Keep Codex as default executor unless the user explicitly chooses another agent."
-      ]
+      ],
+      "reasons": {
+        "skill-multiagent-orchestration": "Use when independent work lanes, subagents, ownership, handoff, or integration gates are needed.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-saas-factory": "Use when skill-saas-factory is directly evidenced by the task.",
+        "skill-security-hooks": "Use when adding or maintaining local hooks, CI gates, or GitHub Actions security automation.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-evolution-api": {
       "mayInvoke": [
         "skill-ai-orchestration",
         "skill-n8n-whatsapp-claude",
         "skill-unified-analytics"
-      ]
+      ],
+      "reasons": {
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-n8n-whatsapp-claude": "Use when n8n workflows connect WhatsApp automation with Claude or other LLMs.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-n8n-whatsapp-claude": {
       "mayInvoke": [
@@ -121,7 +188,13 @@
         "Use n8n as orchestration glue; keep provider keys, validation, quotas, and irreversible side effects behind server-side gateways where possible.",
         "Load community n8n node configuration guidance only when editing concrete workflow nodes.",
         "For WhatsApp side effects, require consent, idempotency, rate limits, and delivery audit before automation is considered complete."
-      ]
+      ],
+      "reasons": {
+        "skill-evolution-api": "Use when WhatsApp/Evolution API instances, QR pairing, webhooks, queues, or delivery events are in scope.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-github-mcp-automation": {
       "mayInvoke": [
@@ -134,32 +207,72 @@
         "Use read-only GitHub inspection before repository mutations.",
         "Require explicit user authorization before push, merge, release, publish, permission, branch protection, secret, or webhook changes.",
         "Keep GitHub-visible comments, PR bodies, issues, and release notes sanitized."
-      ]
+      ],
+      "reasons": {
+        "skill-security-hooks": "Use when adding or maintaining local hooks, CI gates, or GitHub Actions security automation.",
+        "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
+        "skill-multiagent-orchestration": "Use when independent work lanes, subagents, ownership, handoff, or integration gates are needed.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-google-workspace-sync": {
       "mayInvoke": [
         "skill-ai-orchestration",
         "skill-unified-analytics"
-      ]
+      ],
+      "reasons": {
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-unified-analytics": "Use when telemetry, funnels, product metrics, billing analytics, or dashboard reporting are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-live-processing": {
       "mayInvoke": [
         "skill-smart-clip-detection",
         "skill-manual-video-processing",
         "skill-ai-orchestration"
-      ]
+      ],
+      "reasons": {
+        "skill-smart-clip-detection": "Use when video/audio clip candidates, scored moments, or review workflows are in scope.",
+        "skill-manual-video-processing": "Use when manual upload video processing, validation, queues, and retryable workers are in scope.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-manual-video-processing": {
       "mayInvoke": [
         "skill-smart-clip-detection",
         "skill-ai-orchestration"
-      ]
+      ],
+      "reasons": {
+        "skill-smart-clip-detection": "Use when video/audio clip candidates, scored moments, or review workflows are in scope.",
+        "skill-ai-orchestration": "Use when model routing, provider fallbacks, token budgets, LLM gateways, or AI observability are in scope.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     },
     "skill-open-design-ui": {
       "mayInvoke": [
         "skill-frontend-ux-guardrails",
         "skill-modern-ui-patterns"
-      ]
+      ],
+      "reasons": {
+        "skill-frontend-ux-guardrails": "Use when visible UI needs responsive, accessibility, overflow, state, or copy verification.",
+        "skill-modern-ui-patterns": "Use when SaaS/admin UI needs component, dashboard, table, form, or interaction patterns."
+      }
+    },
+    "skill-quality-review": {
+      "mayInvoke": [
+        "skill-multiagent-orchestration",
+        "skill-ai-orchestration",
+        "skill-github-mcp-automation"
+      ],
+      "reasons": {
+        "skill-multiagent-orchestration": "Use when skill review or registry updates are split across docs, validators, mirrors, and routing tests.",
+        "skill-ai-orchestration": "Use when the skill governs AI provider routing, model fallbacks, budgets, or LLM gateway behavior.",
+        "skill-github-mcp-automation": "Use when skill changes are reviewed through GitHub issues, PRs, Actions, or repository automation.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
     }
   }
 }
