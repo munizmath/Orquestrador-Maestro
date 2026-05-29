@@ -29,6 +29,17 @@ node bin/orquestrador-maestro.js status --json
 node bin/orquestrador-maestro.js doctor --json
 ```
 
+## 1.1. Automatizar Setup Local
+
+```bash
+node bin/orquestrador-maestro.js setup local --dry-run --json
+node bin/orquestrador-maestro.js setup local
+```
+
+O `setup local` executa instalação/sincronização, verificação, validação pública,
+health local e diagnóstico. Use `--dry-run` para revisar o plano sem alterar o
+home do usuário.
+
 ## 2. Inicializar Estado Local
 
 O estado operacional fica em `.omx/state`, ignorado pelo Git.
@@ -389,6 +400,37 @@ node bin/orquestrador-maestro.js llm complete \
 ```
 
 O prompt bruto não entra no audit trail; o serviço usa hash e preview redigido.
+
+## 9.2. Testes Live Opt-In Em Sandbox
+
+Os testes reais de sandbox ficam fora do `npm test` e só rodam com variáveis
+explícitas:
+
+```bash
+ORQUESTRADOR_ENABLE_WHATSAPP_SANDBOX_TESTS=1 \
+ORQUESTRADOR_ENABLE_LLM_SANDBOX_TESTS=1 \
+npm run test:live-sandbox
+```
+
+Para realmente enviar para o endpoint configurado, adicione:
+
+```bash
+ORQUESTRADOR_LIVE_SANDBOX_SEND=1 npm run test:live-sandbox
+```
+
+Variáveis esperadas:
+
+```bash
+ORQUESTRADOR_WHATSAPP_TOKEN
+ORQUESTRADOR_WHATSAPP_PHONE_ID
+ORQUESTRADOR_WHATSAPP_API_URL
+ORQUESTRADOR_WHATSAPP_SANDBOX_RECIPIENT
+ORQUESTRADOR_LLM_API_KEY
+ORQUESTRADOR_LLM_API_URL
+```
+
+Tokens, destinatários e endpoints devem ficar em ambiente local ou `.local/`,
+nunca em arquivos rastreados.
 
 ## 10. Usar Queue Local
 

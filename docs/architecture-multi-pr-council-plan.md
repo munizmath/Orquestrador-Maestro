@@ -913,3 +913,7 @@ Todo sub-PR deve cumprir:
 26. Fazer queue executar AdapterIntent.
 27. Adicionar ações seguras ao painel.
 28. Manter mocks como test adapters, não default único.
+29. Criar `setup local` para instalação, sync, health e diagnóstico.
+30. Criar testes live opt-in para sandboxes WhatsApp/LLM.
+31. Consolidar painel operacional com readiness, runs, fila, métricas e audit
+    log em uma tela.
