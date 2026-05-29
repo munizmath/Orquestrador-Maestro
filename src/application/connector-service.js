@@ -105,6 +105,7 @@ function liveLifecycle(id, configKey, action) {
         url: context.url,
         method: "POST",
         body: intent.payload || {},
+        headers: context.headers || {},
         allowedHosts: context.allowedHosts || ["127.0.0.1", "localhost"],
       });
     },

@@ -91,6 +91,7 @@ async function completeLlmLive(input = {}, context = {}) {
   }, {
     ...context,
     url: config.endpoint,
+    headers: config.apiKeyConfigured ? { authorization: `Bearer ${process.env[config.apiKeyEnv]}` } : {},
     allowedHosts: config.allowedHosts,
     dryRunCompleted: Boolean(context.dryRunCompleted),
     idempotencyKey: context.idempotencyKey || dryRun.idempotencyKey,

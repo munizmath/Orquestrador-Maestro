@@ -3,7 +3,7 @@
 const { checkConnector, dryRunConnector, executeConnector } = require("./connector-service.js");
 const { loadConfig } = require("../infrastructure/config-loader.js");
 const { buildIdempotencyKey, createIntegrationIntent } = require("./integration-service.js");
-const { CLASSIFICATIONS } = require("../core/security.js");
+const { CLASSIFICATIONS, redactValue } = require("../core/security.js");
 const { recipientRef } = require("./message-service.js");
 
 function getWhatsAppConfig(context = {}) {
@@ -51,6 +51,23 @@ function buildMessagePayload(input = {}) {
   };
 }
 
+function normalizePhone(value) {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function buildMetaMessagePayload(input = {}) {
+  return {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: normalizePhone(input.recipient || ""),
+    type: "text",
+    text: {
+      preview_url: false,
+      body: String(input.body || "").slice(0, 1000),
+    },
+  };
+}
+
 function dryRunWhatsApp(input = {}, context = {}) {
   const payload = buildMessagePayload(input);
   const intent = createIntegrationIntent({
@@ -86,13 +103,14 @@ async function sendWhatsApp(input = {}, context = {}) {
   if (!config.endpoint) {
     return { ok: false, code: "whatsapp_endpoint_missing", dryRun };
   }
-  return executeConnector("live-whatsapp", {
+  const result = await executeConnector("live-whatsapp", {
     action: "message.send",
-    payload: buildMessagePayload(input),
+    payload: buildMetaMessagePayload(input),
     classification: context.classification || CLASSIFICATIONS.PUBLIC_SAFE,
   }, {
     ...context,
     url: config.endpoint,
+    headers: config.tokenConfigured ? { authorization: `Bearer ${process.env[config.tokenEnv]}` } : {},
     allowedHosts: config.allowedHosts,
     dryRunCompleted: Boolean(context.dryRunCompleted),
     idempotencyKey: context.idempotencyKey || dryRun.idempotencyKey,
@@ -101,6 +119,7 @@ async function sendWhatsApp(input = {}, context = {}) {
     consent: Boolean(context.consent),
     liveHttpEnabled: Boolean(context.liveHttpEnabled),
   });
+  return result.ok ? result : redactValue(result).value;
 }
 
 module.exports = {
