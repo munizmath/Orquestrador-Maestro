@@ -60,6 +60,7 @@ function printHelp() {
 Uso:
   orquestrador-maestro install [opcoes]
   orquestrador-maestro update [opcoes]
+  orquestrador-maestro setup local [--json] [--dry-run] [--home-path <path>]
   orquestrador-maestro verify [opcoes]
   orquestrador-maestro validate [--json] [--check-sync]
   orquestrador-maestro skills list [--json]
@@ -113,6 +114,11 @@ Opcoes de verify:
 Opcoes de validate/skills/health:
   --json                    Emite saida JSON quando suportado
   --check-sync              Confere espelho entre orquestrador/skills e codex/skills
+
+Opcoes de setup local:
+  --json                    Emite um relatorio JSON consolidado
+  --dry-run                 Diagnostica sem instalar/sincronizar
+  --home-path <path>        Usa outro home para teste
 
 Opcoes de local migrate:
   --dry-run                 Mostra migracoes sem alterar disco
@@ -202,6 +208,20 @@ function run(command, args) {
   return typeof result.status === "number" ? result.status : 1;
 }
 
+function runCaptured(command, args) {
+  const result = spawnSync(command, args, {
+    cwd: rootDir,
+    encoding: "utf8",
+    shell: false
+  });
+  return {
+    status: typeof result.status === "number" ? result.status : 1,
+    stdout: result.stdout || "",
+    stderr: result.stderr || "",
+    error: result.error ? result.error.message : null,
+  };
+}
+
 function runNodeScript(scriptName, args = []) {
   const script = path.join(rootDir, "scripts", scriptName);
   if (!commandExists(script)) {
@@ -210,24 +230,27 @@ function runNodeScript(scriptName, args = []) {
   return run(process.execPath, [script, ...args]);
 }
 
-function commandExists(filePath) {
-  return fs.existsSync(filePath);
-}
-
-function runInstall(args, injectedFlags = []) {
+function buildInstallInvocation(args, injectedFlags = []) {
   const isWindows = process.platform === "win32";
   const script = path.join(rootDir, isWindows ? "install.ps1" : "install.sh");
   if (!commandExists(script)) {
     throw new Error(`Instalador nao encontrado: ${script}`);
   }
-
   if (isWindows) {
     const translated = translateArgs([...args, ...injectedFlags], installFlagDefs, "ps");
-    return run("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, ...translated]);
+    return { command: "powershell", args: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, ...translated] };
   }
-
   const translated = translateArgs([...args, ...injectedFlags], installFlagDefs, "sh");
-  return run("bash", [script, ...translated]);
+  return { command: "bash", args: [script, ...translated] };
+}
+
+function commandExists(filePath) {
+  return fs.existsSync(filePath);
+}
+
+function runInstall(args, injectedFlags = []) {
+  const invocation = buildInstallInvocation(args, injectedFlags);
+  return run(invocation.command, invocation.args);
 }
 
 function runVerify(args) {
@@ -271,6 +294,84 @@ function runHealthCommand(args) {
     throw new Error(`Subcomando de health desconhecido: ${subcommand}`);
   }
   return runNodeScript("local-health.js", rest);
+}
+
+function parseSetupLocalArgs(args) {
+  const normalized = normalizeArgs(args);
+  const options = {
+    json: false,
+    dryRun: false,
+    homePath: null,
+  };
+  for (let i = 0; i < normalized.length; i += 1) {
+    const arg = normalized[i];
+    if (arg === "--json") {
+      options.json = true;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      options.dryRun = true;
+      continue;
+    }
+    if (arg === "--home-path") {
+      const value = normalized[i + 1];
+      if (!value || value.startsWith("--")) throw new Error("Parametro --home-path exige um valor.");
+      options.homePath = value;
+      i += 1;
+      continue;
+    }
+    throw new Error(`Parametro desconhecido para setup local: ${arg}`);
+  }
+  return options;
+}
+
+function setupStep(name, command, args, options = {}) {
+  const result = options.capture ? runCaptured(command, args) : { status: run(command, args), stdout: "", stderr: "", error: null };
+  return {
+    name,
+    ok: result.status === 0,
+    exitCode: result.status,
+    stdoutPreview: String(result.stdout || "").slice(0, 1200),
+    stderrPreview: String(result.stderr || "").slice(0, 1200),
+    error: result.error,
+  };
+}
+
+function runSetupCommand(args) {
+  const [subcommand = "local", ...rest] = args;
+  if (subcommand !== "local") throw new Error(`Subcomando de setup desconhecido: ${subcommand}`);
+  const options = parseSetupLocalArgs(rest);
+  const capture = options.json;
+  const installArgs = ["--non-interactive"];
+  if (options.homePath) installArgs.push("--home-path", options.homePath);
+  const installInvocation = buildInstallInvocation(installArgs, options.dryRun ? ["--dry-run"] : []);
+  const steps = [
+    setupStep(options.dryRun ? "install-plan" : "install-sync", installInvocation.command, installInvocation.args, { capture }),
+    setupStep("validate", process.execPath, [path.join(rootDir, "scripts", "run-validate.js"), "--check-sync"], { capture }),
+    setupStep("health-local", process.execPath, [path.join(rootDir, "scripts", "local-health.js")], { capture }),
+    setupStep("doctor", process.execPath, [path.join(rootDir, "bin", "orquestrador-maestro.js"), "doctor", "--json"], { capture: true }),
+  ];
+  if (!options.dryRun) {
+    const verifyArgs = [];
+    if (options.homePath) verifyArgs.push("--home-path", options.homePath);
+    const verifyInvocation = process.platform === "win32"
+      ? { command: "powershell", args: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path.join(rootDir, "scripts", "verify-install.ps1"), ...translateArgs(verifyArgs, verifyFlagDefs, "ps")] }
+      : { command: "bash", args: [path.join(rootDir, "scripts", "verify-install.sh"), ...translateArgs(verifyArgs, verifyFlagDefs, "sh")] };
+    steps.splice(1, 0, setupStep("verify", verifyInvocation.command, verifyInvocation.args, { capture }));
+  }
+  const data = {
+    schemaVersion: 1,
+    mode: "local-only",
+    dryRun: options.dryRun,
+    steps,
+    ok: steps.every((step) => step.ok),
+  };
+  if (options.json) {
+    emitEnvelope("setup local", options, data, data.ok ? [] : steps.filter((step) => !step.ok).map((step) => ({ code: `${step.name}_failed`, message: `${step.name} failed` })));
+    return data.ok ? 0 : 1;
+  }
+  for (const step of steps) console.log(`${step.ok ? "ok" : "fail"}\t${step.name}`);
+  return data.ok ? 0 : 1;
 }
 
 function parseLocalMigrateArgs(args) {
@@ -1207,6 +1308,10 @@ async function dispatch(command, args) {
     return runInstall(args);
   }
 
+  if (command === "setup") {
+    return runSetupCommand(args);
+  }
+
   if (command === "uninstall") {
     return runInstall(args, ["--uninstall"]);
   }
@@ -1331,7 +1436,7 @@ async function main() {
     exitCode = 1;
   }
 
-  if (["install", "update", "uninstall", "list-targets", "dry-run", "verify", "validate", "skills", "health", "local", "runs", "status", "doctor", "insights", "integrations", "llm", "connectors", "workflows", "messages", "queue", "metrics", "adapters", "config", "webhook", "n8n", "whatsapp"].includes(command)) {
+  if (["install", "update", "setup", "uninstall", "list-targets", "dry-run", "verify", "validate", "skills", "health", "local", "runs", "status", "doctor", "insights", "integrations", "llm", "connectors", "workflows", "messages", "queue", "metrics", "adapters", "config", "webhook", "n8n", "whatsapp"].includes(command)) {
     await sendTelemetry(buildTelemetryPayload(command, args, exitCode, errorName));
   }
 
