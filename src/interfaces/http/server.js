@@ -15,6 +15,7 @@ const { buildMetrics } = require("../../application/metrics-service.js");
 const { listLiveAdapters } = require("../../application/live-adapters.js");
 const { explainConfig } = require("../../infrastructure/config-loader.js");
 const { listActions } = require("../../application/action-service.js");
+const { readAuditEvents } = require("../../application/audit-log.js");
 
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
@@ -109,6 +110,45 @@ function createServer(options = {}) {
       }
       if (url.pathname === "/actions") {
         sendJson(response, 200, { ok: true, data: { schemaVersion: 1, actions: listActions() } });
+        return;
+      }
+      if (url.pathname === "/overview") {
+        const runs = buildRunsViewModel(store);
+        const tasks = listTasks(store);
+        const metrics = buildMetrics(store);
+        const audit = readAuditEvents(store).slice(-25).reverse();
+        const adapters = listLiveAdapters().map((adapter) => adapter.execute());
+        sendJson(response, 200, {
+          ok: true,
+          data: {
+            schemaVersion: 1,
+            status: status(),
+            readiness: {
+              adapters,
+              ready: adapters.filter((adapter) => adapter.ok).length,
+              blocked: adapters.filter((adapter) => !adapter.ok).length,
+            },
+            runs,
+            queue: {
+              total: tasks.length,
+              pending: tasks.filter((task) => task.status === "pending").length,
+              running: tasks.filter((task) => task.status === "running").length,
+              failed: tasks.filter((task) => task.status === "failed").length,
+              tasks: tasks.slice(0, 25),
+            },
+            metrics,
+            audit: {
+              total: metrics.audit.total,
+              recent: audit.map((event) => ({
+                id: event.id,
+                type: event.type,
+                status: event.status,
+                timestamp: event.timestamp,
+                safeSummary: event.safeSummary,
+              })),
+            },
+          },
+        });
         return;
       }
       if (url.pathname === "/llm/providers") {

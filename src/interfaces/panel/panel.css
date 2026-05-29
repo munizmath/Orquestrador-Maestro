@@ -51,6 +51,13 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.overview {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 0.8fr) minmax(320px, 1.3fr);
+  margin-bottom: 14px;
+}
+
 article {
   background: #ffffff;
   border: 1px solid #dadce0;
@@ -69,6 +76,25 @@ article {
   font-weight: 700;
 }
 
+.badge {
+  border: 1px solid #dadce0;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  margin: 0 6px 8px 0;
+  padding: 4px 8px;
+}
+
+.badge-ok {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.badge-blocked {
+  background: #fce8e6;
+  color: #b3261e;
+}
+
 ul {
   margin: 0;
   padding-left: 18px;
@@ -76,4 +102,10 @@ ul {
 
 li {
   margin: 6px 0;
+}
+
+@media (max-width: 860px) {
+  .overview {
+    grid-template-columns: 1fr;
+  }
 }

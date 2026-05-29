@@ -15,8 +15,13 @@ function list(items) {
   return `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
 }
 
+function badge(text, ok) {
+  return `<span class="badge ${ok ? "badge-ok" : "badge-blocked"}">${text}</span>`;
+}
+
 async function refresh() {
-  const [status, skills, runs, alerts, integrations, connectors, queue, metrics, llm, adapters, actions] = await Promise.all([
+  const [overview, status, skills, runs, alerts, integrations, connectors, queue, metrics, llm, adapters, actions] = await Promise.all([
+    getJson("/overview"),
     getJson("/status"),
     getJson("/skills"),
     getJson("/runs"),
@@ -30,6 +35,16 @@ async function refresh() {
     getJson("/actions"),
   ]);
 
+  const readiness = overview.data.readiness;
+  setHtml("readiness", `
+    <p>${badge(`${readiness.ready} prontos`, readiness.ready > 0)} ${badge(`${readiness.blocked} bloqueados`, readiness.blocked === 0)}</p>
+    ${list(readiness.adapters.map((adapter) => `${adapter.ok ? "ok" : "blocked"} ${adapter.code || adapter.id}`))}
+  `);
+  setHtml("queue-summary", `
+    <p>${overview.data.queue.total} tarefas, ${overview.data.queue.pending} pendentes, ${overview.data.queue.running} rodando</p>
+    ${list(overview.data.queue.tasks.map((task) => `${task.status} ${task.kind}`))}
+  `);
+  setHtml("audit-log", list(overview.data.audit.recent.map((event) => `${event.timestamp} ${event.type}: ${event.safeSummary}`)));
   setHtml("status", `<p class="${status.data.ok ? "ok" : "fail"}">${status.data.ok ? "Pronto" : "Requer atenção"}</p><p>${status.data.health.skills} skills, ${status.data.health.runs} runs</p>`);
   setHtml("skills", `<p>${skills.data.count} skills catalogadas</p>${list(Object.entries(skills.data.byRisk).map(([risk, count]) => `${risk}: ${count}`))}`);
   setHtml("runs", list(runs.data.recent.map((run) => `${run.status} ${run.kind}: ${run.summary}`)));

@@ -288,6 +288,12 @@ function testOperationalCliCommands() {
   const llmLive = runCli(["llm", "live-check", "--json"]);
   assertExit(llmLive, 1);
   assert.equal(assertJsonEnvelope(parseJsonStdout(llmLive)).data.mode, "live-disabled");
+
+  const setup = runCli(["setup", "local", "--dry-run", "--json"]);
+  assertExit(setup);
+  const setupJson = assertJsonEnvelope(parseJsonStdout(setup));
+  assert.equal(setupJson.data.mode, "local-only");
+  assert(setupJson.data.steps.some((step) => step.name === "install-plan"));
 }
 
 function testQueueMetricsAndRetention() {
@@ -584,6 +590,10 @@ async function testHttpApi() {
     assert.equal(actions.json.data.actions[0].id, "adapter.check");
     const config = await requestJson(port, "/config");
     assert.equal(config.json.data.schemaVersion, 1);
+    const overview = await requestJson(port, "/overview");
+    assert.equal(overview.json.data.schemaVersion, 1);
+    assert(Object.prototype.hasOwnProperty.call(overview.json.data, "readiness"));
+    assert(Object.prototype.hasOwnProperty.call(overview.json.data, "audit"));
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
