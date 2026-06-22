@@ -14,6 +14,17 @@ Before broad work:
 6. Select only the skills needed for the task.
 7. Avoid loading full catalogs unless doing inventory or diagnostics.
 
+## Context Freshness Hook
+
+Before re-deriving repository/stack state (`git status`, `docker ps`, grep) or reading large memory files, check the Compact Context Pack when the project has one:
+
+1. Read `DEV/context/_meta.json`.
+2. Fresh = within `ttl_minutes` AND `head_sha` == `git rev-parse --short HEAD`.
+3. Fresh → use `DEV/context/CONTEXT.md` / `INDEX.md` / `WORKLOG-DIGEST.md`.
+4. Stale or missing → run the project refresh (e.g. `bash infra/rundeck/scripts/refresh_context_ccp.sh`) then use it, or fall back to live commands.
+
+CCP is optional and project-local; skip when `DEV/context/` is absent. Never hand-edit CCP files; no secrets/PII in the CCP.
+
 ## Verification Hook
 
 Before claiming completion:
