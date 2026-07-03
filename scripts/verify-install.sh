@@ -10,6 +10,10 @@ CORE_ONLY=false
 VERBOSE_PATHS=false
 ISSUES=()
 
+count_args() {
+  echo "$#"
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --home-path)
@@ -70,6 +74,28 @@ assert_file_contains() {
   fi
 }
 
+assert_file_line_count_at_most() {
+  local path="$1"
+  local max_lines="$2"
+  local label="$3"
+  local line_count
+  if [ ! -f "$path" ]; then return 0; fi
+  line_count="$(wc -l < "$path" | tr -d ' ')"
+  if [ "${line_count:-0}" -gt "$max_lines" ]; then
+    add_issue "$label is too large for a compact hook router ($line_count lines > $max_lines): $path"
+  fi
+}
+
+assert_file_not_contains() {
+  local path="$1"
+  local pattern="$2"
+  local label="$3"
+  if [ ! -f "$path" ]; then return 0; fi
+  if grep -Eqi "$pattern" "$path"; then
+    add_issue "$label still contains a legacy hook catalog marker: $path"
+  fi
+}
+
 count_dirs() {
   local path="$1"
   if [ ! -d "$path" ]; then echo 0; return 0; fi
@@ -84,16 +110,50 @@ count_files() {
 
 ORQUESTRADOR="$HOME_PATH/.orquestrador"
 CODEX="$HOME_PATH/.codex"
+INSTALL_POLICY="$ORQUESTRADOR/SKILL_INSTALL_POLICY.json"
+NATIVE_ROOT_SPECS=(
+  "codex|$HOME_PATH/.codex/skills|40"
+  "opencode|$HOME_PATH/.opencode/skills|30"
+  "agents|$HOME_PATH/.agents/skills|30"
+  "claude|$HOME_PATH/.claude/skills|30"
+  "cursor|$HOME_PATH/.cursor/skills|30"
+  "gemini|$HOME_PATH/.gemini/skills|30"
+  "windsurf|$HOME_PATH/.windsurf/skills|30"
+  "antigravity|$HOME_PATH/.antigravity-skills/skills|30"
+)
+
+if [ -f "$INSTALL_POLICY" ] && command -v node >/dev/null 2>&1; then
+  NATIVE_ROOT_SPECS=()
+  while IFS='|' read -r program rel_path max_dirs; do
+    [ -z "$program" ] && continue
+    rel_path="${rel_path//\\//}"
+    NATIVE_ROOT_SPECS+=("$program|$HOME_PATH/$rel_path|$max_dirs")
+  done < <(
+    node -e '
+      const fs = require("fs");
+      const policy = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+      for (const [program, entry] of Object.entries(policy.nativeRoots || {})) {
+        console.log([program, entry.path || "", String(entry.maxDirectories || 0)].join("|"));
+      }
+    ' "$INSTALL_POLICY"
+  )
+fi
 
 assert_path "$ORQUESTRADOR/rules.md" "Orquestrador rules"
 assert_path "$ORQUESTRADOR/maestro.md" "Orquestrador maestro"
 assert_path "$ORQUESTRADOR/PROJECT_DEV_HIERARCHY.md" "Project DEV hierarchy"
 assert_path "$ORQUESTRADOR/bin/init-project-dev.sh" "Project DEV Unix initializer"
 assert_path "$ORQUESTRADOR/bin/init-project-dev.ps1" "Project DEV Windows initializer"
+assert_path "$ORQUESTRADOR/bin/compact-worklog.sh" "Project DEV Unix worklog compactor"
+assert_path "$ORQUESTRADOR/bin/compact-worklog.ps1" "Project DEV Windows worklog compactor"
+assert_path "$ORQUESTRADOR/bin/check-dev-gates.sh" "Project DEV Unix gate checker"
+assert_path "$ORQUESTRADOR/bin/check-dev-gates.ps1" "Project DEV Windows gate checker"
+assert_path "$ORQUESTRADOR/bin/dev-context-tools.js" "Project DEV context helper"
 assert_path "$ORQUESTRADOR/sync-skills.sh" "Unix skill synchronizer"
 assert_path "$ORQUESTRADOR/sync-skills.ps1" "Windows skill synchronizer"
 assert_path "$ORQUESTRADOR/SKILLS_INDEX.md" "Orquestrador skills index"
 assert_path "$ORQUESTRADOR/SKILLS_ROUTER.json" "Orquestrador skills router"
+assert_path "$ORQUESTRADOR/SKILL_INSTALL_POLICY.json" "Orquestrador skill install policy"
 assert_path "$ORQUESTRADOR/skills" "Orquestrador canonical skills"
 assert_path "$HOME_PATH/AGENTS.md" "Global AGENTS.md"
 
@@ -107,18 +167,15 @@ if [ "$CORE_ONLY" = false ]; then
   assert_path "$CODEX/agents" "Codex agents"
   assert_path "$CODEX/prompts" "Codex prompts"
 
-  COMPAT_ROOTS=(
-    ".agents/skills"
-    ".claude/skills"
-    ".opencode/skills"
-    ".cursor/skills"
-    ".gemini/skills"
-    ".windsurf/skills"
-    ".antigravity-skills/skills"
-  )
-
-  for root in "${COMPAT_ROOTS[@]}"; do
-    assert_path "$HOME_PATH/$root" "Compatibility skill root $root"
+  for spec in "${NATIVE_ROOT_SPECS[@]+"${NATIVE_ROOT_SPECS[@]}"}"; do
+    IFS='|' read -r program root_path max_dirs <<EOF
+$spec
+EOF
+    assert_path "$root_path" "Native skill root $program"
+    dir_count="$(count_dirs "$root_path")"
+    if [ "${dir_count:-0}" -gt "${max_dirs:-0}" ]; then
+      add_issue "Native skill root $program is oversized for low-token operation ($dir_count directories > $max_dirs): $root_path"
+    fi
   done
 fi
 
@@ -154,6 +211,22 @@ if [ "$CORE_ONLY" = false ] && [ "$SKIP_TOOL_PROFILES" = false ]; then
   assert_file_contains "$HOME_PATH/.antigravity/antigravity.json" "\\.orquestrador" "Antigravity integration config"
   assert_file_contains "$HOME_PATH/.ai-standards/core/rules.md" "DEV/WORKLOG\\.md" "Antigravity AI standards rules"
 
+  HOOK_CHECKS=(
+    "$HOME_PATH/.orquestrador/hooks.md|80|Orquestrador hooks profile"
+    "$HOME_PATH/.opencode/hooks.md|30|OpenCode hooks profile"
+    "$HOME_PATH/.claude/hooks.md|20|Claude hooks profile"
+    "$HOME_PATH/.cursor/hooks.md|20|Cursor hooks profile"
+    "$HOME_PATH/.gemini/hooks.md|20|Gemini hooks profile"
+    "$HOME_PATH/.windsurf/hooks.md|20|Windsurf hooks profile"
+  )
+
+  for hook_check in "${HOOK_CHECKS[@]}"; do
+    IFS='|' read -r hook_path hook_max hook_label <<< "$hook_check"
+    assert_file_contains "$hook_path" "SKILLS_ROUTER\\.json" "$hook_label"
+    assert_file_line_count_at_most "$hook_path" "$hook_max" "$hook_label"
+    assert_file_not_contains "$hook_path" "(GLOBAL SKILLS HOOKS|Complete Skill Reference with Descriptions)" "$hook_label"
+  done
+
   OPENCODE_CONFIG="$HOME_PATH/.config/opencode/opencode.json"
   if [ -f "$OPENCODE_CONFIG" ]; then
     if ! grep -q "~/.orquestrador/rules.md" "$OPENCODE_CONFIG"; then
@@ -165,9 +238,9 @@ if [ "$CORE_ONLY" = false ] && [ "$SKIP_TOOL_PROFILES" = false ]; then
   fi
 fi
 
-if [ "${#ISSUES[@]}" -gt 0 ]; then
+if [ "$(count_args "${ISSUES[@]+"${ISSUES[@]}"}")" -gt 0 ]; then
   echo "Install verification failed:"
-  for issue in "${ISSUES[@]}"; do
+  for issue in "${ISSUES[@]+"${ISSUES[@]}"}"; do
     echo "  - $issue"
   done
   exit 1
@@ -189,5 +262,12 @@ echo "OrquestradorSkills: $(count_dirs "$ORQUESTRADOR/skills")"
 echo "CodexSkills: $(count_dirs "$CODEX/skills")"
 echo "CodexAgents: $(count_files "$CODEX/agents")"
 echo "CodexPrompts: $(count_files "$CODEX/prompts")"
+echo "AgentSkills: $(count_dirs "$HOME_PATH/.agents/skills")"
+echo "ClaudeSkills: $(count_dirs "$HOME_PATH/.claude/skills")"
+echo "OpenCodeSkills: $(count_dirs "$HOME_PATH/.opencode/skills")"
+echo "CursorSkills: $(count_dirs "$HOME_PATH/.cursor/skills")"
+echo "GeminiSkills: $(count_dirs "$HOME_PATH/.gemini/skills")"
+echo "WindsurfSkills: $(count_dirs "$HOME_PATH/.windsurf/skills")"
+echo "AntigravitySkills: $(count_dirs "$HOME_PATH/.antigravity-skills/skills")"
 echo "ToolProfilesChecked: $TOOL_PROFILES_CHECKED"
 echo "CoreOnly: $CORE_ONLY"

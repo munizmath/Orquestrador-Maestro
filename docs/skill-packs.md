@@ -6,16 +6,16 @@ Este repositório publica o máximo prático de conteúdo textual reutilizável 
 
 | Pacote | Fonte local | Destino no repo | Conteúdo |
 |---|---|---|---|
-| Orquestrador | `~/.orquestrador` | `orquestrador/` | Regras, hooks, roteadores, índices, scripts e skills canônicas |
-| Codex | `~/.codex/skills`, `~/.codex/agents`, `~/.codex/prompts` | `codex/` | Skills workflow OMX/Codex, agentes nativos e prompts |
-| Community Skills | `~/.agents/skills` | `skill-library/community-skills/` | Biblioteca deduplicada que representa os espelhos `.agents/.claude/.opencode/.cursor/.gemini/.windsurf` |
+| Orquestrador | `~/.orquestrador` | `orquestrador/` | Regras, hooks, roteadores, índices, scripts, skills canônicas e bibliotecas offload |
+| Codex | `~/.codex/skills`, `~/.codex/agents`, `~/.codex/prompts` | `codex/` | Snapshot público do catálogo OMX/Codex, agentes nativos e prompts |
+| Community Skills | `~/.orquestrador/skill-library/community-skills` | `skill-library/community-skills/` | Biblioteca deduplicada grande, instalada fora das raízes nativas |
 | Tool Profiles | perfis textuais selecionados | `tool-profiles/` | Hooks, regras e prompts globais reaproveitáveis de ferramentas |
 
 Para ver o que cada skill publicada faz, consulte [skill-catalog.md](skill-catalog.md). Para entender como essas skills são escolhidas e combinadas, consulte [orquestrador-reference.md](orquestrador-reference.md).
 
 ## Por Que Não Copiar Cada Raiz Inteira
 
-As raízes `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf` e `.antigravity-skills` têm muita duplicação. O repo guarda uma biblioteca deduplicada e o instalador copia essa biblioteca para os destinos compatíveis.
+As raízes `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf` e `.antigravity-skills` têm muita duplicação. O repo guarda uma biblioteca deduplicada, mas o instalador não replica mais esse volume inteiro nas pastas nativas. Ele instala a biblioteca em `.orquestrador/skill-library/` e usa `sync-skills` para manter apenas o conjunto mínimo necessário em cada cliente.
 
 Perfis como `.claude`, `.cursor`, `.gemini` e `.opencode` também costumam conter histórico, estado local, OAuth, configurações de IDE e dados de projetos. Por isso o pacote `tool-profiles/` é uma seleção controlada de arquivos textuais.
 

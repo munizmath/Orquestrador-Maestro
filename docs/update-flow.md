@@ -32,6 +32,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-skills.ps
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-public.ps1
 ```
 
+## Atualizar Release Notes
+
+Antes de publicar, atualize:
+
+- `CHANGELOG.md` como histórico canônico;
+- o resumo do changelog no `README.md`, incluindo a data da revisão pública mais recente;
+- qualquer radar novo em `docs/research/` quando a mudança vier de referências externas.
+
 ## Revisar E Subir
 
 ```powershell
@@ -49,7 +57,7 @@ O sync atualiza:
 
 - `orquestrador/` com o núcleo canônico.
 - `codex/` com skills, agentes e prompts Codex.
-- `skill-library/community-skills/` com a biblioteca deduplicada de `.agents/skills`.
+- `skill-library/community-skills/` com a biblioteca deduplicada que passa a ser instalada em `.orquestrador/skill-library/community-skills`, fora das raízes nativas.
 - `tool-profiles/` com hooks e perfis textuais selecionados.
 
 Para gerar apenas o núcleo:
@@ -73,4 +81,16 @@ No Linux/macOS:
 ```bash
 bash install.sh --home-path /tmp/orquestrador-public-test
 bash scripts/verify-install.sh --home-path /tmp/orquestrador-public-test
+```
+
+## Testar Fluxo De Update Do Pacote
+
+Antes do próximo publish npm, valide também o fluxo do usuário final:
+
+```powershell
+npm pack --dry-run
+node .\bin\orquestrador-maestro.js changelog
+node .\bin\orquestrador-maestro.js update --home-path $tempHome --core-only
+node .\bin\orquestrador-maestro.js verify --home-path $tempHome --core-only
+node .\bin\orquestrador-maestro.js doctor --home-path $tempHome
 ```

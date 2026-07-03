@@ -106,6 +106,20 @@ function Test-TextFile {
   )
 }
 
+$compactHookLimits = @{
+  "orquestrador/hooks.md" = 80
+  "tool-profiles/opencode/hooks.md" = 30
+  "tool-profiles/claude/hooks.md" = 20
+  "tool-profiles/cursor/hooks.md" = 20
+  "tool-profiles/gemini/hooks.md" = 20
+  "tool-profiles/windsurf/hooks.md" = 20
+}
+
+$legacyHookCatalogMarkers = @(
+  "GLOBAL SKILLS HOOKS",
+  "Complete Skill Reference with Descriptions"
+)
+
 $repoRootFull = [System.IO.Path]::GetFullPath($RepoRoot)
 $defaultForbidden = @()
 $homeName = Split-Path -Leaf ([Environment]::GetFolderPath("UserProfile"))
@@ -211,6 +225,18 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
     if ($literalIndex -ge 0) {
       $info = Get-LineInfo -Text $text -Index $literalIndex
       Add-Issue -Kind "forbidden-literal" -Path $relative -Detail "Found forbidden literal: $literal" -Line $info.Line -Snippet $info.Snippet
+    }
+  }
+
+  if ($compactHookLimits.Contains($rel)) {
+    $lineCount = if ([string]::IsNullOrEmpty($text)) { 0 } else { ([regex]::Matches($text, "(`r`n|`n)")).Count + 1 }
+    if ($lineCount -gt [int]$compactHookLimits[$rel]) {
+      Add-Issue -Kind "oversized-hook" -Path $relative -Detail "Hook has $lineCount lines; limit is $($compactHookLimits[$rel])."
+    }
+    foreach ($marker in $legacyHookCatalogMarkers) {
+      if ($text.IndexOf($marker, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+        Add-Issue -Kind "legacy-hook-catalog" -Path $relative -Detail $marker
+      }
     }
   }
 

@@ -12,11 +12,11 @@
 
 ## Project DEV Documentation
 
-Every project may keep durable documentation and compact memory under `DEV/`. Read `DEV/README.md` or `DEV/INDEX.md`, then `DEV/CONTEXT.md`, then only task-relevant detail files. Do not bulk-load the full `DEV/` tree by default.
+Every project may keep durable documentation and compact memory under `DEV/`. Read `DEV/README.md` or `DEV/INDEX.md`, then `DEV/HANDOFF.md`, then `DEV/CONTEXT.md`, then `DEV/SPECS/ACTIVE.md`, and only then the task-relevant detail files. Do not bulk-load the full `DEV/` tree by default.
 
 Existing sub-hierarchies such as `DEV/LOGS/`, `DEV/SQL/`, `DEV/ARCH/`, `DEV/WORKFLOWS/`, `DEV/TESTS/`, `DEV/DOCUMENTATION/`, and `DEV/BACKLOG/` are valid. Do not rename them by default; map them in `DEV/INDEX.md`.
 
-Create durable project docs under `DEV/` by default. After substantive work, update `DEV/WORKLOG.md` with what changed, why, verification, and next context.
+Create durable project docs under `DEV/` by default. After substantive work, update `DEV/WORKLOG.md`, `DEV/VERIFY.md`, and `DEV/HANDOFF.md` with what changed, why, verification, and next context. Keep `DEV/SPECS/ACTIVE.md` current as the task contract.
 
 ## Skills
 A skill is a set of local instructions to follow that is stored in a `SKILL.md` file. Below is the list of skills that can be used. Each entry includes a name, description, and file path so you can open the source for full instructions when using a specific skill.

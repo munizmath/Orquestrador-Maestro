@@ -227,6 +227,33 @@
         "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
       }
     },
+    "skill-lgpd-brasil": {
+      "mayInvoke": [
+        "skill-saas-factory",
+        "skill-supabase-rls",
+        "skill-saas-security-scan",
+        "skill-security-hooks",
+        "skill-ai-orchestration",
+        "skill-google-workspace-sync",
+        "skill-evolution-api",
+        "skill-unified-analytics"
+      ],
+      "rules": [
+        "Use LGPD as the primary skill when the task involves Brazilian personal data, consent, rights requests, RIPD, privacy notices, retention, incidents, or international transfers.",
+        "Use the related technical skills only when they directly implement or audit the processing surface."
+      ],
+      "reasons": {
+        "skill-saas-factory": "Use when the privacy work must be implemented inside a SaaS product surface, dashboards, or product flows.",
+        "skill-supabase-rls": "Use when data isolation, tenant boundaries, or Postgres RLS policies enforce the privacy and retention rules.",
+        "skill-saas-security-scan": "Use for authorized local review of code, secrets, and dependencies that handle personal data.",
+        "skill-security-hooks": "Use when adding CI gates or hooks that keep personal-data handling and consent controls enforced.",
+        "skill-ai-orchestration": "Use when AI providers process personal data and need consent, minimization, and safe key handling.",
+        "skill-google-workspace-sync": "Use when Workspace integrations move personal data and need least-privilege scopes and revocable consent.",
+        "skill-evolution-api": "Use when WhatsApp messaging carries personal data and needs consent, tenant isolation, and audit logs.",
+        "skill-unified-analytics": "Use when telemetry or analytics collect personal data and need privacy guardrails and retention controls.",
+        "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
+      }
+    },
     "skill-live-processing": {
       "mayInvoke": [
         "skill-smart-clip-detection",

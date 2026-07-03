@@ -89,6 +89,13 @@
     "issue triage": "skill-github-mcp-automation",
     "skill quality": "skill-quality-review",
     "review skill": "skill-quality-review",
-    "validar skill": "skill-quality-review"
+    "validar skill": "skill-quality-review",
+    "lgpd": "skill-lgpd-brasil",
+    "lgpd brasil": "skill-lgpd-brasil",
+    "lei geral de protecao de dados": "skill-lgpd-brasil",
+    "anpd": "skill-lgpd-brasil",
+    "ripd": "skill-lgpd-brasil",
+    "dpo": "skill-lgpd-brasil",
+    "encarregado lgpd": "skill-lgpd-brasil"
   }
 }

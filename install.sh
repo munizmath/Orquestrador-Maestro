@@ -102,7 +102,7 @@ fi
 if [ "$SKIP_SKILL_SYNC" = true ]; then
   ARGS+=(--skip-skill-sync)
 fi
-for component in "${ONLY[@]}"; do
+for component in "${ONLY[@]+"${ONLY[@]}"}"; do
   ARGS+=(--only "$component")
 done
 if [ "$DRY_RUN" = true ]; then
@@ -121,4 +121,4 @@ if [ "$VERBOSE_PATHS" = true ]; then
   ARGS+=(--verbose-paths)
 fi
 
-bash "$ENGINE" "${ARGS[@]}"
+bash "$ENGINE" "${ARGS[@]+"${ARGS[@]}"}"

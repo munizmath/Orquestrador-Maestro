@@ -1,4 +1,5 @@
 .local/
+.playwright-mcp/
 .omx/
 DEV/
 .env

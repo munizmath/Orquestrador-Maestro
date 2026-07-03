@@ -52,9 +52,39 @@ npm update -g @iapro/orquestrador-maestro-cli
 Aplicar a versão atualizada no home:
 
 ```bash
+orquestrador-maestro changelog
 orquestrador-maestro update
 orquestrador-maestro verify
+orquestrador-maestro doctor
 ```
+
+No Linux e no macOS, o comando `doctor` exige `pwsh` ou `powershell` disponível no `PATH`.
+
+Para preparar um projeto com a hierarquia DEV nova:
+
+```bash
+orquestrador-maestro init-dev --project-path .
+orquestrador-maestro check-dev-gates --project-path . --max-entries 12 --strict
+orquestrador-maestro compact-worklog --project-path . --keep 12
+```
+
+## Canal De Release
+
+O canal público atual é o `latest` do npm. Esse é o único caminho recomendado para usuários finais:
+
+```bash
+npm install -g @iapro/orquestrador-maestro-cli@latest
+```
+
+Canais como `preview`, `beta` ou `nightly` só devem ser criados quando o projeto tiver:
+
+- changelog separado por canal;
+- validação automatizada do pacote;
+- instruções claras de rollback;
+- política de compatibilidade para instaladores e entrypoints;
+- aviso explícito de risco para quem já usa o Orquestrador em projetos reais.
+
+Enquanto isso não existir, a regra é simples: publicar versões estáveis no `latest` e documentar toda migração no README.
 
 ## Comandos
 
@@ -62,6 +92,11 @@ orquestrador-maestro verify
 orquestrador-maestro install
 orquestrador-maestro update
 orquestrador-maestro verify
+orquestrador-maestro doctor
+orquestrador-maestro changelog
+orquestrador-maestro init-dev
+orquestrador-maestro compact-worklog
+orquestrador-maestro check-dev-gates
 orquestrador-maestro uninstall
 orquestrador-maestro list-targets
 orquestrador-maestro dry-run
@@ -78,6 +113,22 @@ orquestrador-maestro version
 
 - Windows: `scripts/verify-install.ps1`;
 - Linux/macOS: `scripts/verify-install.sh`.
+
+`doctor` chama o diagnóstico operacional empacotado:
+
+- Windows: `orquestrador/doctor.ps1`;
+- Linux/macOS: `pwsh` ou `powershell` executando `orquestrador/doctor.ps1`.
+
+`init-dev` cria a estrutura padrao `DEV/` com `HANDOFF.md`, `SPECS/ACTIVE.md`, `VERIFY.md` e `WORKLOG.md`.
+
+`compact-worklog` arquiva entradas antigas de `DEV/WORKLOG.md` em `DEV/HANDOFFS/WORKLOG_ARCHIVE.md` e atualiza `DEV/HANDOFF.md`.
+
+`check-dev-gates` valida se o combo `spec + handoff + verify + worklog` esta presente e ainda compacto o bastante para evitar loops e excesso de contexto. O flag `--max-entries` deixa explicito qual limite de entradas o `WORKLOG` pode ter antes de falhar.
+
+`changelog` lê o `CHANGELOG.md` empacotado no próprio pacote:
+
+- `orquestrador-maestro changelog`: mostra as entradas mais recentes;
+- `orquestrador-maestro changelog --full`: imprime o histórico completo incluído na release instalada.
 
 ## Prévia Segura
 
@@ -104,13 +155,18 @@ orquestrador-maestro verify --home-path "$env:TEMP\orquestrador-test" --core-onl
 
 ## Telemetria
 
-O CLI tem telemetria anônima de runtime para medir uso real do pacote quando houver endpoint configurado.
+O CLI tem suporte a telemetria anônima de runtime para medir uso real do pacote. Ela fica desabilitada por padrão. Nenhum evento é enviado sem endpoint configurado e sem habilitação explícita do usuário com `orquestrador-maestro telemetry enable`. Configurações antigas sem consentimento versionado são carregadas como desabilitadas e precisam de novo `telemetry enable`.
 
 Eventos coletáveis:
 
 - `install`;
 - `update`;
 - `verify`;
+- `doctor`;
+- `changelog`;
+- `init-dev`;
+- `compact-worklog`;
+- `check-dev-gates`;
 - `uninstall`;
 - `dry-run`;
 - `list-targets`.
@@ -150,16 +206,22 @@ Configurar endpoint:
 orquestrador-maestro telemetry endpoint https://seu-dominio.example/api/orquestrador-telemetry
 ```
 
-Enviar evento de teste:
+Atalho equivalente:
 
 ```bash
-orquestrador-maestro telemetry test
+orquestrador-maestro telemetry enable --endpoint https://seu-dominio.example/api/orquestrador-telemetry
 ```
 
 Habilitar:
 
 ```bash
 orquestrador-maestro telemetry enable
+```
+
+Enviar evento de teste:
+
+```bash
+orquestrador-maestro telemetry test
 ```
 
 Desabilitar:
@@ -181,13 +243,13 @@ $env:ORQUESTRADOR_MAESTRO_TELEMETRY = "0"
 orquestrador-maestro install
 ```
 
-O endpoint também pode ser configurado por variável de ambiente:
+O endpoint também pode ser configurado por variável de ambiente, mas isso não habilita telemetria sozinho:
 
 ```bash
 ORQUESTRADOR_MAESTRO_TELEMETRY_ENDPOINT=https://seu-dominio.example/api/orquestrador-telemetry
 ```
 
-Antes do publish, o mantenedor pode gravar o endpoint padrão em `package.json`:
+Antes do publish, o mantenedor pode gravar um endpoint sugerido em `package.json`, mas a telemetria continuará exigindo `orquestrador-maestro telemetry enable` no usuário:
 
 ```json
 {
@@ -197,7 +259,7 @@ Antes do publish, o mantenedor pode gravar o endpoint padrão em `package.json`:
 }
 ```
 
-Sem endpoint, a telemetria fica pronta no CLI, mas nenhum evento é enviado.
+Sem endpoint e sem `telemetry enable`, a telemetria fica pronta no CLI, mas nenhum evento é enviado.
 
 Exemplo de evento:
 
@@ -205,7 +267,7 @@ Exemplo de evento:
 {
   "schemaVersion": 1,
   "packageName": "@iapro/orquestrador-maestro-cli",
-  "packageVersion": "0.1.1",
+  "packageVersion": "0.1.2",
   "event": "cli_command",
   "command": "install",
   "flags": ["--core-only"],
@@ -288,7 +350,10 @@ Depois, usuários atualizam com:
 
 ```bash
 npm update -g @iapro/orquestrador-maestro-cli
+orquestrador-maestro changelog
 orquestrador-maestro update
+orquestrador-maestro verify
+orquestrador-maestro doctor
 ```
 
 ## O Que Não Entra No Pacote

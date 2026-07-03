@@ -35,21 +35,25 @@ Instalação completa cria ou atualiza:
 
 | Destino | Função |
 |---|---|
-| `%USERPROFILE%\.orquestrador` | Núcleo com regras, maestro, roteadores, scripts e skills canônicas |
+| `%USERPROFILE%\.orquestrador` | Núcleo com regras, maestro, roteadores, scripts, skills canônicas e bibliotecas offload |
 | `%USERPROFILE%\AGENTS.md` | Contrato global para IAs que leem arquivos locais |
-| `%USERPROFILE%\.codex\skills` | Skills para Codex |
+| `%USERPROFILE%\.codex\skills` | Conjunto nativo enxuto do Codex: skills canônicas, workflows OMX essenciais e `.system` |
 | `%USERPROFILE%\.codex\agents` | Agentes nativos do Codex |
 | `%USERPROFILE%\.codex\prompts` | Prompts dos agentes |
-| `%USERPROFILE%\.agents\skills` | Espelho compatível de skills |
-| `%USERPROFILE%\.claude\skills` | Skills para Claude/Claude Code |
-| `%USERPROFILE%\.opencode\skills` | Skills para OpenCode |
-| `%USERPROFILE%\.cursor\skills` | Skills para Cursor |
-| `%USERPROFILE%\.gemini\skills` | Skills para Gemini |
-| `%USERPROFILE%\.windsurf\skills` | Skills para Windsurf |
-| `%USERPROFILE%\.antigravity-skills\skills` | Espelho adicional de compatibilidade |
+| `%USERPROFILE%\.agents\skills` | Espelho compatível mínimo de skills canônicas |
+| `%USERPROFILE%\.claude\skills` | Raiz nativa mínima para Claude/Claude Code |
+| `%USERPROFILE%\.opencode\skills` | Raiz nativa mínima para OpenCode |
+| `%USERPROFILE%\.cursor\skills` | Raiz nativa mínima para Cursor |
+| `%USERPROFILE%\.gemini\skills` | Raiz nativa mínima para Gemini |
+| `%USERPROFILE%\.windsurf\skills` | Raiz nativa mínima para Windsurf |
+| `%USERPROFILE%\.antigravity-skills\skills` | Raiz nativa mínima de compatibilidade |
+| `%USERPROFILE%\.orquestrador\skill-library\community-skills` | Biblioteca comunitária completa fora das raízes nativas |
+| `%USERPROFILE%\.orquestrador\skill-library\codex-skills` | Catálogo completo de skills OMX/Codex fora da raiz nativa |
 | `%USERPROFILE%\.ai-standards` | Standards portáteis usados pelo Antigravity |
 
 No Linux/macOS, os destinos equivalentes ficam sob `$HOME`, como `$HOME/.orquestrador`, `$HOME/AGENTS.md`, `$HOME/.codex/skills`, `$HOME/.config/opencode` e `$HOME/.ai-standards`.
+
+As bibliotecas grandes continuam instaladas, mas fora das pastas que os clientes tendem a enumerar automaticamente. Isso é parte direta da estratégia de economia de tokens do Orquestrador.
 
 Também instala pontos de entrada para ferramentas:
 

@@ -1,18 +1,19 @@
 # Orquestrador Hooks
 
-This file is intentionally compact. Use it as a hook router, not as a full catalog.
+This file must stay compact. It is a hook router, not a skill catalog.
 
-## Preflight Hook
+## Preflight
 
 Before broad work:
 
 1. Read project `AGENTS.md`.
-2. Read `{{USER_HOME}}/.orquestrador\SKILL_EXECUTION_PROFILES.json`.
-3. Read `{{USER_HOME}}/.orquestrador\SKILL_ALIASES.json`.
-4. Read `{{USER_HOME}}/.orquestrador\SKILLS_ROUTER.json`.
-5. Use `{{USER_HOME}}/.orquestrador\SKILL_CHAINS.json` only after selecting the primary skill.
-6. Select only the skills needed for the task.
-7. Avoid loading full catalogs unless doing inventory or diagnostics.
+2. If `DEV/` exists, read `DEV/README.md` or `DEV/INDEX.md`, then `DEV/HANDOFF.md`, `DEV/CONTEXT.md`, and `DEV/SPECS/ACTIVE.md` before opening any long project history.
+3. Read `{{USER_HOME}}/.orquestrador/SKILL_EXECUTION_PROFILES.json`.
+4. Read `{{USER_HOME}}/.orquestrador/SKILL_ALIASES.json`.
+5. Read `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`.
+6. Read `{{USER_HOME}}/.orquestrador/SKILL_CHAINS.json` only after selecting the primary skill.
+7. Open only the selected `SKILL.md` files and only the files directly referenced by them.
+8. Do not use this file, `SKILLS_INDEX.md`, or `skill-library/community-skills/` as a full discovery catalog.
 
 ## Context Freshness Hook
 
@@ -25,91 +26,36 @@ Before re-deriving repository/stack state (`git status`, `docker ps`, grep) or r
 
 CCP is optional and project-local; skip when `DEV/context/` is absent. Never hand-edit CCP files; no secrets/PII in the CCP.
 
-## Verification Hook
+## Token Budget
+
+- In `fast`, load one skill body.
+- In `standard`, load at most three skill bodies.
+- In `deep`, `saas`, or `security`, expand only when the execution profile and `SKILL_CHAINS.json` allow it.
+- Keep trigger logic in `SKILLS_ROUTER.json`; do not duplicate large trigger tables here.
+- Summarize durable findings into `DEV/WORKLOG.md`, `DEV/VERIFY.md`, and `DEV/HANDOFF.md` instead of rereading the same files later.
+- If `DEV/WORKLOG.md` grows beyond the project's compact limit, run `orquestrador-maestro compact-worklog --project-path <project> --keep 12`.
+- For long tasks, run `orquestrador-maestro check-dev-gates --project-path <project> --max-entries 12 --strict` before declaring handoff readiness.
+
+## Verification
 
 Before claiming completion:
 
 1. Run the lightest meaningful validation.
-2. For code changes, prefer build/lint/test when available.
-3. For global config changes, run:
+2. For code changes, prefer build, lint, and tests when available.
+3. For broad global changes, run `powershell -NoProfile -ExecutionPolicy Bypass -File {{USER_HOME}}/.orquestrador/doctor.ps1` when PowerShell is available.
 
-Windows:
+## Sync
 
-`powershell -NoProfile -ExecutionPolicy Bypass -File {{USER_HOME}}/.orquestrador/doctor.ps1`
+After adding or changing a shared skill:
 
-Linux/macOS: use the lightest available project validation; `doctor.ps1` is Windows-only unless PowerShell is installed.
+- Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File {{USER_HOME}}/.orquestrador/sync-skills.ps1 -Apply`
+- Linux/macOS: `bash {{USER_HOME}}/.orquestrador/sync-skills.sh --apply`
 
-## Sync Hook
+## Control Files
 
-After adding or changing a shared skill, run:
-
-Windows:
-
-`powershell -NoProfile -ExecutionPolicy Bypass -File {{USER_HOME}}/.orquestrador/sync-skills.ps1 -Apply`
-
-Linux/macOS:
-
-`bash {{USER_HOME}}/.orquestrador/sync-skills.sh --apply`
-
-## Automatic Skill Hooks
-
-| Trigger | Skill |
-|---|---|
-| Build, review, or plan SaaS product/dashboard/payments | `/skill:skill-saas-factory` |
-| SaaS admin panel, users, plans, payments, logs, metrics | `/skill:skill-saas-admin-dashboard` |
-| AbacatePay, PIX, CPF/CNPJ, BRL billing | `/skill:skill-abacatepay-integration` |
-| Stripe Checkout, Billing, subscriptions, portal | `/skill:skill-stripe-integration` |
-| Plan limits, quotas, trials, grace, entitlements | `/skill:skill-saas-core-limits` |
-| Local SaaS repository security scan | `/skill:skill-saas-security-scan` |
-| Authorized staging or preview DAST/recon | `/skill:skill-saas-dast-recon` |
-| Git hooks or CI security gates | `/skill:skill-security-hooks` |
-| Supabase, RLS, tenant isolation, policies | `/skill:skill-supabase-rls` |
-| AI routing, model fallback, token budget, agent gateway | `/skill:skill-ai-orchestration` |
-| Subagents, multiagents, swarm, team execution, delegation | `/skill:skill-multiagent-orchestration` |
-| AionUi, cowork app, Team Mode, unified MCP/agent UI | `/skill:skill-aionui-cowork-orchestration` |
-| WhatsApp, Evolution API, message webhooks | `/skill:skill-evolution-api` |
-| GitHub MCP, issues, PRs, Actions, repo maintenance | `/skill:skill-github-mcp-automation` |
-| n8n workflows connecting WhatsApp and Claude/LLMs | `/skill:skill-n8n-whatsapp-claude` |
-| New or changed canonical skills, router, aliases, chains, catalog | `/skill:skill-quality-review` |
-| Frontend polish, responsive guardrails, layout QA | `/skill:skill-frontend-ux-guardrails` |
-| SaaS UI system or admin component patterns | `/skill:skill-modern-ui-patterns` |
-| Open-design visual upgrade or design tokens | `/skill:skill-open-design-ui` |
-| Live video/audio processing pipeline | `/skill:skill-live-processing` |
-| Manual video upload and processing | `/skill:skill-manual-video-processing` |
-| Smart clips, highlights, video moment detection | `/skill:skill-smart-clip-detection` |
-| Product analytics, events, funnels, KPIs | `/skill:skill-unified-analytics` |
-| ElevenLabs, TTS, voice cloning | `/skill:skill-elevenlabs-voice-cloning` |
-| Google Workspace, Calendar, Meet, FreeBusy, OAuth sync | `/skill:skill-google-workspace-sync` |
-
-## Token Budget Rule
-
-Do not load all skills to decide what to do. Read aliases, profiles, and router first. In `fast`, load one skill. In `standard`, load at most three skills. In `deep`, `saas`, or `security`, load more only when `SKILL_CHAINS.json` says the chain is allowed.
-
-## Usage Log
-
-When a tool supports persistent logging, append one JSON line after broad work:
-
-`{{USER_HOME}}/.orquestrador\logs\skill-usage.jsonl`
-
-Use schema:
-
-`{{USER_HOME}}/.orquestrador\SKILL_USAGE_SCHEMA.json`
-
-## Entrypoints
-
-Use:
-
-`{{USER_HOME}}/.orquestrador\PROGRAM_ENTRYPOINTS.json`
-
-## Router
-
-Use:
-
-`{{USER_HOME}}/.orquestrador\SKILLS_ROUTER.json`
-
-## Related Control Files
-
-- `{{USER_HOME}}/.orquestrador\SKILL_ALIASES.json`
-- `{{USER_HOME}}/.orquestrador\SKILL_CHAINS.json`
-- `{{USER_HOME}}/.orquestrador\SKILL_EXECUTION_PROFILES.json`
-- `{{USER_HOME}}/.orquestrador\SKILL_USAGE_SCHEMA.json`
+- `{{USER_HOME}}/.orquestrador/PROGRAM_ENTRYPOINTS.json`
+- `{{USER_HOME}}/.orquestrador/SKILL_EXECUTION_PROFILES.json`
+- `{{USER_HOME}}/.orquestrador/SKILL_ALIASES.json`
+- `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
+- `{{USER_HOME}}/.orquestrador/SKILL_CHAINS.json`
+- `{{USER_HOME}}/.orquestrador/SKILL_USAGE_SCHEMA.json`

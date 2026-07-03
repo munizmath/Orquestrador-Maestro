@@ -23,6 +23,7 @@ $SourceCodex = Join-Path $RepoRoot "codex"
 $SourceCommunitySkills = Join-Path $RepoRoot "skill-library\community-skills"
 $SourceToolProfiles = Join-Path $RepoRoot "tool-profiles"
 $TargetOrquestrador = Join-Path $HomePath ".orquestrador"
+$TargetSkillLibrary = Join-Path $TargetOrquestrador "skill-library"
 $TargetAgents = Join-Path $HomePath "AGENTS.md"
 $BackupRoot = Join-Path $HomePath ".orquestrador-public-backups"
 $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -161,6 +162,29 @@ function Backup-Path {
   New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
   $dest = Join-Path $BackupDir $Label
   Copy-Item -LiteralPath $Path -Destination $dest -Recurse -Force
+}
+
+function Backup-MappedDirectory {
+  param([string]$SourceDir, [string]$DestinationDir, [string]$Label)
+  if (-not (Test-Path -LiteralPath $DestinationDir)) { return }
+  New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
+  $backupTarget = Join-Path $BackupDir $Label
+  foreach ($sourceFile in Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Force) {
+    $relative = Get-RelativePath -BasePath $SourceDir -Path $sourceFile.FullName
+    $existingFile = Join-Path $DestinationDir $relative
+    if (Test-Path -LiteralPath $existingFile) {
+      $backupFile = Join-Path $backupTarget $relative
+      New-Item -ItemType Directory -Force -Path (Split-Path -Parent $backupFile) | Out-Null
+      Copy-Item -LiteralPath $existingFile -Destination $backupFile -Force
+    }
+  }
+}
+
+function Backup-MappedFile {
+  param([string]$DestinationFile, [string]$Label)
+  if (-not (Test-Path -LiteralPath $DestinationFile)) { return }
+  New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
+  Copy-Item -LiteralPath $DestinationFile -Destination (Join-Path $BackupDir $Label) -Force
 }
 
 function Add-InstallTarget {
@@ -311,24 +335,22 @@ $extraTargets = New-Object System.Collections.Generic.List[object]
 $extraFileTargets = New-Object System.Collections.Generic.List[object]
 if (-not $SkipExtraSkills) {
   if (-not $SkipCommunitySkills) {
-    $communityRoots = @(
-      @{ Root = ".codex\skills"; Component = "codex" },
-      @{ Root = ".agents\skills"; Component = "agents" },
-      @{ Root = ".claude\skills"; Component = "claude" },
-      @{ Root = ".opencode\skills"; Component = "opencode" },
-      @{ Root = ".cursor\skills"; Component = "cursor" },
-      @{ Root = ".gemini\skills"; Component = "gemini" },
-      @{ Root = ".windsurf\skills"; Component = "windsurf" },
-      @{ Root = ".antigravity-skills\skills"; Component = "antigravity" }
-    )
-    foreach ($entry in $communityRoots) {
-      if (Test-SelectedComponent -Names @("skills", "community-skills", $entry.Component)) {
-        Add-InstallTarget -Targets $extraTargets -Source $SourceCommunitySkills -Destination (Join-Path $HomePath $entry.Root) -Label ("community__" + $entry.Root.Replace("\", "__")) -Component $entry.Component
-      }
+    if (Test-SelectedComponent -Names @("skills", "community-skills", "codex", "agents", "claude", "opencode", "cursor", "gemini", "windsurf", "antigravity")) {
+      Add-InstallTarget `
+        -Targets $extraTargets `
+        -Source $SourceCommunitySkills `
+        -Destination (Join-Path $TargetSkillLibrary "community-skills") `
+        -Label ".orquestrador__skill-library__community-skills" `
+        -Component "community-skills"
     }
   }
   if (Test-SelectedComponent -Names @("codex", "codex-skills", "skills")) {
-    Add-InstallTarget -Targets $extraTargets -Source (Join-Path $SourceCodex "skills") -Destination (Join-Path $HomePath ".codex\skills") -Label ".codex__skills" -Component "codex"
+    Add-InstallTarget `
+      -Targets $extraTargets `
+      -Source (Join-Path $SourceCodex "skills") `
+      -Destination (Join-Path $TargetSkillLibrary "codex-skills") `
+      -Label ".orquestrador__skill-library__codex-skills" `
+      -Component "codex"
   }
   if (Test-SelectedComponent -Names @("codex", "codex-agents", "agents")) {
     Add-InstallTarget -Targets $extraTargets -Source (Join-Path $SourceCodex "agents") -Destination (Join-Path $HomePath ".codex\agents") -Label ".codex__agents" -Component "codex"
@@ -382,14 +404,14 @@ if ($ListTargets -or $DryRun) {
 
 if ($Uninstall) {
   if ($includeCore) {
-    Backup-Path -Path $TargetOrquestrador -Label ".orquestrador"
-    Backup-Path -Path $TargetAgents -Label "AGENTS.md"
+    Backup-MappedDirectory -SourceDir $SourceOrquestrador -DestinationDir $TargetOrquestrador -Label ".orquestrador"
+    Backup-MappedFile -DestinationFile $TargetAgents -Label "AGENTS.md"
   }
   foreach ($target in $extraTargets) {
-    Backup-Path -Path $target.Destination -Label $target.Label
+    Backup-MappedDirectory -SourceDir $target.Source -DestinationDir $target.Destination -Label $target.Label
   }
   foreach ($target in $extraFileTargets) {
-    Backup-Path -Path $target.Destination -Label $target.Label
+    Backup-MappedFile -DestinationFile $target.Destination -Label $target.Label
   }
 
   if ($includeCore -and (Test-Path -LiteralPath $TargetOrquestrador)) {
@@ -426,20 +448,20 @@ if ($Uninstall) {
   return
 }
 
-Backup-Path -Path $TargetOrquestrador -Label ".orquestrador"
-Backup-Path -Path $TargetAgents -Label "AGENTS.md"
+Backup-MappedDirectory -SourceDir $SourceOrquestrador -DestinationDir $TargetOrquestrador -Label ".orquestrador"
+Backup-MappedFile -DestinationFile $TargetAgents -Label "AGENTS.md"
 $backedUpExtraTargets = @{}
 foreach ($target in $extraTargets) {
   $key = [System.IO.Path]::GetFullPath($target.Destination).ToLowerInvariant()
   if (-not $backedUpExtraTargets.ContainsKey($key)) {
-    Backup-Path -Path $target.Destination -Label $target.Label
+    Backup-MappedDirectory -SourceDir $target.Source -DestinationDir $target.Destination -Label $target.Label
     $backedUpExtraTargets[$key] = $true
   }
 }
 foreach ($target in $extraFileTargets) {
   $key = [System.IO.Path]::GetFullPath($target.Destination).ToLowerInvariant()
   if (-not $backedUpExtraTargets.ContainsKey($key)) {
-    Backup-Path -Path $target.Destination -Label $target.Label
+    Backup-MappedFile -DestinationFile $target.Destination -Label $target.Label
     $backedUpExtraTargets[$key] = $true
   }
 }

@@ -31,6 +31,25 @@ function Assert-FileContains {
   }
 }
 
+function Assert-FileLineCountAtMost {
+  param([string]$Path, [int]$MaxLines, [string]$Label)
+  if (-not (Test-Path -LiteralPath $Path)) { return }
+  $content = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
+  $lineCount = if ([string]::IsNullOrEmpty($content)) { 0 } else { ([regex]::Matches($content, "(`r`n|`n)")).Count + 1 }
+  if ($lineCount -gt $MaxLines) {
+    Add-Issue "$Label is too large for a compact hook router ($lineCount lines > $MaxLines): $Path"
+  }
+}
+
+function Assert-FileNotContains {
+  param([string]$Path, [string]$Pattern, [string]$Label)
+  if (-not (Test-Path -LiteralPath $Path)) { return }
+  $content = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
+  if ($content -match $Pattern) {
+    Add-Issue "$Label still contains a legacy hook catalog marker: $Path"
+  }
+}
+
 function Count-Dirs {
   param([string]$Path)
   if (-not (Test-Path -LiteralPath $Path)) { return 0 }
@@ -43,6 +62,33 @@ function Count-Files {
   return @(Get-ChildItem -LiteralPath $Path -File -Force -ErrorAction SilentlyContinue).Count
 }
 
+function Get-DefaultInstallPolicy {
+  return [pscustomobject]@{
+    nativeRoots = [pscustomobject]@{
+      codex = [pscustomobject]@{ path = ".codex/skills"; maxDirectories = 40 }
+      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 30 }
+      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 30 }
+      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 30 }
+      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 30 }
+      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 30 }
+      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 30 }
+      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 30 }
+    }
+  }
+}
+
+function Get-InstallPolicy {
+  param([string]$Path)
+  if (Test-Path -LiteralPath $Path) {
+    try {
+      return Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+      return Get-DefaultInstallPolicy
+    }
+  }
+  return Get-DefaultInstallPolicy
+}
+
 $orquestrador = Join-Path $HomePath ".orquestrador"
 $codex = Join-Path $HomePath ".codex"
 
@@ -50,8 +96,12 @@ Assert-Path -Path (Join-Path $orquestrador "rules.md") -Label "Orquestrador rule
 Assert-Path -Path (Join-Path $orquestrador "maestro.md") -Label "Orquestrador maestro"
 Assert-Path -Path (Join-Path $orquestrador "PROJECT_DEV_HIERARCHY.md") -Label "Project DEV hierarchy"
 Assert-Path -Path (Join-Path $orquestrador "bin\init-project-dev.ps1") -Label "Project DEV initializer"
+Assert-Path -Path (Join-Path $orquestrador "bin\compact-worklog.ps1") -Label "Project DEV worklog compactor"
+Assert-Path -Path (Join-Path $orquestrador "bin\check-dev-gates.ps1") -Label "Project DEV gate checker"
+Assert-Path -Path (Join-Path $orquestrador "bin\dev-context-tools.js") -Label "Project DEV context helper"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_INDEX.md") -Label "Orquestrador skills index"
 Assert-Path -Path (Join-Path $orquestrador "SKILLS_ROUTER.json") -Label "Orquestrador skills router"
+Assert-Path -Path (Join-Path $orquestrador "SKILL_INSTALL_POLICY.json") -Label "Orquestrador skill install policy"
 Assert-Path -Path (Join-Path $orquestrador "skills") -Label "Orquestrador canonical skills"
 Assert-Path -Path (Join-Path $HomePath "AGENTS.md") -Label "Global AGENTS.md"
 Assert-FileContains -Path (Join-Path $HomePath "AGENTS.md") -Pattern "DEV/" -Label "Global AGENTS.md"
@@ -59,23 +109,27 @@ Assert-FileContains -Path (Join-Path $HomePath "AGENTS.md") -Pattern "DEV/WORKLO
 Assert-FileContains -Path (Join-Path $orquestrador "rules.md") -Pattern "DEV/WORKLOG\.md" -Label "Orquestrador rules"
 Assert-FileContains -Path (Join-Path $orquestrador "PROJECT_DEV_HIERARCHY.md") -Pattern "DEV/WORKLOG\.md" -Label "Project DEV hierarchy"
 
+$installPolicy = Get-InstallPolicy -Path (Join-Path $orquestrador "SKILL_INSTALL_POLICY.json")
+$nativeRootSpecs = @()
+foreach ($prop in $installPolicy.nativeRoots.PSObject.Properties) {
+  $nativeRootSpecs += [pscustomobject]@{
+    Program = $prop.Name
+    Path = Join-Path $HomePath ($prop.Value.path -replace "/", "\")
+    MaxDirectories = [int]$prop.Value.maxDirectories
+  }
+}
+
 if (-not $CoreOnly) {
   Assert-Path -Path (Join-Path $codex "skills") -Label "Codex skills"
   Assert-Path -Path (Join-Path $codex "agents") -Label "Codex agents"
   Assert-Path -Path (Join-Path $codex "prompts") -Label "Codex prompts"
 
-  $compatRoots = @(
-    ".agents\skills",
-    ".claude\skills",
-    ".opencode\skills",
-    ".cursor\skills",
-    ".gemini\skills",
-    ".windsurf\skills",
-    ".antigravity-skills\skills"
-  )
-
-  foreach ($root in $compatRoots) {
-    Assert-Path -Path (Join-Path $HomePath $root) -Label "Compatibility skill root $root"
+  foreach ($root in $nativeRootSpecs) {
+    Assert-Path -Path $root.Path -Label "Native skill root $($root.Program)"
+    $dirCount = Count-Dirs -Path $root.Path
+    if ($dirCount -gt $root.MaxDirectories) {
+      Add-Issue "Native skill root $($root.Program) is oversized for low-token operation ($dirCount directories > $($root.MaxDirectories)): $($root.Path)"
+    }
   }
 }
 
@@ -110,6 +164,21 @@ if ((-not $CoreOnly) -and (-not $SkipToolProfiles)) {
   Assert-FileContains -Path (Join-Path $HomePath "antigravity-rules.json") -Pattern "\.ai-standards" -Label "Antigravity global rules"
   Assert-FileContains -Path (Join-Path $HomePath ".antigravity\antigravity.json") -Pattern "\.orquestrador" -Label "Antigravity integration config"
   Assert-FileContains -Path (Join-Path $HomePath ".ai-standards\core\rules.md") -Pattern "DEV/WORKLOG\.md" -Label "Antigravity AI standards rules"
+
+  $hookChecks = @(
+    @{ Path = (Join-Path $HomePath ".orquestrador\hooks.md"); MaxLines = 80; Label = "Orquestrador hooks profile" },
+    @{ Path = (Join-Path $HomePath ".opencode\hooks.md"); MaxLines = 30; Label = "OpenCode hooks profile" },
+    @{ Path = (Join-Path $HomePath ".claude\hooks.md"); MaxLines = 20; Label = "Claude hooks profile" },
+    @{ Path = (Join-Path $HomePath ".cursor\hooks.md"); MaxLines = 20; Label = "Cursor hooks profile" },
+    @{ Path = (Join-Path $HomePath ".gemini\hooks.md"); MaxLines = 20; Label = "Gemini hooks profile" },
+    @{ Path = (Join-Path $HomePath ".windsurf\hooks.md"); MaxLines = 20; Label = "Windsurf hooks profile" }
+  )
+
+  foreach ($hook in $hookChecks) {
+    Assert-FileContains -Path $hook.Path -Pattern "SKILLS_ROUTER\.json" -Label $hook.Label
+    Assert-FileLineCountAtMost -Path $hook.Path -MaxLines $hook.MaxLines -Label $hook.Label
+    Assert-FileNotContains -Path $hook.Path -Pattern "(?i)(GLOBAL SKILLS HOOKS|Complete Skill Reference with Descriptions)" -Label $hook.Label
+  }
 
   $opencodeConfig = Join-Path $HomePath ".config\opencode\opencode.json"
   if (Test-Path -LiteralPath $opencodeConfig) {
@@ -151,6 +220,9 @@ $summary = [pscustomobject]@{
   AgentSkills = Count-Dirs -Path (Join-Path $HomePath ".agents\skills")
   ClaudeSkills = Count-Dirs -Path (Join-Path $HomePath ".claude\skills")
   OpenCodeSkills = Count-Dirs -Path (Join-Path $HomePath ".opencode\skills")
+  CursorSkills = Count-Dirs -Path (Join-Path $HomePath ".cursor\skills")
+  GeminiSkills = Count-Dirs -Path (Join-Path $HomePath ".gemini\skills")
+  WindsurfSkills = Count-Dirs -Path (Join-Path $HomePath ".windsurf\skills")
   AntigravitySkills = Count-Dirs -Path (Join-Path $HomePath ".antigravity-skills\skills")
   ToolProfilesChecked = (-not $CoreOnly) -and (-not $SkipToolProfiles)
   CoreOnly = $CoreOnly

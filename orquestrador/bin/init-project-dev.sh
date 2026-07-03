@@ -2,15 +2,41 @@
 set -euo pipefail
 
 # Orquestrador Maestro - Project DEV initializer
-# Usage: bash ~/.orquestrador/bin/init-project-dev.sh [project_path]
+# Usage: bash ~/.orquestrador/bin/init-project-dev.sh [--project-path PATH]
 
-PROJECT_PATH="${1:-$(pwd)}"
+PROJECT_PATH="$(pwd)"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --project-path)
+      if [ "$#" -lt 2 ]; then
+        echo "Error: --project-path requires a value." >&2
+        exit 1
+      fi
+      PROJECT_PATH="$2"
+      shift
+      ;;
+    --help|-h)
+      sed -n '2,4p' "$0"
+      exit 0
+      ;;
+    --*)
+      echo "Error: unknown option: $1" >&2
+      exit 1
+      ;;
+    *)
+      PROJECT_PATH="$1"
+      ;;
+  esac
+  shift
+done
+
 mkdir -p "$PROJECT_PATH"
 PROJECT_ROOT="$(CDPATH= cd -- "$PROJECT_PATH" && pwd -P)"
 PROJECT_NAME="$(basename "$PROJECT_ROOT")"
 DEV_ROOT="$PROJECT_ROOT/DEV"
 CREATED_COUNT=0
-TOTAL_FILES=8
+TOTAL_FILES=11
 
 write_text_file_if_missing() {
   local path="$1"
@@ -44,6 +70,7 @@ SUBDIRS=(
   "TASKS"
   "RESEARCH"
   "HANDOFFS"
+  "SPECS"
 )
 
 for subdir in "${SUBDIRS[@]}"; do
@@ -55,13 +82,15 @@ if write_text_file_if_missing "$DEV_ROOT/README.md" <<'EOF'
 
 Compact operational documentation and project memory.
 
-Start with:
+Recommended read order:
 
 1. `INDEX.md`
-2. `CONTEXT.md`
-3. The task-specific document
+2. `HANDOFF.md`
+3. `CONTEXT.md`
+4. `SPECS/ACTIVE.md`
+5. The task-specific document
 
-Do not bulk-load the full `DEV/` folder by default.
+Keep `WORKLOG.md` short. Archive older entries with `compact-worklog` instead of turning `WORKLOG.md` into a long transcript.
 EOF
 then
   CREATED_COUNT=$((CREATED_COUNT + 1))
@@ -73,8 +102,11 @@ if write_text_file_if_missing "$DEV_ROOT/INDEX.md" <<'EOF'
 | Path | Purpose |
 |---|---|
 | `README.md` | Short operational documentation entrypoint |
+| `HANDOFF.md` | Current snapshot for the next AI or human |
 | `CONTEXT.md` | Current state, constraints, commands, and risks |
-| `WORKLOG.md` | Compact chronological hook of work done |
+| `SPECS/ACTIVE.md` | Active objective, scope, acceptance, and status |
+| `WORKLOG.md` | Compact chronological hook of substantive work |
+| `VERIFY.md` | Latest verification evidence and outcomes |
 | `ARCHITECTURE.md` | Living project architecture |
 | `DECISIONS.md` | Consolidated technical decisions |
 | `ADR/` | Formal decision records |
@@ -82,16 +114,46 @@ if write_text_file_if_missing "$DEV_ROOT/INDEX.md" <<'EOF'
 | `DATABASE/` | Data model, migrations, and data notes |
 | `TESTING.md` | Verification strategy and commands |
 | `RUNBOOKS/` | Operational procedures |
-| `TASKS/` | Active plans and tasks |
+| `TASKS/` | Active plans and task artifacts |
 | `RESEARCH/` | Research and references |
-| `HANDOFFS/` | Context handoffs |
+| `HANDOFFS/` | Archived handoffs and compacted worklog history |
 | `LOGS/` | Longer execution logs |
 | `SQL/` | SQL scripts and database work |
 | `ARCH/` | Existing architecture sub-hierarchy |
-| `WORKFLOWS/` | Active and completed workflow artifacts |
+| `WORKFLOWS/` | Existing workflow artifacts |
 | `TESTS/` | Existing testing sub-hierarchy |
 | `DOCUMENTATION/` | Existing project documentation sub-hierarchy |
 | `BACKLOG/` | Existing backlog and completed work archive |
+EOF
+then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_text_file_if_missing "$DEV_ROOT/HANDOFF.md" <<'EOF'
+# Active Handoff
+
+This file should stay small. Refresh it after substantive work or run `orquestrador-maestro compact-worklog`.
+
+## Snapshot
+
+- Updated:
+- Read order: `INDEX.md` -> `HANDOFF.md` -> `CONTEXT.md` -> `SPECS/ACTIVE.md`
+- Active spec: `SPECS/ACTIVE.md`
+- Verification source: `VERIFY.md`
+- Worklog archive: `HANDOFFS/WORKLOG_ARCHIVE.md`
+
+## Latest Work
+
+- Entry:
+- Spec:
+- Changed:
+- Verified:
+- Risks:
+- Next context:
+
+## Recent Entries
+
+-
 EOF
 then
   CREATED_COUNT=$((CREATED_COUNT + 1))
@@ -103,6 +165,8 @@ if write_text_file_if_missing "$DEV_ROOT/CONTEXT.md" <<'EOF'
 ## State
 
 - Project: `{{PROJECT_NAME}}`
+- Active handoff: `HANDOFF.md`
+- Active spec: `SPECS/ACTIVE.md`
 - Update this file when commands, architecture, environment, risks, or active decisions change.
 
 ## Commands
@@ -129,16 +193,42 @@ if write_text_file_if_missing "$DEV_ROOT/WORKLOG.md" <<'EOF'
 
 Record a short summary here after substantive work.
 
+Use `HANDOFF.md` for the current snapshot and `HANDOFFS/WORKLOG_ARCHIVE.md` for older entries after compaction.
+
 ## Template
 
 ```text
 ## YYYY-MM-DD - Short task title
 
-- Changed: paths or areas touched.
-- Why: one sentence.
-- Verified: command or manual check.
-- Next context: only what the next AI needs.
+- Spec: `DEV/SPECS/ACTIVE.md` or equivalent task doc
+- Changed: paths or areas touched
+- Why: one sentence
+- Verified: command or manual check
+- Risks: only active risks
+- Next context: only what the next AI needs
 ```
+EOF
+then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_text_file_if_missing "$DEV_ROOT/VERIFY.md" <<'EOF'
+# Verify
+
+## Latest Verification
+
+- Date:
+- Scope:
+
+## Commands
+
+-
+
+## Outcome
+
+- Passed:
+- Failed:
+- Pending:
 EOF
 then
   CREATED_COUNT=$((CREATED_COUNT + 1))
@@ -181,6 +271,43 @@ if write_text_file_if_missing "$DEV_ROOT/ROADMAP.md" <<'EOF'
 # Roadmap
 
 Use this file for product or engineering direction when active planning exists.
+EOF
+then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_text_file_if_missing "$DEV_ROOT/SPECS/ACTIVE.md" <<'EOF'
+# Active Spec - {{PROJECT_NAME}}
+
+## Goal
+
+-
+
+## In Scope
+
+-
+
+## Out Of Scope
+
+-
+
+## Acceptance
+
+-
+
+## Constraints
+
+-
+
+## Verification Plan
+
+-
+
+## Status
+
+- State: draft
+- Owner:
+- Last updated:
 EOF
 then
   CREATED_COUNT=$((CREATED_COUNT + 1))

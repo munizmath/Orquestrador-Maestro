@@ -20,7 +20,7 @@ Este fluxo mostra o caminho de instalação recomendado: baixar a CLI via npm, a
 
 ![Fluxo de funcionamento da orquestração com hierarquia, skills, hooks e DEV](docs/assets/runtime-flow.gif)
 
-Durante o uso, a IA deve ler primeiro os contratos compactos, respeitar a hierarquia, escolher a menor skill útil, executar com hooks e registrar o que importa em `DEV/WORKLOG.md` quando houver trabalho substancial.
+Durante o uso, a IA deve ler primeiro os contratos compactos, respeitar a hierarquia, escolher a menor skill útil, executar com hooks e registrar o que importa em `DEV/HANDOFF.md`, `DEV/VERIFY.md` e `DEV/WORKLOG.md` quando houver trabalho substancial.
 
 ### 3. Atualização Segura
 
@@ -29,6 +29,8 @@ Durante o uso, a IA deve ler primeiro os contratos compactos, respeitar a hierar
 O projeto público funciona como snapshot sanitizado. O mantenedor evolui a fonte local, exporta, valida, documenta no changelog, publica no GitHub/npm e o usuário atualiza com os comandos da CLI.
 
 ## Instalação Recomendada
+
+Última revisão pública deste README: 2026-06-30.
 
 Para instalar direto pelo npm:
 
@@ -42,9 +44,13 @@ Para atualizar depois:
 
 ```bash
 npm update -g @iapro/orquestrador-maestro-cli
+orquestrador-maestro changelog
 orquestrador-maestro update
 orquestrador-maestro verify
+orquestrador-maestro doctor
 ```
+
+No Linux e no macOS, `orquestrador-maestro doctor` exige `pwsh` ou `powershell` no `PATH`.
 
 Se preferir Git/ZIP, use as seções de instalação completa abaixo. O npm é o caminho mais simples para quem só quer instalar e manter atualizado.
 
@@ -63,6 +69,8 @@ Se preferir Git/ZIP, use as seções de instalação completa abaixo. O npm é o
 - [Requisitos e Compatibilidade](#requisitos-e-compatibilidade)
 - [Contribuição Da Comunidade](#contribuição-da-comunidade)
 - [Melhorias Recentes](#melhorias-recentes)
+- [Radar De Maio 2026](#radar-de-maio-2026)
+- [Radar De Junho 2026](#radar-de-junho-2026)
 - [Visão Geral](#visão-geral)
 - [Instalação Via npm](#instalação-via-npm)
 - [Como Funciona](#como-funciona)
@@ -119,6 +127,8 @@ Na prática, a PR #2 deixou o projeto mais fácil de manter: novas skills passam
 
 Crédito também ao Bruno, integrante da comunidade Grupo IAPro, pela curadoria e pelo papo que trouxe as referências de RTK e Caveman para a discussão. Essa contribuição ajudou a priorizar melhorias de economia de contexto, redução de leitura desnecessária, uso mais consciente da pasta `DEV/` e organização do Orquestrador para evitar gasto excessivo de tokens.
 
+Hector Noya e Felinto, integrantes do Grupo IAPro, também ficam registrados como colaboradores da comunidade nesta evolução do Orquestrador. Eles contribuíram com a curadoria e discussão das referências Ponytail, React Doctor e Headroom, ajudando a direcionar melhorias de gate de menor implementação suficiente, revisão React mais determinística e compressão/retrieval opt-in para contexto pesado.
+
 ## Melhorias Recentes
 
 A versão atual também incorporou aprendizados de projetos como [`rtk-ai/rtk`](https://github.com/rtk-ai/rtk) e [`juliusbrussee/caveman`](https://github.com/juliusbrussee/caveman), adaptados ao objetivo do Orquestrador Maestro: instalar uma configuração pública, auditável e reutilizável para vários agentes de IA.
@@ -130,9 +140,58 @@ Principais melhorias:
 - validação pública reforçada contra arquivos locais, temporários, caches, memórias privadas e raízes como `.omx/`, `.local/` e `DEV/`;
 - smoke tests em home temporário para validar instalação, verificação, listagem e desinstalação sem tocar no usuário real;
 - matriz de entrypoints em `orquestrador/PROGRAM_ENTRYPOINTS.json` para Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Windsurf e Antigravity;
-- documentação de economia de contexto para orientar IAs a lerem primeiro regras, índices, roteadores e `DEV/` antes de carregar arquivos longos.
+- documentação de economia de contexto para orientar IAs a lerem primeiro regras, índices, roteadores e `DEV/` antes de carregar arquivos longos;
+- novo fluxo determinístico de projeto com `DEV/SPECS/ACTIVE.md`, `DEV/HANDOFF.md`, `DEV/VERIFY.md`, `compact-worklog` e `check-dev-gates` para reduzir looping e contexto desperdiçado.
 
 Para entender os detalhes, veja [docs/installer-options.md](docs/installer-options.md), [docs/context-economy.md](docs/context-economy.md), [docs/privacy-model.md](docs/privacy-model.md) e [docs/orquestrador-reference.md](docs/orquestrador-reference.md).
+
+## Radar De Maio 2026
+
+A atualização mais recente revisou projetos públicos de agentes, harness engineering, MCP, skills e memória com atividade verificada no GitHub entre abril e maio de 2026. O objetivo não é copiar código, e sim transformar bons padrões em documentação, validação e próximos passos próprios do Orquestrador.
+
+O que ficou como direção técnica:
+
+- **canais e atualização**: projetos como [`openai/codex`](https://github.com/openai/codex) e [`google-gemini/gemini-cli`](https://github.com/google-gemini/gemini-cli) reforçam que CLI pública precisa ter instalação simples, update previsível, changelog claro e canais de release bem explicados antes de criar variantes como `latest`, `preview` ou `nightly`;
+- **telemetria explícita**: [`google-gemini/gemini-cli`](https://github.com/google-gemini/gemini-cli), [`ChromeDevTools/chrome-devtools-mcp`](https://github.com/ChromeDevTools/chrome-devtools-mcp) e [`entireio/cli`](https://github.com/entireio/cli) reforçam que telemetria e coleta de sessão devem ter documentação objetiva, botão de desligar, payload permitido e proibição clara de dados privados;
+- **harness determinístico**: [`coleam00/archon`](https://github.com/coleam00/archon), [`ai-boost/awesome-harness-engineering`](https://github.com/ai-boost/awesome-harness-engineering) e [`aiming-lab/AutoHarness`](https://github.com/aiming-lab/AutoHarness) apontam para fases, gates, artefatos, validação e planos/checkpoints como parte do produto, não como detalhe interno;
+- **subagentes portáveis**: [`shinpr/sub-agents-mcp`](https://github.com/shinpr/sub-agents-mcp) mostra um caminho para definir agentes em Markdown e expor execução por MCP, mantendo o padrão do Orquestrador de criar perfis reutilizáveis sem prender tudo a uma única ferramenta;
+- **engenharia de contexto**: [`bonigarcia/context-engineering`](https://github.com/bonigarcia/context-engineering), [`deepset-ai/haystack`](https://github.com/deepset-ai/haystack), [`sbhooley/ainativelang`](https://github.com/sbhooley/ainativelang) e [`MemTensor/MemOS`](https://github.com/MemTensor/MemOS) reforçam o modelo de contexto em camadas: instruções, memória, ferramentas, estado, roteamento, custo, auditoria e governança;
+- **SkillOps**: [`gotalab/skillport`](https://github.com/gotalab/skillport) entra como referência estável para a ideia de gerenciar skills uma vez e servir em múltiplas ferramentas via CLI ou MCP.
+
+O radar completo, com data de atividade, licença e decisão de aproveitamento, está em [docs/research/repo-radar-2026-05.md](docs/research/repo-radar-2026-05.md).
+
+Na prática, isso deixa o roadmap público mais claro:
+
+1. manter `npm install -g` e `orquestrador-maestro update` como caminho simples;
+2. só adicionar canais `preview` ou `nightly` quando houver cadência real de release;
+3. manter telemetria anônima, documentada, desativável e sem caminhos locais;
+4. evoluir `DEV/` com templates de plano, implementação, verificação e handoff;
+5. estudar MCP/subagentes como camada opcional, sem quebrar a instalação atual;
+6. documentar cada referência externa antes de transformar qualquer padrão em código.
+
+## Radar De Junho 2026
+
+A revisão pública de junho de 2026 cruzou fontes adicionais para melhorar produto, documentação, fluxo de atualização, UX/UI e economia real de contexto sem transformar o repositório em depósito de material externo:
+
+- [`tenfoldmarc/website-builder-setup`](https://github.com/tenfoldmarc/website-builder-setup): reforçou a necessidade de onboarding orientado a resultado, passos curtos e UX de instalação mais explícita;
+- [`bradautomates/claude-video`](https://github.com/bradautomates/claude-video): reforçou a separação entre README operacional, `CHANGELOG.md` canônico, empacotamento claro e fluxo de release previsível;
+- [`anthropics/claude-cookbooks`](https://github.com/anthropics/claude-cookbooks): reforçou organização por registro, guias de contribuição, categorias estáveis e documentação que ajuda a IA a achar o playbook certo sem carregar tudo;
+- pasta pública do Google Drive [`CS Fundamentals (Lets Code)`](https://drive.google.com/drive/folders/18FBvExqEtt9mtNKKP65f_ETdtS7nCG1G): útil como biblioteca externa de referência, mas inadequada para ser vendorizada neste snapshot público.
+- [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail): reforçou o gate de menor implementação suficiente para evitar overengineering, dependências desnecessárias e subagentes produzindo código demais;
+- [`millionco/react-doctor`](https://github.com/millionco/react-doctor): reforçou a ideia de gate React determinístico, com audit local, configuração explícita e foco em problemas novos introduzidos por uma mudança;
+- [`headroomlabs-ai/headroom`](https://github.com/headroomlabs-ai/headroom): reforçou o roadmap de compressão opt-in e reversível para outputs longos, logs, RAG, arquivos e histórico de sessão.
+
+O que virou melhoria concreta neste projeto:
+
+- `CHANGELOG.md` passa a ser o histórico canônico empacotado junto da CLI;
+- o CLI ganha `orquestrador-maestro changelog` para mostrar o que mudou antes do update;
+- o CLI ganha `orquestrador-maestro doctor` para rodar o diagnóstico operacional empacotado depois da instalação ou atualização;
+- o fluxo recomendado para usuário instalado fica explícito: `npm update -g`, `changelog`, `update`, `verify` e `doctor`;
+- referências grandes e privadas passam a ter contrato formal de uso local via `REFERENCE_PACKS.md`, em vez de cópia para dentro do repositório público;
+- a trilha de UX/UI fica mais objetiva para agentes: usar primeiro `skill-open-design-ui`, depois `skill-modern-ui-patterns` e `skill-frontend-ux-guardrails` quando a tarefa realmente pedir interface;
+- o roadmap de contexto passa a separar três frentes: escrever menos quando o simples resolve, auditar React com gate especializado quando o projeto pedir e comprimir contexto pesado só de forma opt-in, mensurável e recuperável.
+
+O detalhamento desta revisão está em [docs/research/repo-radar-2026-06.md](docs/research/repo-radar-2026-06.md).
 
 ## Visão Geral
 
@@ -192,17 +251,30 @@ Para atualizar:
 
 ```bash
 npm update -g @iapro/orquestrador-maestro-cli
+orquestrador-maestro changelog
 orquestrador-maestro update
 orquestrador-maestro verify
+orquestrador-maestro doctor
 ```
 
 O pacote instala o comando `orquestrador-maestro`, mas não altera o home automaticamente durante o `npm install`. A alteração acontece quando o usuário roda `orquestrador-maestro install` ou `orquestrador-maestro update`, o que deixa o fluxo mais auditável e seguro.
 
-O CLI tem telemetria anônima para medir comandos como `install`, `update`, `verify`, `dry-run` e `uninstall`. Ela não envia telefone, nome de usuário, caminho local, prompts, logs, tokens ou conteúdo de projeto. Para usar em produção, configure um endpoint HTTPS antes de publicar o pacote ou depois no usuário:
+Na versão atual, `orquestrador-maestro update` também migra instalações antigas: remove skills excedentes das raízes nativas, restaura o conjunto mínimo gerenciado e preserva o excedente em `.orquestrador/skill-library/disabled-native`.
+
+O CLI tem suporte a telemetria anônima para medir comandos como `install`, `update`, `verify`, `doctor`, `changelog`, `dry-run` e `uninstall`. Ela fica desabilitada por padrão e só envia eventos depois de o usuário configurar um endpoint e habilitar explicitamente. Configurações antigas sem consentimento versionado são tratadas como desabilitadas até o usuário rodar `orquestrador-maestro telemetry enable` novamente. Ela não envia telefone, nome de usuário, caminho local, prompts, logs, tokens ou conteúdo de projeto.
+
+Para habilitar:
 
 ```bash
 orquestrador-maestro telemetry endpoint https://seu-dominio.example/api/orquestrador-telemetry
+orquestrador-maestro telemetry enable
 orquestrador-maestro telemetry test
+```
+
+Atalho equivalente:
+
+```bash
+orquestrador-maestro telemetry enable --endpoint https://seu-dominio.example/api/orquestrador-telemetry
 ```
 
 Para desabilitar:
@@ -283,22 +355,27 @@ A IA deve usar o usuário atual da máquina dela. Ela não deve copiar caminhos 
 
 ## O Que A Instalação Cria
 
+Observação de arquitetura: as bibliotecas grandes ficam em `.orquestrador/skill-library/`, enquanto as raízes nativas de `.codex`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf`, `.agents` e `.antigravity-skills` ficam enxutas para reduzir o custo fixo de contexto por sessão.
+
 Por padrão, o instalador copia o núcleo, skills, agentes, prompts e perfis de ferramentas para o home do usuário atual.
 
 | Destino Windows | Destino Linux/macOS | Função |
 |---|---|---|
-| `%USERPROFILE%\.orquestrador` | `$HOME/.orquestrador` | Núcleo canônico com regras, Maestro, hooks, roteadores, índices, scripts e skills principais. |
+| `%USERPROFILE%\.orquestrador` | `$HOME/.orquestrador` | Núcleo canônico com regras, Maestro, hooks, roteadores, índices, scripts, skills canônicas e bibliotecas offload. |
 | `%USERPROFILE%\AGENTS.md` | `$HOME/AGENTS.md` | Contrato global que Codex e outros agentes devem ler como regra de usuário. |
-| `%USERPROFILE%\.codex\skills` | `$HOME/.codex/skills` | Skills do Codex/OMX e skills canônicas espelhadas. |
+| `%USERPROFILE%\.codex\skills` | `$HOME/.codex/skills` | Conjunto nativo enxuto: skills canônicas, workflows OMX essenciais e `.system`. |
 | `%USERPROFILE%\.codex\agents` | `$HOME/.codex/agents` | Perfis de subagentes Codex. |
 | `%USERPROFILE%\.codex\prompts` | `$HOME/.codex/prompts` | Prompts de papéis usados por agentes. |
-| `%USERPROFILE%\.agents\skills` | `$HOME/.agents/skills` | Raiz legada de skills para compatibilidade com outras ferramentas. |
-| `%USERPROFILE%\.claude\skills` | `$HOME/.claude/skills` | Espelho de skills para Claude Code. |
-| `%USERPROFILE%\.opencode\skills` | `$HOME/.opencode/skills` | Espelho de skills para OpenCode. |
-| `%USERPROFILE%\.cursor\skills` | `$HOME/.cursor/skills` | Espelho de skills para Cursor. |
-| `%USERPROFILE%\.gemini\skills` | `$HOME/.gemini/skills` | Espelho de skills para Gemini CLI. |
-| `%USERPROFILE%\.windsurf\skills` | `$HOME/.windsurf/skills` | Espelho de skills para Windsurf. |
-| `%USERPROFILE%\.antigravity-skills\skills` | `$HOME/.antigravity-skills/skills` | Espelho de skills para ambientes compatíveis. |
+| `%USERPROFILE%\.agents\skills` | `$HOME/.agents/skills` | Raiz legada com apenas as skills canônicas espelhadas. |
+| `%USERPROFILE%\.claude\skills` | `$HOME/.claude/skills` | Raiz nativa mínima para Claude Code, sincronizada a partir do manifesto canônico. |
+| `%USERPROFILE%\.opencode\skills` | `$HOME/.opencode/skills` | Raiz nativa mínima para OpenCode. |
+| `%USERPROFILE%\.cursor\skills` | `$HOME/.cursor/skills` | Raiz nativa mínima para Cursor. |
+| `%USERPROFILE%\.gemini\skills` | `$HOME/.gemini/skills` | Raiz nativa mínima para Gemini CLI. |
+| `%USERPROFILE%\.windsurf\skills` | `$HOME/.windsurf/skills` | Raiz nativa mínima para Windsurf. |
+| `%USERPROFILE%\.antigravity-skills\skills` | `$HOME/.antigravity-skills/skills` | Raiz nativa mínima para ambientes compatíveis. |
+| `%USERPROFILE%\.orquestrador\skill-library\community-skills` | `$HOME/.orquestrador/skill-library/community-skills` | Biblioteca comunitária completa, fora das raízes que as IAs escaneiam automaticamente. |
+| `%USERPROFILE%\.orquestrador\skill-library\codex-skills` | `$HOME/.orquestrador/skill-library/codex-skills` | Catálogo completo de skills OMX/Codex para consulta e migração sem inflar o contexto nativo. |
+| `%USERPROFILE%\.orquestrador\skill-library\disabled-native` | `$HOME/.orquestrador/skill-library/disabled-native` | Skills antigas retiradas das raízes nativas para reduzir tokens sem apagar trabalho do usuário. |
 | `%USERPROFILE%\.ai-standards` | `$HOME/.ai-standards` | Standards portáteis usados pelo Antigravity. |
 | `%USERPROFILE%\.orquestrador-public-backups` | `$HOME/.orquestrador-public-backups` | Backups criados quando o instalador substitui arquivos existentes. |
 
@@ -314,6 +391,13 @@ O instalador também cria perfis textuais e entrypoints para ferramentas. Eles s
 | Windsurf | `.codeium\windsurf\memories\global_rules.md`, `.windsurf\hooks.md`, `.windsurf\skills`. |
 | Antigravity | `antigravity-rules.json`, `.antigravity\antigravity.json`, `.antigravity\settings.json`, `.ai-standards`, `.antigravity-skills\skills`. |
 
+Arquitetura nova de contexto:
+
+- bibliotecas grandes ficam em `.orquestrador/skill-library/`;
+- as pastas nativas de cada software ficam pequenas por padrão;
+- `sync-skills` instala o mínimo necessário e offloada o excesso das raízes nativas;
+- isso reduz o custo fixo por sessão em ferramentas que listam todas as skills no prompt do sistema.
+
 No Linux/macOS, os mesmos entrypoints são instalados com `/` sob `$HOME`, por exemplo `$HOME/.codex/AGENTS.md`, `$HOME/.config/opencode/opencode.json` e `$HOME/.ai-standards`.
 
 Quando algum arquivo de destino já existe, o instalador faz backup antes de substituir, exceto se você usar flags que mudam esse comportamento.
@@ -321,6 +405,27 @@ Quando algum arquivo de destino já existe, o instalador faz backup antes de sub
 ## Como Funciona
 
 O Orquestrador Maestro trabalha por hierarquia. A IA não deve sair abrindo tudo. Ela deve ler primeiro os contratos compactos, escolher o menor conjunto de contexto necessário e só então executar.
+
+Hoje o fluxo tem duas camadas:
+
+- **camada global**: `rules.md` -> `maestro.md` -> `AGENTS.md` -> router de skills;
+- **camada de projeto**: `DEV/INDEX.md` -> `DEV/HANDOFF.md` -> `DEV/CONTEXT.md` -> `DEV/SPECS/ACTIVE.md` -> detalhes da tarefa -> `DEV/WORKLOG.md` só se necessário.
+
+```mermaid
+flowchart LR
+  A["Pedido do Maestro"] --> B["rules.md + maestro.md + AGENTS.md"]
+  B --> C["DEV/INDEX.md"]
+  C --> D["DEV/HANDOFF.md"]
+  D --> E["DEV/CONTEXT.md"]
+  E --> F["DEV/SPECS/ACTIVE.md"]
+  F --> G["Router de skills"]
+  G --> H["Execução"]
+  H --> I["DEV/VERIFY.md"]
+  I --> J["DEV/WORKLOG.md"]
+  J --> K["check-dev-gates"]
+  K --> L["compact-worklog"]
+  L --> D
+```
 
 ### Hierarquia De Leitura
 
@@ -330,8 +435,13 @@ A ordem esperada é:
 2. `%USERPROFILE%\.orquestrador\maestro.md` ou `$HOME/.orquestrador/maestro.md`
 3. `%USERPROFILE%\AGENTS.md` ou `$HOME/AGENTS.md`
 4. `AGENTS.md` mais próximo do projeto atual
-5. documentação `DEV/` do projeto, quando existir
-6. skill ou prompt específico da tarefa
+5. `DEV/README.md` ou `DEV/INDEX.md`
+6. `DEV/HANDOFF.md`
+7. `DEV/CONTEXT.md`
+8. `DEV/SPECS/ACTIVE.md`
+9. documentos específicos da tarefa
+10. `DEV/WORKLOG.md` apenas se handoff, contexto e spec não bastarem
+11. skill ou prompt específico da tarefa
 
 Essa ordem separa três tipos de regra:
 
@@ -350,18 +460,37 @@ O modelo de trabalho é:
 - o Orquestrador executa, roteia, verifica e reporta;
 - o Maestro decide objetivos, autoriza escopos sensíveis e aprova publicação.
 
-Na prática, isso evita que a IA invente um processo novo a cada projeto. Ela passa a seguir o ciclo padrão abaixo.
+Na prática, isso evita que a IA invente um processo novo a cada projeto. Ela passa a seguir um ciclo padronizado que reduz ambiguidade, trava looping e mantém o worklog leve.
 
-### Ciclo De Execução
+### Ciclo Determinístico De Projeto
 
-1. **Observar**: ler regras globais, projeto atual, status do workspace e documentos `DEV/` relevantes.
-2. **Classificar**: entender se a tarefa é simples, padrão, profunda, multiagente, SaaS ou segurança.
-3. **Rotear**: consultar aliases, router e perfis antes de abrir skills grandes.
-4. **Selecionar**: carregar apenas o `SKILL.md` principal e referências diretamente necessárias.
-5. **Executar**: fazer a alteração, investigação ou documentação pedida.
-6. **Verificar**: rodar o menor conjunto de verificações que prova o resultado.
-7. **Registrar**: atualizar `DEV/WORKLOG.md` quando houve trabalho substancial no projeto local.
-8. **Reportar**: explicar o que mudou, o que foi verificado e qualquer risco restante.
+O combo operacional agora é: `spec + handoff + verify + worklog + scripts + gate`.
+
+1. **Criar a estrutura** com `orquestrador-maestro init-dev --project-path .` quando o projeto ainda não tiver `DEV/`.
+2. **Fixar a tarefa** em `DEV/SPECS/ACTIVE.md`: objetivo, escopo, aceite e plano de verificação.
+3. **Executar com contexto mínimo**: handoff, contexto, spec ativa e a skill mínima necessária.
+4. **Registrar evidência** em `DEV/VERIFY.md`: comandos, resultado e pendências.
+5. **Atualizar o snapshot** em `DEV/HANDOFF.md`: o que mudou, o que foi verificado e o próximo passo.
+6. **Adicionar só o resumo** em `DEV/WORKLOG.md`: entrada curta, não transcrição longa.
+7. **Rodar o gate** com `orquestrador-maestro check-dev-gates --project-path . --max-entries 12 --strict` quando a tarefa for longa ou estiver pronta para handoff.
+8. **Compactar o histórico** com `orquestrador-maestro compact-worklog --project-path . --keep 12` quando o worklog crescer demais.
+
+### Scripts E Gate
+
+Os scripts existem para transformar a convenção em comportamento verificável:
+
+- `init-dev` cria a hierarquia mínima já no formato certo.
+- `check-dev-gates` impede que o projeto siga sem `spec`, `handoff`, `verify` ou com `WORKLOG` inflado.
+- `compact-worklog` move contexto frio para `DEV/HANDOFFS/WORKLOG_ARCHIVE.md` e mantém só o caminho quente de leitura.
+
+### Por Que Isso Reduz Tokens
+
+- `HANDOFF.md` concentra o snapshot atual e evita reler uma conversa longa.
+- `SPECS/ACTIVE.md` reduz ambiguidade e para o projeto de rodar em círculos.
+- `VERIFY.md` evita rediscutir se algo foi realmente validado.
+- `WORKLOG.md` fica curto por design; o histórico velho sai do caminho padrão de leitura.
+- `check-dev-gates` transforma a convenção em verificação objetiva.
+- `compact-worklog` preserva histórico sem deixar ele ocupar o contexto base da sessão.
 
 ## Roteamento De Skills
 
@@ -402,12 +531,14 @@ Fluxo esperado:
 
 ## Skills Principais
 
-As skills canônicas ficam em `orquestrador/skills/` e são espelhadas para as pastas das ferramentas durante a instalação.
+As skills canônicas ficam em `orquestrador/skills/` e são espelhadas para as pastas nativas das ferramentas durante a instalação.
 
 | Skill | O que faz |
 |---|---|
 | `skill-saas-factory` | Skill guarda-chuva para planejar, construir ou revisar SaaS. Coordena arquitetura, produto, pagamento, admin, segurança e analytics. |
 | `skill-saas-admin-dashboard` | Padroniza painel admin com usuários, tenants, planos, billing, logs, métricas, filtros e operações de suporte. |
+| `skill-cobranca-automatizada-saas-abacatepay` | Motor de cobrança automatizada com AbacatePay, régua de cobrança, faturas, trial, portal público e notificações de cobrança. |
+| `skill-lgpd-brasil` | LGPD e privacidade para produtos brasileiros: mapa de dados, bases legais, consentimento, RIPD, direitos do titular e incidentes. |
 | `skill-abacatepay-integration` | Guia integração com AbacatePay, incluindo PIX/cartão, CPF/CNPJ, webhooks, recibos, reembolso e entitlements. |
 | `skill-stripe-integration` | Guia Stripe Checkout, Billing, subscriptions, portal, invoices, trials, coupons, webhooks e estado de assinatura. |
 | `skill-saas-core-limits` | Define limites de plano, cotas, entitlements, grace period, bloqueios e contadores de uso. |
@@ -432,7 +563,9 @@ As skills canônicas ficam em `orquestrador/skills/` e são espelhadas para as p
 | `skill-elevenlabs-voice-cloning` | Integra TTS/clonagem ElevenLabs com consentimento, uploads seguros, jobs e proteção de biometria vocal. |
 | `skill-google-workspace-sync` | Guia OAuth, Calendar, Meet, Drive, Sheets, webhooks, escopos mínimos e reconciliação. |
 
-As skills workflow do Codex/OMX ficam em `codex/skills/`. Elas cobrem execução, revisão, planejamento, delegação, diagnóstico, consulta a outros modelos e modos de trabalho como `ralph`, `team`, `ultrawork`, `deep-interview`, `code-review` e `security-review`.
+As skills workflow do Codex/OMX ficam em `codex/skills/` no snapshot público, mas a instalação não despeja esse catálogo inteiro em `.codex/skills`. O instalador guarda a biblioteca completa em `.orquestrador/skill-library/codex-skills` e mantém nativamente apenas um conjunto essencial como `orquestrador-maestro`, `autopilot`, `doctor`, `plan`, `ralplan`, `ralph`, `team`, `ultrawork`, `deep-interview`, `code-review`, `security-review`, `web-clone`, `worker`, `ask-claude`, `ask-gemini` e `.system`.
+
+Isso evita que ferramentas que enumeram a pasta nativa inteira paguem custo fixo de centenas de skills em toda sessão.
 
 O catálogo completo está em [docs/skill-catalog.md](docs/skill-catalog.md).
 
@@ -440,7 +573,7 @@ O catálogo completo está em [docs/skill-catalog.md](docs/skill-catalog.md).
 
 Crie skills canônicas em `orquestrador/skills/` dentro deste repositório quando estiver evoluindo o snapshot público. Depois da instalação, a fonte canônica no computador do usuário fica em `%USERPROFILE%\.orquestrador\skills` no Windows ou `$HOME/.orquestrador/skills` no Linux/macOS.
 
-Não edite os espelhos diretamente (`.codex/skills`, `.claude/skills`, `.opencode/skills`, `.agents/skills`, etc.) a menos que esteja depurando. Eles são destinos de sincronização.
+Não edite os espelhos diretamente (`.codex/skills`, `.claude/skills`, `.opencode/skills`, `.agents/skills`, etc.) a menos que esteja depurando. Eles são destinos de sincronização e agora devem permanecer pequenos.
 
 ### Exemplo: Skill De Front-End React
 
@@ -574,6 +707,8 @@ git diff -- .
 
 Neste repositório, "hook" significa uma regra ou ponto de execução que muda o comportamento da IA ou de uma ferramenta. Alguns hooks são instruções em Markdown. Outros são scripts instaláveis.
 
+Os hooks das ferramentas devem continuar pequenos. O roteamento real de gatilhos e skills vive em `SKILL_ALIASES.json`, `SKILLS_ROUTER.json` e `SKILL_CHAINS.json`, não em catálogos longos dentro de cada `hooks.md`.
+
 | Hook | Onde fica | Lógica |
 |---|---|---|
 | Preflight | `orquestrador/hooks.md` | Antes de trabalho amplo, ler contratos, projeto, DEV e roteadores. |
@@ -581,8 +716,8 @@ Neste repositório, "hook" significa uma regra ou ponto de execução que muda o
 | Token budget | `orquestrador/hooks.md` | Evitar carregar catálogos grandes; abrir apenas arquivos necessários. |
 | Verification | `orquestrador/hooks.md` | Verificar antes de declarar conclusão. |
 | Project DEV | `PROJECT_DEV_HIERARCHY.md` | Ler memória local do projeto e atualizar `DEV/WORKLOG.md` após trabalho substancial. |
-| Tool entrypoints | `PROGRAM_ENTRYPOINTS.json`, `tool-profiles/` | Fazer cada ferramenta encontrar o Orquestrador no caminho nativo dela. |
-| Skill sync | `sync-skills.ps1`, `sync-skills.sh` | Espelhar skills canônicas para `.codex`, `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf` e `.antigravity-skills`. |
+| Tool entrypoints | `PROGRAM_ENTRYPOINTS.json`, `tool-profiles/` | Fazer cada ferramenta encontrar o Orquestrador no caminho nativo dela, com hooks compactos e roteamento centralizado. |
+| Skill sync | `sync-skills.ps1`, `sync-skills.sh` | Espelhar skills canônicas para `.codex`, `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf` e `.antigravity-skills`, além de manter essas raízes enxutas. |
 | Usage log | `SKILL_USAGE_SCHEMA.json` | Padrão opcional para registrar qual skill foi escolhida, aberta e verificada. |
 | Security Git hooks | `skill-security-hooks/scripts/install-security-hooks.cmd` | Instalar `pre-commit` e `pre-push` defensivos em repositórios autorizados. |
 
@@ -596,8 +731,12 @@ Estrutura recomendada:
 DEV/
   README.md
   INDEX.md
+  HANDOFF.md
   CONTEXT.md
+  SPECS/
+    ACTIVE.md
   WORKLOG.md
+  VERIFY.md
   ARCHITECTURE.md
   DECISIONS.md
   ADR/
@@ -607,39 +746,51 @@ DEV/
   TASKS/
   RESEARCH/
   HANDOFFS/
+    WORKLOG_ARCHIVE.md
 ```
 
 Ordem de leitura dentro de um projeto:
 
 1. `AGENTS.md` do projeto, se existir.
 2. `DEV/README.md` ou `DEV/INDEX.md`.
-3. `DEV/CONTEXT.md`.
-4. documentos específicos da tarefa.
-5. skills globais do Orquestrador.
+3. `DEV/HANDOFF.md`.
+4. `DEV/CONTEXT.md`.
+5. `DEV/SPECS/ACTIVE.md`.
+6. documentos específicos da tarefa.
+7. `DEV/WORKLOG.md` só quando os arquivos curtos não bastarem.
+8. skills globais do Orquestrador.
 
 A IA não deve carregar a pasta `DEV/` inteira por padrão. Ela deve usar os índices para economizar tokens.
 
-Depois de trabalho substancial, a IA deve registrar uma entrada curta em `DEV/WORKLOG.md`:
+Depois de trabalho substancial, a IA deve atualizar `DEV/VERIFY.md`, `DEV/HANDOFF.md` e registrar uma entrada curta em `DEV/WORKLOG.md`:
 
 ```text
 ## YYYY-MM-DD - Título curto
 
-- Alterado: caminhos ou áreas mexidas.
-- Motivo: uma frase.
-- Verificado: comando ou checagem manual.
-- Próximo contexto: só o que a próxima IA precisa saber.
+- Spec: `DEV/SPECS/ACTIVE.md` ou documento equivalente
+- Changed: caminhos ou areas mexidas
+- Why: uma frase
+- Verified: comando ou checagem manual
+- Risks: so riscos ativos
+- Next context: so o que a proxima IA precisa saber
 ```
 
 Para criar `DEV/` em um projeto:
+
+```bash
+orquestrador-maestro init-dev --project-path /caminho/do/projeto
+```
+
+Ou pelos scripts locais:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-project-dev.ps1 -ProjectPath "C:\caminho\do\projeto"
 ```
 
-No Linux/macOS:
+Linux/macOS:
 
 ```bash
-bash scripts/init-project-dev.sh /caminho/do/projeto
+bash scripts/init-project-dev.sh --project-path /caminho/do/projeto
 ```
 
 Depois da instalação, também existe o helper instalado no usuário:
@@ -651,10 +802,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.orquestra
 No Linux/macOS:
 
 ```bash
-bash "$HOME/.orquestrador/bin/init-project-dev.sh" /caminho/do/projeto
+bash "$HOME/.orquestrador/bin/init-project-dev.sh" --project-path /caminho/do/projeto
 ```
 
-O script cria a estrutura base sem sobrescrever arquivos existentes.
+O script cria a estrutura base sem sobrescrever arquivos existentes. Para manter o fluxo compacto depois:
+
+```bash
+orquestrador-maestro check-dev-gates --project-path /caminho/do/projeto --max-entries 12 --strict
+orquestrador-maestro compact-worklog --project-path /caminho/do/projeto --keep 12
+```
 
 ## Como Pedir Para A IA Trabalhar Com O Orquestrador
 
@@ -670,7 +826,8 @@ Pedido para tarefa com docs:
 
 ```text
 Atualize a documentação do projeto seguindo a hierarquia DEV/.
-Leia DEV/INDEX.md e DEV/CONTEXT.md, edite os arquivos duráveis corretos
+Leia DEV/INDEX.md, DEV/HANDOFF.md, DEV/CONTEXT.md e DEV/SPECS/ACTIVE.md,
+edite os arquivos duráveis corretos, registre evidência em DEV/VERIFY.md
 e deixe um resumo curto em DEV/WORKLOG.md.
 ```
 
@@ -768,7 +925,19 @@ bash scripts/verify-install.sh --home-path /tmp/orquestrador-test-home
 
 ## Atualizar Uma Instalação
 
-Para atualizar a instalação de um usuário:
+Para quem instalou via npm, este é o fluxo recomendado:
+
+```bash
+npm update -g @iapro/orquestrador-maestro-cli
+orquestrador-maestro changelog
+orquestrador-maestro update
+orquestrador-maestro verify
+orquestrador-maestro doctor
+```
+
+No Linux e no macOS, `doctor` exige `pwsh` ou `powershell` disponível no `PATH`.
+
+Para quem instalou a partir deste clone Git/ZIP, atualize assim:
 
 ```powershell
 git pull
@@ -825,6 +994,7 @@ O validador público verifica:
 ```text
 .
   AGENTS.md
+  CONTRIBUTING.md
   README.md
   install.ps1
   install.sh
@@ -834,6 +1004,7 @@ O validador público verifica:
     skills/
   docs/
     assets/
+    research/
   home/
     AGENTS.md
   orquestrador/
@@ -874,7 +1045,10 @@ O validador público verifica:
 - [docs/orquestrador.md](docs/orquestrador.md): download, instalação, verificação, uso e atualização.
 - [docs/orquestrador-reference.md](docs/orquestrador-reference.md): lógica interna, roteamento, hooks, perfis, agentes, sync e verificação.
 - [docs/context-economy.md](docs/context-economy.md): economia de contexto inspirada em RTK/Caveman, leitura em camadas e roadmap de wrappers compactos.
+- [docs/research/repo-radar-2026-05.md](docs/research/repo-radar-2026-05.md): radar de repositórios recentes e padrões extraíveis para próximas melhorias.
+- [docs/research/repo-radar-2026-06.md](docs/research/repo-radar-2026-06.md): radar de junho de 2026 com UX/UI, changelog canônico, doctor/changelog no CLI, uso seguro de bibliotecas externas, gate de implementação mínima, gate React e compressão opt-in de contexto.
 - [docs/npm-package.md](docs/npm-package.md): pacote `@iapro/orquestrador-maestro-cli`, comandos npm, update e publicação.
+- [docs/reference-packs.md](docs/reference-packs.md): padrão para bibliotecas locais e privadas de referência sem publicar conteúdo externo junto do snapshot.
 - [docs/skill-catalog.md](docs/skill-catalog.md): catálogo das skills canônicas, Codex e comunitárias publicadas.
 - [docs/ai-agent-operating-guide.md](docs/ai-agent-operating-guide.md): como as IAs devem resolver tarefas usando o Orquestrador.
 - [docs/project-dev-hierarchy.md](docs/project-dev-hierarchy.md): hierarquia `DEV/` para documentação e memória de projetos.
@@ -883,6 +1057,7 @@ O validador público verifica:
 - [docs/privacy-model.md](docs/privacy-model.md): modelo de privacidade e sanitização.
 - [docs/update-flow.md](docs/update-flow.md): como atualizar este repo a partir da máquina fonte.
 - [docs/assets/](docs/assets/): GIFs usados neste README para explicar instalação, funcionamento e atualização.
+- [CONTRIBUTING.md](CONTRIBUTING.md): checklist de contribuição, privacidade, validação e padrão de changelog.
 
 ## Resolução de Problemas
 
@@ -898,8 +1073,9 @@ Se a IA não encontrar as skills:
 
 1. verifique `%USERPROFILE%\.orquestrador\skills`;
 2. verifique `%USERPROFILE%\.codex\skills`;
-3. rode `%USERPROFILE%\.orquestrador\sync-skills.ps1 -Apply`;
-4. rode novamente `scripts\verify-install.ps1`.
+3. verifique `%USERPROFILE%\.orquestrador\skill-library\community-skills` e `%USERPROFILE%\.orquestrador\skill-library\codex-skills`;
+4. rode `%USERPROFILE%\.orquestrador\sync-skills.ps1 -Apply`;
+5. rode novamente `scripts\verify-install.ps1`.
 
 No Linux/macOS, use os equivalentes Bash:
 
@@ -950,9 +1126,11 @@ Palavras-chave naturais do README:
 
 ## Changelog
 
-Este README mantém o changelog resumido do projeto para que a pessoa entenda rapidamente o que mudou antes de atualizar. Mudanças grandes também podem ter documentação dedicada em `docs/`, mas o resumo público deve continuar aqui.
+Última revisão pública deste resumo: 2026-06-28.
 
-Padrão usado:
+Este README mantém o changelog resumido do projeto para que a pessoa entenda rapidamente o que mudou antes de atualizar. O histórico canônico empacotado na release instalada fica em [CHANGELOG.md](CHANGELOG.md). Mudanças grandes também podem ter documentação dedicada em `docs/`, mas o resumo público deve continuar aqui.
+
+Padrão usado para releases publicadas:
 
 ```text
 ### x.y.z - YYYY-MM-DD
@@ -964,7 +1142,41 @@ Padrão usado:
 - Migration: ação necessária para quem já usa o Orquestrador.
 ```
 
-### 0.1.1 - 2026-05-25 (em preparação)
+Mudanças já mergeadas no GitHub, mas ainda não publicadas no npm, ficam temporariamente em `### Unreleased`. No publish seguinte, essa seção deve virar a próxima versão semver.
+
+### Unreleased
+
+- Added: radar de junho ampliado com Ponytail, React Doctor e Headroom como referências para implementação mínima, gate React e compressão opt-in de contexto.
+- Added: registro de Hector Noya e Felinto, integrantes do Grupo IAPro, como colaboradores comunitários da melhoria ligada a Ponytail, React Doctor e Headroom.
+- Changed: `docs/context-economy.md` agora explicita gates de otimização para reduzir código desnecessário, revisão subjetiva e contexto pesado.
+- Changed: `docs/research/repo-radar-2026-06.md` foi expandido com decisões práticas sem copiar código, prompts, assets ou conteúdo dos projetos externos.
+
+### 0.1.2 - 2026-06-29
+
+- Added: `CHANGELOG.md` como histórico canônico empacotado com a CLI e exposto para usuário final pelo comando `orquestrador-maestro changelog`.
+- Added: comando `orquestrador-maestro doctor` para executar o diagnóstico operacional empacotado depois de instalar ou atualizar.
+- Added: `docs/research/repo-radar-2026-06.md` com revisão de junho de 2026 sobre onboarding, UX/UI, changelog, release flow e bibliotecas externas.
+- Added: `docs/reference-packs.md` e `orquestrador/REFERENCE_PACKS.md` para formalizar o uso local de bibliotecas privadas e materiais grandes fora do snapshot público.
+- Added: `CONTRIBUTING.md` com checklist seguro para PRs, validação, privacidade, skills e changelog.
+- Added: `docs/research/repo-radar-2026-05.md` com radar de repositórios recentes, licenças, padrões úteis e decisões de aproveitamento.
+- Added: comandos `orquestrador-maestro init-dev`, `compact-worklog` e `check-dev-gates` para criar a hierarquia DEV, compactar worklog e validar o combo `spec + handoff + verify + worklog`.
+- Changed: fluxo recomendado de usuário instalado agora explicita `npm update -g`, `orquestrador-maestro changelog`, `orquestrador-maestro update`, `orquestrador-maestro verify` e `orquestrador-maestro doctor`.
+- Changed: CLI ajustado para telemetria desabilitada por padrão; endpoint configurado sem `telemetry enable` explícito não envia eventos, e configurações legadas sem consentimento versionado são migradas para desabilitadas.
+- Changed: README passa a apontar uma trilha mais objetiva de UX/UI para agentes, priorizando `skill-open-design-ui`, `skill-modern-ui-patterns` e `skill-frontend-ux-guardrails` quando houver trabalho de interface.
+- Changed: README, `docs/project-dev-hierarchy.md`, `docs/context-economy.md` e `docs/orquestrador-reference.md` agora documentam o fluxo determinístico com `HANDOFF`, `SPECS/ACTIVE`, `VERIFY`, gate e compactação de worklog.
+- Fixed: instalador Windows ajustado para fazer backup apenas dos arquivos mapeados no core e nos perfis de ferramenta, evitando falha com caches, plugins, marketplace staging, `.tmp` e logs ativos do Codex/Claude.
+- Fixed: CLI npm passa `--only cursor,claude` e `--only=cursor,claude` corretamente para o PowerShell e para o Bash.
+- Fixed: `orquestrador/doctor.ps1` deixa de marcar texto UTF-8 válido como `PADRÃO` como se fosse mojibake só por conter `Ã`.
+- Changed: README ampliado com radar de maio de 2026, explicando canais de atualização, telemetria, harness determinístico, subagentes, engenharia de contexto e SkillOps.
+- Changed: documentação de economia de contexto alinhada ao radar recente e aos próximos templates `DEV/`.
+- Security: reforço de que referências externas são usadas como padrões, não como cópia de código, e que telemetria, sessões e bibliotecas privadas devem permanecer opt-in, desativáveis e fora do repositório público.
+- Migration: quem já tinha telemetria habilitada em config antiga precisará habilitar novamente após atualizar o CLI; esta mudança chega ao npm a partir da versão `0.1.2`.
+
+- Changed: `orquestrador-maestro update` agora compacta as raízes nativas de skills em Claude, Codex, OpenCode, Cursor, Gemini, Windsurf, `.agents` e Antigravity, preservando o excedente em `.orquestrador/skill-library/disabled-native`.
+- Fixed: o conjunto nativo mínimo do Codex agora preserva `orquestrador-maestro`, `doctor` e `ralplan`, evitando divergência entre a política enxuta de skills e os perfis instalados.
+- Migration: projetos que quiserem o fluxo novo de contexto devem rodar `orquestrador-maestro init-dev --project-path .` e passar a manter `DEV/HANDOFF.md`, `DEV/SPECS/ACTIVE.md` e `DEV/VERIFY.md` junto do `DEV/WORKLOG.md`.
+
+### 0.1.1 - 2026-05-25
 
 - Added: GIFs explicativos no README para instalação, funcionamento da orquestração e atualização segura.
 - Added: script `scripts/generate-readme-gifs.py` para regenerar os assets visuais do README com layout consistente.

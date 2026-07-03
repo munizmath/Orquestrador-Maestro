@@ -126,6 +126,7 @@ SOURCE_COMMUNITY_SKILLS="$REPO_ROOT/skill-library/community-skills"
 SOURCE_TOOL_PROFILES="$REPO_ROOT/tool-profiles"
 
 TARGET_ORQUESTRADOR="$HOME_PATH/.orquestrador"
+TARGET_SKILL_LIBRARY="$TARGET_ORQUESTRADOR/skill-library"
 TARGET_AGENTS="$HOME_PATH/AGENTS.md"
 BACKUP_ROOT="$HOME_PATH/.orquestrador-public-backups"
 STAMP="$(date +"%Y%m%d-%H%M%S")"
@@ -136,12 +137,16 @@ TARGETS=()
 FILE_TARGETS=()
 BACKED_UP_DESTINATIONS=()
 
+count_args() {
+  echo "$#"
+}
+
 selected_component() {
   local wanted candidate
-  if [ "${#ONLY_COMPONENTS[@]}" -eq 0 ]; then
+  if [ -z "${ONLY_COMPONENTS[*]-}" ]; then
     return 0
   fi
-  for wanted in "${ONLY_COMPONENTS[@]}"; do
+  for wanted in "${ONLY_COMPONENTS[@]+"${ONLY_COMPONENTS[@]}"}"; do
     if [ "$wanted" = "all" ]; then
       return 0
     fi
@@ -157,7 +162,7 @@ selected_component() {
 validate_only_components() {
   local component
   local allowed=" all core orquestrador global-agents skills community-skills codex agents claude opencode cursor gemini windsurf antigravity tool-profiles codex-skills codex-agents codex-prompts prompts "
-  for component in "${ONLY_COMPONENTS[@]}"; do
+  for component in "${ONLY_COMPONENTS[@]+"${ONLY_COMPONENTS[@]}"}"; do
     case "$allowed" in
       *" $component "*) ;;
       *)
@@ -260,7 +265,7 @@ backup_path() {
 
   [ -e "$path" ] || return 0
 
-  for seen in "${BACKED_UP_DESTINATIONS[@]}"; do
+  for seen in "${BACKED_UP_DESTINATIONS[@]+"${BACKED_UP_DESTINATIONS[@]}"}"; do
     if [ "$seen" = "$path" ]; then
       return 0
     fi
@@ -321,13 +326,13 @@ list_install_plan() {
     print_target_row "$mode" ".orquestrador" "core" "directory" "$TARGET_ORQUESTRADOR" "$SOURCE_ORQUESTRADOR"
     print_target_row "$mode" "AGENTS.md" "core" "file" "$TARGET_AGENTS" "$SOURCE_AGENTS"
   fi
-  for entry in "${TARGETS[@]}"; do
+  for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
     IFS='|' read -r src dest label component kind <<EOF
 $entry
 EOF
     print_target_row "$mode" "$label" "$component" "$kind" "$dest" "$src"
   done
-  for entry in "${FILE_TARGETS[@]}"; do
+  for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
     IFS='|' read -r src dest label component kind <<EOF
 $entry
 EOF
@@ -406,28 +411,13 @@ fi
 
 if [ "$SKIP_EXTRA_SKILLS" = false ]; then
   if [ "$SKIP_COMMUNITY_SKILLS" = false ]; then
-    COMMUNITY_ROOTS=(
-      ".codex/skills|codex"
-      ".agents/skills|agents"
-      ".claude/skills|claude"
-      ".opencode/skills|opencode"
-      ".cursor/skills|cursor"
-      ".gemini/skills|gemini"
-      ".windsurf/skills|windsurf"
-      ".antigravity-skills/skills|antigravity"
-    )
-    for entry in "${COMMUNITY_ROOTS[@]}"; do
-      IFS='|' read -r root component <<EOF
-$entry
-EOF
-      if selected_component skills community-skills "$component"; then
-        add_target "$SOURCE_COMMUNITY_SKILLS" "$HOME_PATH/$root" "community__${root//\//__}" "$component"
-      fi
-    done
+    if selected_component skills community-skills codex agents claude opencode cursor gemini windsurf antigravity; then
+      add_target "$SOURCE_COMMUNITY_SKILLS" "$TARGET_SKILL_LIBRARY/community-skills" ".orquestrador__skill-library__community-skills" "community-skills"
+    fi
   fi
 
   if selected_component codex codex-skills skills; then
-    add_target "$SOURCE_CODEX/skills" "$HOME_PATH/.codex/skills" ".codex__skills" "codex"
+    add_target "$SOURCE_CODEX/skills" "$TARGET_SKILL_LIBRARY/codex-skills" ".orquestrador__skill-library__codex-skills" "codex"
   fi
   if selected_component codex codex-agents agents; then
     add_target "$SOURCE_CODEX/agents" "$HOME_PATH/.codex/agents" ".codex__agents" "codex"
@@ -481,14 +471,14 @@ if [ "$UNINSTALL" = true ]; then
     backup_path "$TARGET_AGENTS" "AGENTS.md"
   fi
 
-  for entry in "${TARGETS[@]}"; do
+  for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
     IFS='|' read -r _src dest label _component _kind <<EOF
 $entry
 EOF
     backup_path "$dest" "$label"
   done
 
-  for entry in "${FILE_TARGETS[@]}"; do
+  for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
     IFS='|' read -r _src dest label _component _kind <<EOF
 $entry
 EOF
@@ -510,14 +500,14 @@ EOF
     rm -f "$TARGET_AGENTS"
   fi
 
-  for entry in "${TARGETS[@]}"; do
+  for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
     IFS='|' read -r src dest _label _component _kind <<EOF
 $entry
 EOF
     uninstall_mapped_directory "$src" "$dest"
   done
 
-  for entry in "${FILE_TARGETS[@]}"; do
+  for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
     IFS='|' read -r _src dest _label _component _kind <<EOF
 $entry
 EOF
@@ -544,22 +534,22 @@ EOF
       echo "Backup: [created]"
     fi
   fi
-  echo "ExtraTargets: ${#TARGETS[@]}"
-  echo "FileTargets: ${#FILE_TARGETS[@]}"
+  echo "ExtraTargets: $(count_args "${TARGETS[@]+"${TARGETS[@]}"}")"
+  echo "FileTargets: $(count_args "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}")"
   exit 0
 fi
 
 backup_path "$TARGET_ORQUESTRADOR" ".orquestrador"
 backup_path "$TARGET_AGENTS" "AGENTS.md"
 
-for entry in "${TARGETS[@]}"; do
+for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
   IFS='|' read -r _src dest label _component _kind <<EOF
 $entry
 EOF
   backup_path "$dest" "$label"
 done
 
-for entry in "${FILE_TARGETS[@]}"; do
+for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
   IFS='|' read -r _src dest label _component _kind <<EOF
 $entry
 EOF
@@ -578,21 +568,25 @@ copy_tree_with_placeholders "$SOURCE_ORQUESTRADOR" "$TARGET_ORQUESTRADOR"
 copy_with_placeholders "$SOURCE_AGENTS" "$TARGET_AGENTS"
 mkdir -p "$TARGET_ORQUESTRADOR/logs"
 
-for entry in "${TARGETS[@]}"; do
+for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
   IFS='|' read -r src dest _label _component _kind <<EOF
 $entry
 EOF
   copy_tree_with_placeholders "$src" "$dest"
 done
 
-for entry in "${FILE_TARGETS[@]}"; do
+for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
   IFS='|' read -r src dest _label _component _kind <<EOF
 $entry
 EOF
   copy_with_placeholders "$src" "$dest"
 done
 
-chmod +x "$TARGET_ORQUESTRADOR/sync-skills.sh" "$TARGET_ORQUESTRADOR/bin/init-project-dev.sh" 2>/dev/null || true
+chmod +x \
+  "$TARGET_ORQUESTRADOR/sync-skills.sh" \
+  "$TARGET_ORQUESTRADOR/bin/init-project-dev.sh" \
+  "$TARGET_ORQUESTRADOR/bin/compact-worklog.sh" \
+  "$TARGET_ORQUESTRADOR/bin/check-dev-gates.sh" 2>/dev/null || true
 
 if [ "$SKIP_SKILL_SYNC" = false ]; then
   SYNC_SCRIPT="$TARGET_ORQUESTRADOR/sync-skills.sh"
@@ -620,4 +614,4 @@ if [ -d "$BACKUP_DIR" ]; then
 fi
 echo "SkillSync: $([ "$SKIP_SKILL_SYNC" = false ] && echo true || echo false)"
 echo "ToolProfiles: $INSTALL_TOOL_PROFILES"
-echo "ExtraSkillTargets: ${#TARGETS[@]}"
+echo "ExtraSkillTargets: $(count_args "${TARGETS[@]+"${TARGETS[@]}"}")"

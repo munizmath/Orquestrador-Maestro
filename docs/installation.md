@@ -51,18 +51,21 @@ Em uma máquina de exemplo, se o usuário for `maria`, os destinos ficam abaixo 
 
 | Destino | Função |
 |---|---|
-| `%USERPROFILE%\.orquestrador` | Núcleo do Orquestrador: regras, maestro, hooks, roteadores, scripts e skills canônicas |
+| `%USERPROFILE%\.orquestrador` | Núcleo do Orquestrador: regras, maestro, hooks, roteadores, scripts, skills canônicas e bibliotecas offload |
 | `%USERPROFILE%\AGENTS.md` | Contrato global lido pelas IAs antes de trabalhar em projetos |
-| `%USERPROFILE%\.codex\skills` | Skills disponíveis para Codex |
+| `%USERPROFILE%\.codex\skills` | Conjunto nativo enxuto do Codex: skills canônicas, workflows OMX essenciais e `.system` |
 | `%USERPROFILE%\.codex\agents` | Agentes nativos do Codex |
 | `%USERPROFILE%\.codex\prompts` | Prompts dos agentes do Codex |
-| `%USERPROFILE%\.agents\skills` | Espelho compatível de skills |
-| `%USERPROFILE%\.claude\skills` | Skills para Claude/Claude Code quando aplicável |
-| `%USERPROFILE%\.opencode\skills` | Skills para OpenCode |
-| `%USERPROFILE%\.cursor\skills` | Skills para Cursor |
-| `%USERPROFILE%\.gemini\skills` | Skills para Gemini |
-| `%USERPROFILE%\.windsurf\skills` | Skills para Windsurf |
-| `%USERPROFILE%\.antigravity-skills\skills` | Espelho adicional de compatibilidade |
+| `%USERPROFILE%\.agents\skills` | Espelho compatível mínimo com skills canônicas |
+| `%USERPROFILE%\.claude\skills` | Raiz nativa mínima para Claude/Claude Code |
+| `%USERPROFILE%\.opencode\skills` | Raiz nativa mínima para OpenCode |
+| `%USERPROFILE%\.cursor\skills` | Raiz nativa mínima para Cursor |
+| `%USERPROFILE%\.gemini\skills` | Raiz nativa mínima para Gemini |
+| `%USERPROFILE%\.windsurf\skills` | Raiz nativa mínima para Windsurf |
+| `%USERPROFILE%\.antigravity-skills\skills` | Raiz nativa mínima para compatibilidade adicional |
+| `%USERPROFILE%\.orquestrador\skill-library\community-skills` | Biblioteca comunitária completa fora das raízes nativas |
+| `%USERPROFILE%\.orquestrador\skill-library\codex-skills` | Catálogo completo de skills OMX/Codex fora da raiz nativa |
+| `%USERPROFILE%\.orquestrador\skill-library\disabled-native` | Skills offloadadas das raízes nativas durante otimizações |
 | `%USERPROFILE%\.ai-standards` | Standards portáteis usados pelo Antigravity |
 | `%USERPROFILE%\.opencode` | Hooks e perfil textual do OpenCode |
 | `%USERPROFILE%\.claude` | Hooks e prompt textual do Claude |
@@ -79,6 +82,8 @@ Em uma máquina de exemplo, se o usuário for `maria`, os destinos ficam abaixo 
 | `%USERPROFILE%\.antigravity\settings.json` | Configuração portável do Antigravity |
 
 No Linux/macOS, os destinos equivalentes usam `$HOME` e `/`, por exemplo `$HOME/.orquestrador`, `$HOME/AGENTS.md`, `$HOME/.codex/skills`, `$HOME/.config/opencode` e `$HOME/.ai-standards`.
+
+O ponto central dessa arquitetura é economia de contexto: as bibliotecas grandes continuam instaladas, mas fora das pastas que Claude Code, Codex, OpenCode, Cursor, Gemini, Windsurf e outros clientes tendem a enumerar automaticamente em toda sessão.
 
 ## Backups
 
@@ -177,9 +182,15 @@ Leia o AGENTS.md do meu usuário, depois leia o AGENTS.md deste projeto se exist
 Use o Orquestrador Maestro, escolha a skill correta e resolva a tarefa com verificação.
 ```
 
-Quando o projeto tiver `DEV/`, essa pasta é tratada como documentação operacional local. A IA deve começar pelos arquivos de índice ou visão geral (`DEV/AGENTS.md`, `DEV/README.md`, `DEV/INDEX.md`, `DEV/PROJECT.md`, `DEV/CONTEXT.md`) e só depois abrir os documentos específicos da tarefa.
+Quando o projeto tiver `DEV/`, essa pasta é tratada como documentação operacional local. A IA deve começar pelos arquivos curtos de controle: `DEV/README.md` ou `DEV/INDEX.md`, depois `DEV/HANDOFF.md`, `DEV/CONTEXT.md` e `DEV/SPECS/ACTIVE.md`. Só depois ela deve abrir os documentos específicos da tarefa.
 
 Para criar a estrutura `DEV/` em um projeto:
+
+```bash
+orquestrador-maestro init-dev --project-path /caminho/do/projeto
+```
+
+Ou pelo script local:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-project-dev.ps1 -ProjectPath "C:\caminho\do\projeto"
@@ -188,7 +199,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-project-dev.p
 No Linux/macOS:
 
 ```bash
-bash scripts/init-project-dev.sh /caminho/do/projeto
+bash scripts/init-project-dev.sh --project-path /caminho/do/projeto
 ```
 
 Depois de instalado, o mesmo helper também fica disponível no usuário:
@@ -200,10 +211,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.orquestra
 No Linux/macOS:
 
 ```bash
-bash "$HOME/.orquestrador/bin/init-project-dev.sh" /caminho/do/projeto
+bash "$HOME/.orquestrador/bin/init-project-dev.sh" --project-path /caminho/do/projeto
 ```
 
-O script cria `DEV/README.md`, `DEV/INDEX.md`, `DEV/CONTEXT.md`, `DEV/WORKLOG.md` e subpastas como `ADR/`, `API/`, `DATABASE/`, `RUNBOOKS/`, `TASKS/`, `RESEARCH/`, `HANDOFFS/`, `LOGS/`, `SQL/`, `ARCH/`, `WORKFLOWS/`, `TESTS/`, `DOCUMENTATION/` e `BACKLOG/`, sem sobrescrever arquivos existentes.
+O script cria `DEV/README.md`, `DEV/INDEX.md`, `DEV/HANDOFF.md`, `DEV/CONTEXT.md`, `DEV/SPECS/ACTIVE.md`, `DEV/WORKLOG.md`, `DEV/VERIFY.md` e subpastas como `ADR/`, `API/`, `DATABASE/`, `RUNBOOKS/`, `TASKS/`, `RESEARCH/`, `HANDOFFS/`, `LOGS/`, `SQL/`, `ARCH/`, `WORKFLOWS/`, `TESTS/`, `DOCUMENTATION/` e `BACKLOG/`, sem sobrescrever arquivos existentes.
+
+Para manter o contexto enxuto ao longo do projeto:
+
+```bash
+orquestrador-maestro check-dev-gates --project-path /caminho/do/projeto --max-entries 12 --strict
+orquestrador-maestro compact-worklog --project-path /caminho/do/projeto --keep 12
+```
 
 O instalador também grava pontos globais de entrada para ferramentas que suportam arquivos de regra ou memória:
 

@@ -9,21 +9,15 @@ function Test-FileMojibake {
   if (-not (Test-Path -LiteralPath $Path)) { return $null }
   $text = Get-Content -LiteralPath $Path -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
   if ($null -eq $text) { return 0 }
-  $markers = @(
-    [string][char]0x00C3,
-    [string][char]0x00F0,
-    [string][char]0x00E2,
-    [string][char]0xFFFD
+  $patterns = @(
+    'Ã[\u0080-\u00BF]',
+    'â[\u0080-\u00BF]{1,2}',
+    'ð[\u0080-\u00BF]{1,3}',
+    [regex]::Escape([string][char]0xFFFD)
   )
   $count = 0
-  foreach ($marker in $markers) {
-    $start = 0
-    while ($true) {
-      $idx = $text.IndexOf($marker, $start, [StringComparison]::Ordinal)
-      if ($idx -lt 0) { break }
-      $count++
-      $start = $idx + $marker.Length
-    }
+  foreach ($pattern in $patterns) {
+    $count += ([regex]::Matches($text, $pattern)).Count
   }
   return $count
 }
@@ -122,6 +116,58 @@ function Read-JsonDocument {
   } catch {
     return [pscustomobject]@{ Name = $Name; Path = $Path; Exists = $true; Parsed = $false; Value = $null; Error = $_.Exception.Message }
   }
+}
+
+function Get-DefaultInstallPolicy {
+  return [pscustomobject]@{
+    libraryRoots = [pscustomobject]@{
+      community = ".orquestrador/skill-library/community-skills"
+      codex = ".orquestrador/skill-library/codex-skills"
+      disabledNative = ".orquestrador/skill-library/disabled-native"
+    }
+    nativeRoots = [pscustomobject]@{
+      codex = [pscustomobject]@{
+        path = ".codex/skills"
+        maxDirectories = 40
+        allowDirectories = @(
+          ".system",
+          "ask-claude",
+          "ask-gemini",
+          "autopilot",
+          "cancel",
+          "code-review",
+          "deep-interview",
+          "plan",
+          "ralph",
+          "security-review",
+          "team",
+          "ultrawork",
+          "web-clone",
+          "worker"
+        )
+      }
+      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 30; allowDirectories = @() }
+      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 30; allowDirectories = @() }
+      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 30; allowDirectories = @() }
+      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 30; allowDirectories = @() }
+      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 30; allowDirectories = @() }
+      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 30; allowDirectories = @() }
+      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 30; allowDirectories = @() }
+    }
+  }
+}
+
+function Get-InstallPolicy {
+  param([string]$HomePath)
+  $path = Join-Path $HomePath ".orquestrador\SKILL_INSTALL_POLICY.json"
+  if (Test-Path -LiteralPath $path) {
+    try {
+      return Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+      return Get-DefaultInstallPolicy
+    }
+  }
+  return Get-DefaultInstallPolicy
 }
 
 function Add-RoutingIssue {
@@ -266,6 +312,80 @@ function Get-OrchestratorRoutingHealth {
   }
 }
 
+function Get-HookHealth {
+  param([string]$HomePath)
+  $specs = @(
+    @{ Program = "orquestrador"; Path = (Join-Path $HomePath ".orquestrador\hooks.md"); MaxLines = 80 },
+    @{ Program = "opencode"; Path = (Join-Path $HomePath ".opencode\hooks.md"); MaxLines = 30 },
+    @{ Program = "claude"; Path = (Join-Path $HomePath ".claude\hooks.md"); MaxLines = 20 },
+    @{ Program = "cursor"; Path = (Join-Path $HomePath ".cursor\hooks.md"); MaxLines = 20 },
+    @{ Program = "gemini"; Path = (Join-Path $HomePath ".gemini\hooks.md"); MaxLines = 20 },
+    @{ Program = "windsurf"; Path = (Join-Path $HomePath ".windsurf\hooks.md"); MaxLines = 20 }
+  )
+
+  foreach ($spec in $specs) {
+    $exists = Test-Path -LiteralPath $spec.Path
+    $text = if ($exists) { Get-Content -LiteralPath $spec.Path -Raw -Encoding UTF8 -ErrorAction SilentlyContinue } else { $null }
+    $lineCount = if ([string]::IsNullOrEmpty($text)) { 0 } elseif ($exists) { ([regex]::Matches($text, "(`r`n|`n)")).Count + 1 } else { $null }
+    $containsRouter = if ($exists) { $text -match "SKILLS_ROUTER\.json" } else { $false }
+    $legacyCatalogMarker = if ($exists) { $text -match "(?i)(GLOBAL SKILLS HOOKS|Complete Skill Reference with Descriptions)" } else { $false }
+    $healthy = $exists -and $containsRouter -and (-not $legacyCatalogMarker) -and ($lineCount -le [int]$spec.MaxLines)
+
+    [pscustomobject]@{
+      Program = $spec.Program
+      Path = $spec.Path
+      Exists = $exists
+      LineCount = $lineCount
+      MaxLines = [int]$spec.MaxLines
+      ContainsRouter = [bool]$containsRouter
+      LegacyCatalogMarker = [bool]$legacyCatalogMarker
+      Healthy = [bool]$healthy
+      MojibakeHits = if ($exists) { Test-FileMojibake -Path $spec.Path } else { $null }
+    }
+  }
+}
+
+function Get-NativeSkillRootHealth {
+  param([string]$HomePath, [object]$InstallPolicy, [string[]]$CanonicalSkills)
+  $communityLibrary = Join-Path $HomePath (($InstallPolicy.libraryRoots.community -replace "/", "\"))
+  $codexLibrary = Join-Path $HomePath (($InstallPolicy.libraryRoots.codex -replace "/", "\"))
+  $disabledNative = Join-Path $HomePath (($InstallPolicy.libraryRoots.disabledNative -replace "/", "\"))
+
+  foreach ($prop in $InstallPolicy.nativeRoots.PSObject.Properties) {
+    $program = $prop.Name
+    $root = Join-Path $HomePath (($prop.Value.path -replace "/", "\"))
+    $allow = @($CanonicalSkills + @($prop.Value.allowDirectories))
+    $allowSet = @{}
+    foreach ($name in $allow) { $allowSet[$name] = $true }
+
+    $extra = @()
+    $count = 0
+    if (Test-Path -LiteralPath $root) {
+      $dirs = @(Get-ChildItem -LiteralPath $root -Directory -Force -ErrorAction SilentlyContinue)
+      $count = $dirs.Count
+      foreach ($dir in $dirs) {
+        if (-not $allowSet.ContainsKey($dir.Name)) {
+          $extra += $dir.Name
+        }
+      }
+    }
+
+    [pscustomobject]@{
+      Program = $program
+      Path = $root
+      Exists = Test-Path -LiteralPath $root
+      DirectoryCount = $count
+      MaxDirectories = [int]$prop.Value.maxDirectories
+      ExtraDirectories = $extra
+      ExtraCount = $extra.Count
+      Healthy = (Test-Path -LiteralPath $root) -and ($count -le [int]$prop.Value.maxDirectories) -and ($extra.Count -eq 0)
+      CommunityLibraryExists = Test-Path -LiteralPath $communityLibrary
+      CodexLibraryExists = Test-Path -LiteralPath $codexLibrary
+      DisabledNativeRootExists = Test-Path -LiteralPath $disabledNative
+    }
+  }
+}
+
 $entrypoints = Join-Path $HomePath ".orquestrador\PROGRAM_ENTRYPOINTS.json"
 $map = Get-Content -LiteralPath $entrypoints -Raw -Encoding UTF8 | ConvertFrom-Json
 
@@ -325,6 +445,10 @@ $skillMirrorTargets = @(
 $skillQuality = @(Get-CanonicalSkillQuality -Root $canonicalSkillsRoot)
 $skillMirrorDrift = @(Get-SkillMirrorDrift -CanonicalRoot $canonicalSkillsRoot -Targets $skillMirrorTargets)
 $routingHealth = Get-OrchestratorRoutingHealth -HomePath $HomePath -CanonicalSkillsRoot $canonicalSkillsRoot
+$hookHealth = @(Get-HookHealth -HomePath $HomePath)
+$canonicalSkillNames = @($skillQuality | Where-Object { $_.Exists } | Select-Object -ExpandProperty Skill)
+$installPolicy = Get-InstallPolicy -HomePath $HomePath
+$nativeSkillRootHealth = @(Get-NativeSkillRootHealth -HomePath $HomePath -InstallPolicy $installPolicy -CanonicalSkills $canonicalSkillNames)
 
 $port3001 = Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue
 $versions = [ordered]@{}
@@ -340,6 +464,8 @@ try { $versions.opencodeInstalled = (npm list -g opencode-ai --depth=0 2>$null |
   CanonicalSkillQuality = $skillQuality
   SkillMirrorDrift = $skillMirrorDrift
   OrchestratorRoutingHealth = $routingHealth
+  HookHealth = $hookHealth
+  NativeSkillRootHealth = $nativeSkillRootHealth
   AntigravityPort3001Listening = ($null -ne $port3001)
   Versions = $versions
 } | ConvertTo-Json -Depth 8

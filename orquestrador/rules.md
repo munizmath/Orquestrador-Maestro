@@ -24,15 +24,21 @@ This is the compact global contract for agents on this machine.
 
 ## Project DEV Documentation
 
-When the current project contains a `DEV/` directory, treat it as the canonical project documentation and operational memory root. Read only an index or overview first, in this order when present: `DEV/AGENTS.md`, `DEV/README.md`, `DEV/INDEX.md`, `DEV/PROJECT.md`, `DEV/CONTEXT.md`.
+When the current project contains a `DEV/` directory, treat it as the canonical project documentation and operational memory root. Read only compact control files first, in this order when present: `DEV/AGENTS.md`, `DEV/README.md`, `DEV/INDEX.md`, `DEV/HANDOFF.md`, `DEV/CONTEXT.md`, `DEV/SPECS/ACTIVE.md`.
 
-After that, load only task-relevant files under `DEV/`, such as `ARCHITECTURE.md`, `DECISIONS.md`, `ADR/`, `API.md`, `DATABASE.md`, `TESTING.md`, `RUNBOOK.md`, `ROADMAP.md`, or `TASKS.md`. Existing sub-hierarchies such as `DEV/LOGS/`, `DEV/SQL/`, `DEV/ARCH/`, `DEV/WORKFLOWS/`, `DEV/TESTS/`, `DEV/DOCUMENTATION/`, and `DEV/BACKLOG/` are also valid. Do not bulk-load the entire `DEV/` tree by default.
+After that, load only task-relevant files under `DEV/`, such as `ARCHITECTURE.md`, `DECISIONS.md`, `ADR/`, `API.md`, `DATABASE.md`, `TESTING.md`, `RUNBOOK.md`, `ROADMAP.md`, or `TASKS.md`. Existing sub-hierarchies such as `DEV/LOGS/`, `DEV/SQL/`, `DEV/ARCH/`, `DEV/WORKFLOWS/`, `DEV/TESTS/`, `DEV/DOCUMENTATION/`, and `DEV/BACKLOG/` are also valid. Do not bulk-load the entire `DEV/` tree by default, and do not open `DEV/WORKLOG.md` before the handoff and active spec unless the compact files are insufficient.
 
-Create durable project documentation under `DEV/` by default. After substantive work, append a compact entry to `DEV/WORKLOG.md` with what changed, why, verification, and next context. Update `DEV/INDEX.md` when DEV docs change and `DEV/CONTEXT.md` when project state, commands, architecture, environment, or risks change.
+Create durable project documentation under `DEV/` by default. After substantive work, append a compact entry to `DEV/WORKLOG.md`, refresh `DEV/VERIFY.md`, and refresh `DEV/HANDOFF.md`. Update `DEV/INDEX.md` when DEV docs change, `DEV/CONTEXT.md` when project state changes, and `DEV/SPECS/ACTIVE.md` when scope, acceptance, or status changes.
 
 If project `AGENTS.md` conflicts with `DEV/` documentation, project `AGENTS.md` wins. `DEV/` documentation provides project context before global skills are applied.
 
 Full convention: `{{USER_HOME}}/.orquestrador/PROJECT_DEV_HIERARCHY.md`.
+
+## Optional Reference Packs
+
+When the user points to a private library, Drive export, PDF bundle, or local study pack, use `{{USER_HOME}}/.orquestrador/REFERENCE_PACKS.md` as the contract.
+
+Open the pack index first. Do not bulk-load the whole library by default. Treat those packs as local-only and never publish them through this repository.
 
 ## Quality Standards
 
@@ -48,6 +54,13 @@ Full convention: `{{USER_HOME}}/.orquestrador/PROJECT_DEV_HIERARCHY.md`.
 Use `{{USER_HOME}}/.orquestrador\SKILLS_ROUTER.json` before opening skill files.
 
 Load only the skill files needed for the task. Load long references only when the selected skill requires them.
+
+For long-running work, prefer the combo `spec + worklog + verify + handoff + gate` over ad hoc chat history reconstruction:
+
+- keep `DEV/SPECS/ACTIVE.md` current;
+- keep `DEV/WORKLOG.md` short;
+- archive older entries with `compact-worklog`;
+- validate the structure with `check-dev-gates`.
 
 ## Maintenance
 

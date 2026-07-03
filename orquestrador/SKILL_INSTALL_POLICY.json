@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "libraryRoots": {
+    "community": ".orquestrador/skill-library/community-skills",
+    "codex": ".orquestrador/skill-library/codex-skills",
+    "disabledNative": ".orquestrador/skill-library/disabled-native"
+  },
+  "nativeRoots": {
+    "codex": {
+      "path": ".codex/skills",
+      "maxDirectories": 40,
+      "allowDirectories": [
+        ".system",
+        "ask-claude",
+        "ask-gemini",
+        "autopilot",
+        "cancel",
+        "code-review",
+        "deep-interview",
+        "doctor",
+        "orquestrador-maestro",
+        "plan",
+        "ralplan",
+        "ralph",
+        "security-review",
+        "team",
+        "ultrawork",
+        "web-clone",
+        "worker"
+      ]
+    },
+    "opencode": {
+      "path": ".opencode/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "agents": {
+      "path": ".agents/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "claude": {
+      "path": ".claude/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "cursor": {
+      "path": ".cursor/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "gemini": {
+      "path": ".gemini/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "windsurf": {
+      "path": ".windsurf/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    },
+    "antigravity": {
+      "path": ".antigravity-skills/skills",
+      "maxDirectories": 30,
+      "allowDirectories": []
+    }
+  }
+}

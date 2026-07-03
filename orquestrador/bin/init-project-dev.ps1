@@ -39,7 +39,8 @@ $subdirs = @(
   "RUNBOOKS",
   "TASKS",
   "RESEARCH",
-  "HANDOFFS"
+  "HANDOFFS",
+  "SPECS"
 )
 
 foreach ($subdir in $subdirs) {
@@ -56,13 +57,15 @@ $files = @(
 
 Compact operational documentation and project memory.
 
-Start with:
+Recommended read order:
 
 1. `INDEX.md`
-2. `CONTEXT.md`
-3. The task-specific document
+2. `HANDOFF.md`
+3. `CONTEXT.md`
+4. `SPECS/ACTIVE.md`
+5. The task-specific document
 
-Do not bulk-load the full `DEV/` folder by default.
+Keep `WORKLOG.md` short. Archive older entries with `compact-worklog` instead of turning `WORKLOG.md` into a long transcript.
 '@
   },
   @{
@@ -73,8 +76,11 @@ Do not bulk-load the full `DEV/` folder by default.
 | Path | Purpose |
 |---|---|
 | `README.md` | Short operational documentation entrypoint |
+| `HANDOFF.md` | Current snapshot for the next AI or human |
 | `CONTEXT.md` | Current state, constraints, commands, and risks |
-| `WORKLOG.md` | Compact chronological hook of work done |
+| `SPECS/ACTIVE.md` | Active objective, scope, acceptance, and status |
+| `WORKLOG.md` | Compact chronological hook of substantive work |
+| `VERIFY.md` | Latest verification evidence and outcomes |
 | `ARCHITECTURE.md` | Living project architecture |
 | `DECISIONS.md` | Consolidated technical decisions |
 | `ADR/` | Formal decision records |
@@ -82,16 +88,45 @@ Do not bulk-load the full `DEV/` folder by default.
 | `DATABASE/` | Data model, migrations, and data notes |
 | `TESTING.md` | Verification strategy and commands |
 | `RUNBOOKS/` | Operational procedures |
-| `TASKS/` | Active plans and tasks |
+| `TASKS/` | Active plans and task artifacts |
 | `RESEARCH/` | Research and references |
-| `HANDOFFS/` | Context handoffs |
+| `HANDOFFS/` | Archived handoffs and compacted worklog history |
 | `LOGS/` | Longer execution logs |
 | `SQL/` | SQL scripts and database work |
 | `ARCH/` | Existing architecture sub-hierarchy |
-| `WORKFLOWS/` | Active and completed workflow artifacts |
+| `WORKFLOWS/` | Existing workflow artifacts |
 | `TESTS/` | Existing testing sub-hierarchy |
 | `DOCUMENTATION/` | Existing project documentation sub-hierarchy |
 | `BACKLOG/` | Existing backlog and completed work archive |
+'@
+  },
+  @{
+    Name = "HANDOFF.md"
+    Content = @'
+# Active Handoff
+
+This file should stay small. Refresh it after substantive work or run `orquestrador-maestro compact-worklog`.
+
+## Snapshot
+
+- Updated:
+- Read order: `INDEX.md` -> `HANDOFF.md` -> `CONTEXT.md` -> `SPECS/ACTIVE.md`
+- Active spec: `SPECS/ACTIVE.md`
+- Verification source: `VERIFY.md`
+- Worklog archive: `HANDOFFS/WORKLOG_ARCHIVE.md`
+
+## Latest Work
+
+- Entry:
+- Spec:
+- Changed:
+- Verified:
+- Risks:
+- Next context:
+
+## Recent Entries
+
+-
 '@
   },
   @{
@@ -102,6 +137,8 @@ Do not bulk-load the full `DEV/` folder by default.
 ## State
 
 - Project: `{{PROJECT_NAME}}`
+- Active handoff: `HANDOFF.md`
+- Active spec: `SPECS/ACTIVE.md`
 - Update this file when commands, architecture, environment, risks, or active decisions change.
 
 ## Commands
@@ -113,11 +150,11 @@ Do not bulk-load the full `DEV/` folder by default.
 
 ## Constraints And Risks
 
-- 
+-
 
 ## Next Context
 
-- 
+-
 '@
   },
   @{
@@ -127,16 +164,41 @@ Do not bulk-load the full `DEV/` folder by default.
 
 Record a short summary here after substantive work.
 
+Use `HANDOFF.md` for the current snapshot and `HANDOFFS/WORKLOG_ARCHIVE.md` for older entries after compaction.
+
 ## Template
 
 ```text
 ## YYYY-MM-DD - Short task title
 
-- Changed: paths or areas touched.
-- Why: one sentence.
-- Verified: command or manual check.
-- Next context: only what the next AI needs.
+- Spec: `DEV/SPECS/ACTIVE.md` or equivalent task doc
+- Changed: paths or areas touched
+- Why: one sentence
+- Verified: command or manual check
+- Risks: only active risks
+- Next context: only what the next AI needs
 ```
+'@
+  },
+  @{
+    Name = "VERIFY.md"
+    Content = @'
+# Verify
+
+## Latest Verification
+
+- Date:
+- Scope:
+
+## Commands
+
+-
+
+## Outcome
+
+- Passed:
+- Failed:
+- Pending:
 '@
   },
   @{
@@ -162,11 +224,11 @@ Record consolidated technical decisions. Use `ADR/` for decisions that need more
 
 ## Commands
 
-- 
+-
 
 ## Strategy
 
-- 
+-
 '@
   },
   @{
@@ -175,6 +237,42 @@ Record consolidated technical decisions. Use `ADR/` for decisions that need more
 # Roadmap
 
 Use this file for product or engineering direction when active planning exists.
+'@
+  },
+  @{
+    Name = "SPECS/ACTIVE.md"
+    Content = @'
+# Active Spec - {{PROJECT_NAME}}
+
+## Goal
+
+-
+
+## In Scope
+
+-
+
+## Out Of Scope
+
+-
+
+## Acceptance
+
+-
+
+## Constraints
+
+-
+
+## Verification Plan
+
+-
+
+## Status
+
+- State: draft
+- Owner:
+- Last updated:
 '@
   }
 )

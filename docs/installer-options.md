@@ -62,7 +62,7 @@ Por padrão, `DryRun`, `ListTargets`, instalação, uninstall e verificação mo
 | `--no-force` | Não força sobrescrita do core. |
 | `--no-tool-profiles` | Não instala perfis das ferramentas. |
 | `--core-only` | Instala apenas o core. |
-| `--skip-community-skills` | Não copia a biblioteca comunitária. |
+| `--skip-community-skills` | Não copia a biblioteca comunitária para `.orquestrador/skill-library/community-skills`. |
 | `--skip-skill-sync` | Não roda sync ao final. |
 | `--only ID` | Limita extras a um componente simbólico. |
 | `--dry-run` | Mostra o plano sem efeitos colaterais. |
@@ -100,6 +100,7 @@ Exemplos:
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Only codex -DryRun
 powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -Only antigravity
+orquestrador-maestro install --only codex,cursor,claude --dry-run
 ```
 
 Linux/macOS:
@@ -107,9 +108,19 @@ Linux/macOS:
 ```bash
 bash install.sh --only codex --dry-run
 bash install.sh --only antigravity
+orquestrador-maestro install --only=codex,cursor,claude --dry-run
 ```
 
 Mesmo com `Only`, o core é mantido no plano porque os perfis das ferramentas apontam para `.orquestrador` e `AGENTS.md`.
+
+No CLI npm, `--only` aceita um componente, componentes repetidos ou lista separada por vírgula:
+
+```bash
+orquestrador-maestro install --only cursor
+orquestrador-maestro install --only cursor --only claude
+orquestrador-maestro install --only cursor,claude,opencode
+orquestrador-maestro install --only=cursor,claude,opencode
+```
 
 No modo `Uninstall`, `Only` limita o que será removido. Exemplo: `-Uninstall -Only codex` remove apenas os arquivos mapeados do componente Codex; não remove `.orquestrador` nem `AGENTS.md`.
 

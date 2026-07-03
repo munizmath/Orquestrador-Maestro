@@ -1,8 +1,8 @@
 # Project DEV Hierarchy
 
-`DEV/` is the canonical project documentation and memory root.
+`DEV/` is the canonical project documentation and operational memory root.
 
-Use it to reduce token use across sessions: read compact indexes first, then load only the task-relevant detail files.
+Use it to reduce token use across sessions: read compact control files first, then load only the task-relevant detail files.
 
 ## Required Files
 
@@ -10,8 +10,11 @@ Every project that uses this convention should keep:
 
 - `DEV/README.md`: short project documentation entrypoint.
 - `DEV/INDEX.md`: map of available project docs and what each file is for.
-- `DEV/CONTEXT.md`: current project state, constraints, assumptions, commands, and open risks.
-- `DEV/WORKLOG.md`: compact chronological hook of substantive work done by agents.
+- `DEV/HANDOFF.md`: compact current snapshot for the next AI or human.
+- `DEV/CONTEXT.md`: current project state, constraints, commands, and risks.
+- `DEV/SPECS/ACTIVE.md`: active goal, scope, acceptance, and verification plan.
+- `DEV/WORKLOG.md`: compact chronological hook of substantive work.
+- `DEV/VERIFY.md`: latest verification evidence and outcomes.
 
 ## Recommended Sub-Hierarchy
 
@@ -28,6 +31,7 @@ Use these paths when relevant:
 - `DEV/ROADMAP.md`
 - `DEV/RESEARCH/`
 - `DEV/HANDOFFS/`
+- `DEV/HANDOFFS/WORKLOG_ARCHIVE.md`
 
 ## Compatible Existing Sub-Hierarchies
 
@@ -49,25 +53,35 @@ When entering a project:
 
 1. Read the nearest project `AGENTS.md`, when present.
 2. Read `DEV/README.md` or `DEV/INDEX.md`.
-3. Read `DEV/CONTEXT.md`.
-4. Open only the detail files relevant to the task.
-5. Select global skills after project context is understood.
+3. Read `DEV/HANDOFF.md`.
+4. Read `DEV/CONTEXT.md`.
+5. Read `DEV/SPECS/ACTIVE.md`.
+6. Open only the detail files relevant to the task.
+7. Open `DEV/WORKLOG.md` only when the handoff or spec is not enough.
+8. Select global skills after project context is understood.
 
 Do not bulk-load the full `DEV/` tree by default.
 
 ## Write Hook
 
-After any substantive project work, update `DEV/WORKLOG.md`.
+After any substantive project work, update:
 
-Each entry should be compact:
+- `DEV/WORKLOG.md` with one compact entry.
+- `DEV/VERIFY.md` with the latest checks.
+- `DEV/HANDOFF.md` with the next-session snapshot.
+- `DEV/SPECS/ACTIVE.md` when scope, acceptance, or status changes.
+
+Each worklog entry should stay small:
 
 ```text
 ## YYYY-MM-DD - Short task title
 
-- Changed: paths or areas touched.
-- Why: one sentence.
-- Verified: command or manual check.
-- Next context: only what the next agent needs.
+- Spec: `DEV/SPECS/ACTIVE.md` or equivalent task doc
+- Changed: paths or areas touched
+- Why: one sentence
+- Verified: command or manual check
+- Risks: only active risks
+- Next context: only what the next AI needs
 ```
 
 Also update:
@@ -76,7 +90,18 @@ Also update:
 - `DEV/CONTEXT.md` when project assumptions, commands, architecture, environment, or risks change.
 - The relevant detail file when a durable decision or project fact changes.
 
-If the project has `DEV/LOGS/`, keep long execution logs there and place only the compact next-session summary in `DEV/WORKLOG.md`.
+## Worklog Control
+
+`DEV/WORKLOG.md` should not become a long transcript.
+
+Use the helpers below:
+
+- `orquestrador-maestro compact-worklog --project-path <project> --keep 12`
+- `orquestrador-maestro check-dev-gates --project-path <project> --max-entries 12 --strict`
+
+`compact-worklog` keeps only the most recent entries in `DEV/WORKLOG.md`, archives older entries into `DEV/HANDOFFS/WORKLOG_ARCHIVE.md`, and refreshes `DEV/HANDOFF.md`.
+
+`check-dev-gates` verifies that the spec, handoff, verify, context, and worklog structure are present and still compact enough to avoid context sprawl.
 
 ## Documentation Placement
 

@@ -623,6 +623,28 @@
         "validar skill"
       ],
       "status": "canonical"
+    },
+    "skill-lgpd-brasil": {
+      "description": "LGPD-focused privacy and data-governance skill for Brazilian software products. Use for data mapping, legal basis selection, consent, privacy notices, RIPD, rights requests, retention, vendor risk, incident response, and international transfer review.",
+      "category": "compliance",
+      "risk": "high",
+      "source": "local-privacy-patterns",
+      "mirrorEverywhere": true,
+      "triggers": ["lgpd", "lgpd brasil", "lei geral de protecao de dados", "anpd", "ripd", "dpo", "encarregado", "privacidade lgpd", "dados pessoais", "dados sensiveis"],
+      "aliases": ["lgpd", "lgpd brasil", "lei geral de protecao de dados", "anpd", "ripd", "dpo", "encarregado lgpd"],
+      "status": "canonical",
+      "priorityScore": 4
+    },
+    "skill-cobranca-automatizada-saas-abacatepay": {
+      "description": "Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics.",
+      "category": "payments",
+      "risk": "high",
+      "source": "local-saas-billing-patterns",
+      "mirrorEverywhere": true,
+      "triggers": ["cobranca", "cobrança", "billing automatizado", "regua de cobranca", "régua de cobrança", "fatura", "invoice", "dunning", "abacatepay cobranca", "billing cron", "trial expiration", "invoice portal", "notificacao cobranca", "notificação cobrança", "billing metrics", "mrr", "billing admin", "planos", "plans"],
+      "aliases": ["cobranca", "billing automatizado", "regua de cobranca"],
+      "status": "canonical",
+      "priorityScore": 3
     }
   }
 }
