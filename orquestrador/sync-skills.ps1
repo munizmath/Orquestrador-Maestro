@@ -21,7 +21,7 @@ function Get-DefaultInstallPolicy {
     nativeRoots = [pscustomobject]@{
       codex = [pscustomobject]@{
         path = ".codex/skills"
-        maxDirectories = 40
+        maxDirectories = 64
         allowDirectories = @(
           ".system",
           "ask-claude",
@@ -42,13 +42,13 @@ function Get-DefaultInstallPolicy {
           "worker"
         )
       }
-      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 30; allowDirectories = @() }
-      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 30; allowDirectories = @() }
-      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 30; allowDirectories = @() }
-      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 30; allowDirectories = @() }
-      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 30; allowDirectories = @() }
-      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 30; allowDirectories = @() }
-      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 30; allowDirectories = @() }
+      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 48; allowDirectories = @() }
+      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 48; allowDirectories = @() }
+      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 48; allowDirectories = @() }
+      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 48; allowDirectories = @() }
+      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 48; allowDirectories = @() }
+      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 48; allowDirectories = @() }
+      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 48; allowDirectories = @() }
     }
   }
 }

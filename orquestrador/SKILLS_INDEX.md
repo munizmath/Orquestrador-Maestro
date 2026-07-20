@@ -58,8 +58,23 @@ Then open only the selected `SKILL.md` files and their directly referenced files
 | Unified analytics | `/skill:skill-unified-analytics` |
 | ElevenLabs voice integration | `/skill:skill-elevenlabs-voice-cloning` |
 | Google Workspace sync | `/skill:skill-google-workspace-sync` |
-| LGPD / privacy compliance | `/skill:skill-lgpd-brasil` |
 | Automated billing (AbacatePay, dunning, trial) | `/skill:skill-cobranca-automatizada-saas-abacatepay` |
+| WhatsApp Meta Ads leads | `/skill:skill-whatsapp-meta-ads-leads` |
+| Quality gate for external skills/plugins/MCPs | `/skill:skill-quality-gate` |
+| Repository health and onboarding diagnosis | `/skill:skill-repo-health` |
+| Preflight before implementation | `/skill:skill-preflight` |
+| Systematic debugging | `/skill:skill-systematic-debugging` |
+| Verification before completion | `/skill:skill-verification-before-completion` |
+| Web E2E and visual regression testing | `/skill:skill-webapp-testing` |
+| Build secure MCP servers | `/skill:skill-mcp-builder` |
+| Generate deep technical wiki | `/skill:skill-deep-wiki` |
+| Agent observability and evaluation | `/skill:skill-agent-observability` |
+| Release engineering and rollback | `/skill:skill-release-engineering` |
+| Safe database migrations | `/skill:skill-database-migrations` |
+| Dependency upgrades | `/skill:skill-dependency-upgrade` |
+| Incident response | `/skill:skill-incident-response` |
+| Architecture decision records | `/skill:skill-adr` |
+| Web research and synthesis | `/skill:skill-research-and-synthesis` |
 
 ## Maintenance
 

@@ -65,7 +65,6 @@ Open only the extra skill needed by the current task:
 - Visual design/tokens/component library workflow: `skill-open-design-ui`.
 - Brazilian PIX/card checkout or AbacatePay billing: `skill-abacatepay-integration`.
 - Stripe Checkout, Billing, subscriptions, or customer portal: `skill-stripe-integration`
-- LGPD, privacy compliance, consent, rights requests, retention, or incident response: `skill-lgpd-brasil`.
 - Admin/sidebar/dashboard/metrics/users/plans/logs UI: `skill-saas-admin-dashboard`.
 - Limits, quotas, entitlements, feature flags, trials, grace periods: `skill-saas-core-limits`.
 - Supabase RLS, tenant policies, storage policies: `skill-supabase-rls`.
@@ -85,7 +84,6 @@ Open only the extra skill needed by the current task:
 6. Prefer migrations and tests that prove access control, webhook idempotency, and dashboard query shape.
 7. Treat auth flows as product-critical: handle loading, expired session, unauthorized, email confirmation, duplicate account, and recovery states.
 8. Keep public landing analytics privacy-aware; do not collect sensitive form values or payment/auth secrets in event payloads.
-9. Route LGPD, privacy notices, consent, retention, rights requests, and incident-response questions to `skill-lgpd-brasil` before drafting product text or data flows.
 
 ## Minimum Acceptance Criteria
 
@@ -108,3 +106,4 @@ Read only what the task needs:
 - `references/architecture.md`: SaaS module, database, frontend, and backend checklist.
 - `references/payments.md`: provider selection, webhook, payment table, and entitlement checklist.
 - `references/security-infra.md`: secrets, Supabase, API, and verification checklist.
+

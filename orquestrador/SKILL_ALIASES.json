@@ -99,6 +99,14 @@
     "encarregado lgpd": "skill-lgpd-brasil",
     "cobranca": "skill-cobranca-automatizada-saas-abacatepay",
     "billing automatizado": "skill-cobranca-automatizada-saas-abacatepay",
-    "regua de cobranca": "skill-cobranca-automatizada-saas-abacatepay"
+    "regua de cobranca": "skill-cobranca-automatizada-saas-abacatepay",
+    "otimizar imagem": "skill-optimize-images",
+    "otimizar imagens": "skill-optimize-images",
+    "imagens web": "skill-optimize-images",
+    "imagem para blog": "skill-optimize-images",
+    "imagem para site": "skill-optimize-images",
+    "compressão de imagens": "skill-optimize-images",
+    "webp": "skill-optimize-images",
+    "avif": "skill-optimize-images"
   }
 }

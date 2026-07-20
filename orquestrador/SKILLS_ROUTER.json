@@ -259,7 +259,10 @@
         "layout quebrado",
         "dashboard ux",
         "accessibility",
-        "a11y"
+        "a11y",
+        "impeccable audit",
+        "impeccable harden",
+        "desloppify frontend"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-frontend-ux-guardrails/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-frontend-ux-guardrails/SKILL.md",
@@ -275,7 +278,10 @@
         "design system",
         "saas ui",
         "admin ui",
-        "layout moderno"
+        "layout moderno",
+        "impeccable typeset",
+        "impeccable layout",
+        "impeccable colorize"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-modern-ui-patterns/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-modern-ui-patterns/SKILL.md",
@@ -290,7 +296,11 @@
         "design ui",
         "visual qa",
         "component library",
-        "brand ui"
+        "brand ui",
+        "impeccable shape",
+        "impeccable craft",
+        "impeccable critique",
+        "impeccable polish"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-open-design-ui/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-open-design-ui/SKILL.md",
@@ -482,6 +492,224 @@
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-cobranca-automatizada-saas-abacatepay/SKILL.md",
       "cost": "high",
       "safety": "server-side-payment-secrets-and-data-integrity"
+    },
+    "skill-browser-agent": {
+      "description": "Reliable web-browser agents using semantic page state, accessibility-tree inspection, structured Playwright actions, post-action validation, replay, and bounded visual fallbacks.",
+      "triggers": [
+        "browser agent",
+        "agente de navegador",
+        "automacao web",
+        "automação web",
+        "navegar na web",
+        "playwright agent",
+        "semantic browser",
+        "accessibility tree",
+        "arvore de acessibilidade",
+        "browser automation",
+        "web agent"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-browser-agent/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-browser-agent/SKILL.md",
+      "cost": "medium",
+      "safety": "approved-origins-validated-actions-private-browser-state"
+    },
+    "skill-whatsapp-meta-ads-leads": {
+      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
+      "triggers": [
+        "whatsapp meta ads",
+        "campanha de whatsapp",
+        "leads qualificados whatsapp",
+        "meta ads para negócios locais"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
+      "cost": "medium",
+      "safety": "marketing-platform-and-personal-data"
+    },
+    "skill-quality-gate": {
+      "description": "Avalia skills, plugins e MCPs antes da adoção.",
+      "triggers": [
+        "quality gate",
+        "skill gate",
+        "auditar plugin"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-quality-gate/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-gate/SKILL.md",
+      "cost": "medium",
+      "safety": "supply-chain-review"
+    },
+    "skill-repo-health": {
+      "description": "Diagnóstico de saúde de repositórios.",
+      "triggers": [
+        "repo health",
+        "inspecionar repositorio"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-repo-health/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-repo-health/SKILL.md",
+      "cost": "low",
+      "safety": "read-only-diagnostics"
+    },
+    "skill-preflight": {
+      "description": "Preflight de escopo, riscos e verificação.",
+      "triggers": [
+        "preflight",
+        "pre-flight"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-preflight/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-preflight/SKILL.md",
+      "cost": "low",
+      "safety": "bounded-planning"
+    },
+    "skill-systematic-debugging": {
+      "description": "Debugging por evidência e causa raiz.",
+      "triggers": [
+        "debug sistematico",
+        "causa raiz"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-systematic-debugging/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-systematic-debugging/SKILL.md",
+      "cost": "medium",
+      "safety": "diagnostic"
+    },
+    "skill-verification-before-completion": {
+      "description": "Verificação antes de declarar conclusão.",
+      "triggers": [
+        "verificar conclusão",
+        "verification before completion"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-verification-before-completion/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-verification-before-completion/SKILL.md",
+      "cost": "low",
+      "safety": "quality-gate"
+    },
+    "skill-webapp-testing": {
+      "description": "Testes web E2E e regressão visual.",
+      "triggers": [
+        "webapp testing",
+        "teste e2e",
+        "playwright"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-webapp-testing/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md",
+      "cost": "medium",
+      "safety": "authorized-origins-only"
+    },
+    "skill-mcp-builder": {
+      "description": "Construção segura de MCP servers.",
+      "triggers": [
+        "mcp builder",
+        "criar mcp"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-mcp-builder/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-mcp-builder/SKILL.md",
+      "cost": "high",
+      "safety": "least-privilege-tools"
+    },
+    "skill-deep-wiki": {
+      "description": "Documentação técnica navegável.",
+      "triggers": [
+        "deep wiki",
+        "wiki tecnica"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-deep-wiki/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md",
+      "cost": "medium",
+      "safety": "docs-only-by-default"
+    },
+    "skill-agent-observability": {
+      "description": "Observabilidade de agentes.",
+      "triggers": [
+        "agent observability",
+        "observabilidade de agente"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-agent-observability/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-agent-observability/SKILL.md",
+      "cost": "medium",
+      "safety": "redact-secrets-and-pii"
+    },
+    "skill-release-engineering": {
+      "description": "Engenharia de releases seguros.",
+      "triggers": [
+        "release engineering",
+        "preparar release"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-release-engineering/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-release-engineering/SKILL.md",
+      "cost": "high",
+      "safety": "no-deploy-without-authorization"
+    },
+    "skill-database-migrations": {
+      "description": "Migrações de banco seguras.",
+      "triggers": [
+        "database migration",
+        "migração de banco"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-database-migrations/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-database-migrations/SKILL.md",
+      "cost": "high",
+      "safety": "production-data-change"
+    },
+    "skill-dependency-upgrade": {
+      "description": "Atualização controlada de dependências.",
+      "triggers": [
+        "dependency upgrade",
+        "atualizar dependencias"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-dependency-upgrade/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-dependency-upgrade/SKILL.md",
+      "cost": "medium",
+      "safety": "lockfile-and-regression-checks"
+    },
+    "skill-incident-response": {
+      "description": "Resposta e recuperação de incidentes.",
+      "triggers": [
+        "incident response",
+        "incidente",
+        "postmortem"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-incident-response/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-incident-response/SKILL.md",
+      "cost": "high",
+      "safety": "preserve-evidence"
+    },
+    "skill-adr": {
+      "description": "Registros de decisões arquiteturais.",
+      "triggers": [
+        "adr",
+        "decisão arquitetural"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-adr/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-adr/SKILL.md",
+      "cost": "low",
+      "safety": "decision-record"
+    },
+    "skill-research-and-synthesis": {
+      "description": "Pesquisa rastreável com fontes.",
+      "triggers": [
+        "research and synthesis",
+        "pesquisa web"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-research-and-synthesis/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-research-and-synthesis/SKILL.md",
+      "cost": "medium",
+      "safety": "source-attribution"
+    },
+    "skill-optimize-images": {
+      "description": "Otimiza imagens para blogs e sites, incluindo conversão de formato, redimensionamento, compressão, responsividade, acessibilidade e validação visual. Use quando pedirem para otimizar, reduzir, preparar, converter ou melhorar imagens para web.",
+      "triggers": [
+        "otimizar imagem",
+        "otimizar imagens",
+        "imagem para blog",
+        "imagem para site",
+        "compressão de imagem",
+        "webp",
+        "avif",
+        "image optimization"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-optimize-images/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-optimize-images/SKILL.md",
+      "cost": "low",
+      "safety": "task-specific-guardrails"
     }
   }
 }

@@ -1,87 +1,154 @@
 # Changelog
 
-All notable changes to Orquestrador Maestro are documented here.
+Todas as mudanças relevantes do Orquestrador Maestro estão documentadas aqui.
 
-## Unreleased
+## Unreleased - 2026-07-20
 
-### Added
-- `skill-lgpd-brasil` as a new canonical LGPD/privacy skill in `orquestrador/skills/`, with routing for dados pessoais, consentimento, RIPD, direitos do titular, retenção, incidentes, and transferências internacionais.
-- June 2026 radar now includes Ponytail, React Doctor, and Headroom as references for minimal implementation gates, deterministic React review, and opt-in context compression.
-- README community contribution section now records Hector Noya and Felinto from Grupo IAPro as collaborators in the Ponytail, React Doctor, and Headroom improvement track.
+### Contribuição comunitária
+- Adicionada a skill `improve-codebase-architecture`, de Eduardo Queiroz, para análises arquiteturais com relatório HTML decisório, diagramas, comparação de impactos técnicos e de produto e referências em português.
+## 0.1.11 - 2026-07-20
 
-### Changed
-- README, catalog, aliases, and router now surface the LGPD skill alongside the existing privacy-related and SaaS routing skills.
-- `docs/research/repo-radar-2026-06.md` was rewritten with clean UTF-8 text and expanded decisions for context optimization, React gates, and reversible compression.
+### Corrigido
 
-### Fixed
-- Unix installer and verifier scripts now guard empty Bash arrays so `install.sh` and `scripts/verify-install.sh` remain compatible with macOS `/bin/bash` 3.2 under `set -euo pipefail`.
+- No macOS/Linux, instalação e desinstalação agora fazem backup somente dos arquivos gerenciados pelo Orquestrador dentro dos perfis das ferramentas.
+- Sessões, autenticação, caches, bancos locais e demais arquivos pessoais em `.codex`, `.claude`, `.cursor`, `.gemini` e perfis equivalentes não são mais copiados para `.orquestrador-public-backups`.
+- Os testes completos agora criam uma sessão pessoal sentinela e comprovam que ela não é copiada nem removida durante instalação e desinstalação.
+
+## 0.1.10 - 2026-07-20
+
+### Corrigido
+
+- O bootstrap macOS/Linux agora valida Node.js 18+, recusa root, tolera `SHELL` ausente e seleciona apenas prefixos npm completamente graváveis.
+- O bootstrap Windows agora recusa sessão elevada, valida Node.js 18+ e faz fallback seguro quando o prefixo npm protegido não pode ser criado ou escrito.
+- A versão instalada é confirmada por `npm root -g`, evitando suposições incorretas sobre o layout do prefixo.
+- A sincronização e a verificação de skills voltaram a concordar: 42 skills canônicas cabem nos limites declarados de todas as integrações.
+- A fonte canônica de `skill-lgpd-brasil` foi restaurada e a skill de WhatsApp Meta Ads foi registrada no manifesto e no roteador.
+- O validador do catálogo volta a passar com metadados completos nas skills canônicas.
+- A auditoria de dependências ignora exemplos opcionais ausentes em vez de falhar com erro de processo.
+
+### Testado
+
+- Instalação completa, verificação e desinstalação em PowerShell e Bash.
+- Ciclo do tarball npm: instalação global em prefixo de usuário, `version`, `install`, `verify`, `update`, `doctor` e `uninstall`.
+- Compatibilidade sintática dos scripts Unix e validação pública do conteúdo do pacote.
+
+## Unreleased - 2026-07-19
+
+### Adicionado
+- README agora possui a seção concisa `Capacidades Atuais`, cobrindo a superfície pública do sistema: instalação e atualização portáteis, ferramentas de IA suportadas, bootstrap de projetos, roteamento de skills, hooks, perfis de execução, subagentes opcionais, validação, diagnóstico, controles de privacidade e fluxo de memória operacional `DEV/`.
+- README agora aponta para `CHANGELOG.md` como histórico canônico de atualizações, migrações, pesquisas, correções e contribuições da comunidade.
+- README agora aponta para o diretório de pesquisas e para a documentação do fluxo de atualização, sem duplicar radares históricos extensos.
+- Crédito comunitário a Eduardo Queiroz, do Grupo IAPro, pela indicação do fluxo de desenvolvimento assistido por IA de Matt Pocock, recomendado por uma desenvolvedora da Microsoft.
+- Consolidada a documentação de requisitos, troubleshooting, metadados do GitHub, flags do instalador, matrizes de entrypoints e bootstrap dos clientes suportados.
+
+### Comunidade
+- `kivervinicius`: fork e PR #1 adicionaram o suporte multiplataforma para Linux e macOS, incluindo instaladores Bash, verificação Unix, inicialização de `DEV/` e sincronização de skills.
+- `kivervinicius`: PR #2 consolidou a criação, o catálogo, o manifesto, a sincronização e a validação de skills canônicas.
+- Bruno, do Grupo IAPro: curadoria das referências RTK e Caveman, contribuindo para economia de contexto, leitura mais seletiva e uso mais consciente de `DEV/`.
+- Hector Noya e Felinto, do Grupo IAPro: curadoria de Ponytail, React Doctor e Headroom, contribuindo para gates de implementação mínima, revisão React determinística e compressão de contexto opt-in.
+- Eduardo Queiroz, do Grupo IAPro: indicação do fluxo de desenvolvimento assistido por IA de Matt Pocock, recomendado por uma desenvolvedora da Microsoft.
+
+### Alterado
+- O detalhamento das melhorias recentes e dos radares de maio e junho foi retirado do fluxo principal do README e concentrado no CHANGELOG e nos documentos de pesquisa vinculados.
+- O README foi mantido focado no que o sistema faz, em instalação e atualização, integrações, fluxo operacional, segurança, privacidade e contribuição.
+- A data de revisão do README foi atualizada para 2026-07-19, esclarecendo que ele é a visão prática do sistema e que o `CHANGELOG.md` é o histórico detalhado.
+- O histórico comunitário do fork Linux/macOS e das PRs #1 e #2 de `kivervinicius`, além das curadorias de RTK/Caveman, Ponytail, React Doctor e Headroom, foi consolidado nesta seção.
+- A documentação registra o hardening do instalador Unix: evita `readlink -f`, suporta Bash antigo, preserva fontes de skills, protege remoções recursivas e aceita `--home-path` para testes isolados.
+
+### Corrigido
+- Resumos históricos duplicados foram removidos do README para reduzir divergências entre a documentação e as notas de versão.
+- O texto em português, seguro para UTF-8, e o modelo de sanitização pública foram preservados.
+- A orientação de troubleshooting do README foi consolidada na documentação canônica sem remover as instruções operacionais.
+
+### Migração
+- Nenhuma migração de instalação é necessária. Use o README para a visão atual do sistema e o `CHANGELOG.md` para o histórico completo antes de atualizar.
+
+## 0.1.3 - 2026-07-15
+
+### Adicionado
+- Integração com Grok CLI para Windows, Linux e macOS por meio de `~/.grok/config.toml`, `AGENTS.md` e das raízes compartilhadas `.agents/skills` e `.orquestrador/skills`.
+- `skill-optimize-images`, roteada por expressões como “otimizar imagem”, “imagem para blog”, “imagem para site”, WebP e AVIF.
+- `scripts/install-grok-orquestrador.ps1` e `scripts/install-grok-orquestrador.sh` para configuração portátil do Grok.
+- `skill-lgpd-brasil` como skill canônica de LGPD e privacidade em `orquestrador/skills/`, com roteamento para dados pessoais, consentimento, RIPD, direitos do titular, retenção, incidentes e transferências internacionais.
+- O radar de junho de 2026 passou a incluir Ponytail, React Doctor e Headroom como referências para gates de implementação mínima, revisão React determinística e compressão de contexto opt-in.
+- A seção de contribuições do README passou a registrar Hector Noya e Felinto, do Grupo IAPro, como colaboradores da trilha Ponytail, React Doctor e Headroom.
+
+### Alterado
+- README e documentação dos perfis de ferramentas agora incluem instalação, descoberta e verificação do Grok CLI.
+- As skills de front-end agora incluem um fluxo inspirado no Impeccable, com contexto persistente de design, roteamento por sintomas, orientação produto versus marca, detecção de antipatters, pontuação de qualidade e gates de auditoria antes da entrega.
+- A orientação de front-end agora documenta `PRODUCT.md`, `DESIGN.md`, passes como `typeset`, `layout`, `colorize`, `adapt`, `distill`, `quieter` e `bolder`, além da validação opcional `npx impeccable detect`.
+- README, catálogo, aliases e roteador agora apresentam a skill de LGPD junto das rotas existentes de privacidade e SaaS.
+- `docs/research/repo-radar-2026-06.md` foi reescrito com UTF-8 correto e decisões ampliadas sobre otimização de contexto, gates React e compressão reversível.
+
+### Corrigido
+- Os scripts Unix de instalação e verificação agora protegem arrays Bash vazios, mantendo `install.sh` e `scripts/verify-install.sh` compatíveis com o `/bin/bash` 3.2 do macOS sob `set -euo pipefail`.
 
 ## 0.1.2 - 2026-06-29
 
-### Added
-- `skill-cobranca-automatizada-saas-abacatepay` as a new canonical billing skill in `orquestrador/skills/`, with routed triggers for cobrança automatizada, régua de cobrança, fatura, dunning, trial expiration, invoice portal, and billing admin flows.
-- `orquestrador-maestro changelog` to expose the bundled release notes and the recommended update flow for existing installs.
-- `orquestrador-maestro doctor` to expose the installation diagnostic already shipped in `orquestrador/doctor.ps1`.
-- `orquestrador-maestro init-dev` to scaffold the compact `DEV/` hierarchy with `HANDOFF.md`, `SPECS/ACTIVE.md`, `VERIFY.md`, and a short `WORKLOG.md`.
-- `orquestrador-maestro compact-worklog` and `orquestrador-maestro check-dev-gates` to keep project memory compact, archive cold worklog history, and validate the `spec + handoff + verify + worklog` contract.
-- `docs/research/repo-radar-2026-06.md` with the June 26, 2026 research pass over `tenfoldmarc/website-builder-setup`, `bradautomates/claude-video`, `anthropics/claude-cookbooks`, and the public Google Drive library shared in this review.
-- `docs/reference-packs.md` and `orquestrador/REFERENCE_PACKS.md` to standardize local-only reference packs for private Drive exports, PDFs, internal docs, and study libraries without publishing that material.
+### Adicionado
+- `skill-cobranca-automatizada-saas-abacatepay` como nova skill canônica de cobrança em `orquestrador/skills/`, com gatilhos para cobrança automatizada, régua de cobrança, fatura, dunning, expiração de trial, portal de faturas e fluxos administrativos.
+- `orquestrador-maestro changelog` para exibir as notas de versão empacotadas e o fluxo recomendado de atualização.
+- `orquestrador-maestro doctor` para expor o diagnóstico de instalação já fornecido por `orquestrador/doctor.ps1`.
+- `orquestrador-maestro init-dev` para criar a hierarquia compacta `DEV/` com `HANDOFF.md`, `SPECS/ACTIVE.md`, `VERIFY.md` e `WORKLOG.md` curto.
+- `orquestrador-maestro compact-worklog` e `orquestrador-maestro check-dev-gates` para manter a memória compacta, arquivar histórico antigo e validar o contrato `spec + handoff + verify + worklog`.
+- `docs/research/repo-radar-2026-06.md` com a pesquisa de 26 de junho de 2026 sobre projetos e referências públicas.
+- `docs/reference-packs.md` e `orquestrador/REFERENCE_PACKS.md` para padronizar bibliotecas locais de referência sem publicar materiais privados.
 
-### Changed
-- README and the public skill catalog now surface the automated billing skill alongside the existing AbacatePay, Stripe, limits, and admin routes.
-- README now exposes the latest audited update date, a tighter installed-user update flow, the June 2026 radar, and the UX/UI stack built around `skill-open-design-ui`, `skill-modern-ui-patterns`, and `skill-frontend-ux-guardrails`.
-- README, `docs/project-dev-hierarchy.md`, `docs/context-economy.md`, `docs/orquestrador-reference.md`, `docs/installation.md`, and `docs/npm-package.md` now describe the deterministic project loop based on `HANDOFF.md`, `SPECS/ACTIVE.md`, `VERIFY.md`, `check-dev-gates`, and `compact-worklog`.
-- `docs/update-flow.md` now requires updating both `CHANGELOG.md` and the README summary before publish, plus a package-level smoke flow with `changelog`, `update`, `verify`, and `doctor`.
-- `docs/npm-package.md` now treats `changelog` and `doctor` as first-class CLI commands alongside install, update, verify, uninstall, and telemetry.
-- Contribution guidance now uses `CHANGELOG.md` as the canonical history and keeps the README as the fast summary users read before updating.
-- Tool hooks for Claude, Cursor, Gemini, Windsurf, and OpenCode now act as compact shims and delegate trigger selection to `SKILL_EXECUTION_PROFILES.json`, `SKILL_ALIASES.json`, `SKILLS_ROUTER.json`, and `SKILL_CHAINS.json` instead of embedding large skill catalogs.
-- `docs/context-economy.md`, `docs/orquestrador-reference.md`, and the README now document the compact-hook architecture explicitly so future updates keep routing centralized.
+### Alterado
+- README e catálogo público agora apresentam a skill de cobrança automatizada junto das rotas existentes de AbacatePay, Stripe, limites e administração.
+- README agora apresenta a data de auditoria, o fluxo de atualização, o radar de junho e a stack de UX/UI baseada em `skill-open-design-ui`, `skill-modern-ui-patterns` e `skill-frontend-ux-guardrails`.
+- README, `docs/project-dev-hierarchy.md`, `docs/context-economy.md`, `docs/orquestrador-reference.md`, `docs/installation.md` e `docs/npm-package.md` agora descrevem o loop determinístico baseado em `HANDOFF.md`, `SPECS/ACTIVE.md`, `VERIFY.md`, `check-dev-gates` e `compact-worklog`.
+- `docs/update-flow.md` agora exige atualizar `CHANGELOG.md` e o resumo do README antes da publicação, além do smoke flow do pacote.
+- `docs/npm-package.md` agora trata `changelog` e `doctor` como comandos principais, junto de install, update, verify, uninstall e telemetria.
+- A orientação de contribuição agora usa `CHANGELOG.md` como histórico canônico e mantém o README como resumo rápido.
+- Hooks de Claude, Cursor, Gemini, Windsurf e OpenCode agora funcionam como shims compactos e delegam o roteamento a `SKILL_EXECUTION_PROFILES.json`, `SKILL_ALIASES.json`, `SKILLS_ROUTER.json` e `SKILL_CHAINS.json`.
+- `docs/context-economy.md`, `docs/orquestrador-reference.md` e README agora documentam explicitamente a arquitetura de hooks compactos.
 - Instaladores e sincronizadores agora mantêm as raízes nativas de skills enxutas em todos os clientes suportados, movendo bibliotecas grandes para `.orquestrador/skill-library/` e offloadando excesso para `.orquestrador/skill-library/disabled-native`.
 
-### Fixed
+### Corrigido
 - O conjunto nativo minimo do Codex agora preserva `orquestrador-maestro`, `doctor` e `ralplan`, evitando divergencia entre a politica enxuta de skills e os perfis instalados.
-- Existing installs now have an explicit post-update verification path: `npm update -g`, `orquestrador-maestro changelog`, `orquestrador-maestro update`, `orquestrador-maestro verify`, and `orquestrador-maestro doctor`.
+- Instalações existentes agora têm um caminho explícito de verificação pós-atualização: `npm update -g`, `orquestrador-maestro changelog`, `orquestrador-maestro update`, `orquestrador-maestro verify` e `orquestrador-maestro doctor`.
 - `orquestrador/doctor.ps1` no longer treats legitimate accented UTF-8 text such as `PADRÃO` as mojibake just because it contains `Ã`.
-- Validation and install health checks now flag legacy oversized hook catalogs before they drift back into the public snapshot or a local install.
+- Validações e diagnósticos agora sinalizam catálogos antigos de hooks antes que voltem ao snapshot público ou à instalação local.
 - `sync-skills.ps1`, `sync-skills.sh`, `verify-install.ps1`, `verify-install.sh`, and `doctor.ps1` agora detectam raízes nativas de skills infladas, restauram o conjunto mínimo gerenciado e deixam de empurrar centenas de diretórios para cada cliente por padrão.
 
-### Security
-- Private reference libraries from sources like Google Drive are now documented as local-only packs. They are intentionally not vendored into the public snapshot and must be indexed before agents read them.
-- The new CLI commands stay inside the same privacy model: no local paths, project contents, tokens, or personal identifiers are required to read release notes or run diagnostics.
+### Segurança
+- Bibliotecas privadas de fontes como Google Drive agora são documentadas como pacotes somente locais. Elas não são vendorizadas no snapshot público e devem ser indexadas antes da leitura pelos agentes.
+- Os novos comandos da CLI seguem o mesmo modelo de privacidade: não exigem caminhos locais, conteúdo de projetos, tokens ou identificadores pessoais.
 
-### Migration
-- Users should update with:
+### Migração
+- Usuários devem atualizar com:
   - `npm update -g @iapro/orquestrador-maestro-cli`
   - `orquestrador-maestro changelog`
   - `orquestrador-maestro update`
   - `orquestrador-maestro verify`
   - `orquestrador-maestro doctor`
-- Existing installs with hundreds of native skills will be compacted during `orquestrador-maestro update`, and the offloaded directories will be preserved under `.orquestrador/skill-library/disabled-native`.
-- Projects that want the new low-token workflow should run `orquestrador-maestro init-dev --project-path .` and keep `DEV/HANDOFF.md`, `DEV/SPECS/ACTIVE.md`, `DEV/VERIFY.md`, and a compact `DEV/WORKLOG.md` current.
+- Instalações existentes com centenas de skills nativas serão compactadas durante `orquestrador-maestro update`, preservando os diretórios movidos em `.orquestrador/skill-library/disabled-native`.
+- Projetos que quiserem o novo fluxo econômico em tokens devem executar `orquestrador-maestro init-dev --project-path .` e manter `DEV/HANDOFF.md`, `DEV/SPECS/ACTIVE.md`, `DEV/VERIFY.md` e um `DEV/WORKLOG.md` compacto atualizados.
 
 ## 0.1.1 - 2026-05-25
 
-### Added
-- GIFs in the README for installation, runtime flow, and safe update flow.
-- `scripts/generate-readme-gifs.py` to regenerate the visual assets with consistent layout.
-- `npm run audit` and `npm run outdated:all` to audit the root package and example workspaces with lockfiles.
+### Adicionado
+- GIFs no README para instalação, fluxo de execução e atualização segura.
+- `scripts/generate-readme-gifs.py` para regenerar os assets visuais com layout consistente.
+- `npm run audit` e `npm run outdated:all` para auditar o pacote raiz e workspaces de exemplo com lockfiles.
 
-### Changed
-- README reorganized to explain the mental model, hierarchy, `DEV/` usage, and update flow before the full file map.
-- Dependency set refreshed inside the supported Node.js 18+ compatibility window.
+### Alterado
+- README reorganizado para explicar o modelo mental, a hierarquia, o uso de `DEV/` e o fluxo de atualização antes do mapa completo de arquivos.
+- Dependências atualizadas dentro da janela de compatibilidade suportada pelo Node.js 18+.
 
-### Security
-- npm audit cleared for packages with lockfiles while intentionally holding back incompatible major upgrades such as `better-sqlite3@12` and `express@5`.
+### Segurança
+- Auditoria npm limpa nos pacotes com lockfiles, mantendo intencionalmente upgrades incompatíveis como `better-sqlite3@12` e `express@5` fora da atualização.
 
-### Migration
-- No breaking migration expected. Installed users can update with `npm update -g @iapro/orquestrador-maestro-cli`, then `orquestrador-maestro update` and `orquestrador-maestro verify`.
+### Migração
+- Nenhuma migração incompatível é esperada. Usuários instalados podem executar `npm update -g @iapro/orquestrador-maestro-cli`, seguido de `orquestrador-maestro update` e `orquestrador-maestro verify`.
 
 ## 0.1.0 - 2026-05-25
 
-### Added
-- First public npm release of `@iapro/orquestrador-maestro-cli`.
-- CLI commands `install`, `update`, `verify`, `list-targets`, and `uninstall`.
-- Public snapshot with Orquestrador core, Codex skills, tool profiles, hooks, and installation documentation.
+### Adicionado
+- Primeira versão pública no npm de `@iapro/orquestrador-maestro-cli`.
+- Comandos da CLI `install`, `update`, `verify`, `list-targets` e `uninstall`.
+- Snapshot público com o núcleo do Orquestrador, skills do Codex, perfis de ferramentas, hooks e documentação de instalação.
 
-### Security
-- Public validation gates to block tokens, logs, caches, backups, local memories, real user paths, and private files from the published snapshot.
+### Segurança
+- Gates de validação pública para bloquear tokens, logs, caches, backups, memórias locais, caminhos reais de usuário e arquivos privados do snapshot publicado.

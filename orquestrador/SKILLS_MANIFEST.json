@@ -742,6 +742,324 @@
       "priorityScore": 3,
       "cost": "high",
       "safety": "server-side-payment-secrets-and-data-integrity"
+    },
+    "skill-browser-agent": {
+      "description": "Reliable web-browser agents using semantic page state, accessibility-tree inspection, structured Playwright actions, post-action validation, replay, and bounded visual fallbacks.",
+      "category": "automation",
+      "risk": "medium",
+      "source": "local-browser-agent-patterns",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "browser agent",
+        "agente de navegador",
+        "automacao web",
+        "automação web",
+        "navegar na web",
+        "playwright agent",
+        "semantic browser",
+        "accessibility tree",
+        "arvore de acessibilidade",
+        "browser automation",
+        "web agent"
+      ],
+      "aliases": [
+        "browser agent",
+        "agente web",
+        "automação de navegador",
+        "playwright"
+      ],
+      "status": "canonical"
+    },
+    "skill-whatsapp-meta-ads-leads": {
+      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
+      "category": "marketing",
+      "risk": "low",
+      "source": "filipe-detrey-campanha-whatsapp-2026",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "whatsapp meta ads",
+        "campanha de whatsapp",
+        "leads qualificados whatsapp",
+        "meta ads para negócios locais"
+      ],
+      "aliases": [
+        "whatsapp meta ads leads",
+        "campanha whatsapp"
+      ],
+      "status": "canonical"
+    },
+    "skill-quality-gate": {
+      "description": "Avalia skills, plugins e MCPs antes da adoção.",
+      "category": "governance",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "quality gate",
+        "skill gate",
+        "avaliar skill",
+        "auditar plugin"
+      ],
+      "aliases": [
+        "quality gate",
+        "skill gate"
+      ],
+      "status": "canonical"
+    },
+    "skill-repo-health": {
+      "description": "Diagnóstico de saúde, stack, verificação e riscos de repositórios.",
+      "category": "engineering",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "repo health",
+        "saúde do repositorio",
+        "inspecionar repositorio"
+      ],
+      "aliases": [
+        "repo health",
+        "health check repositorio"
+      ],
+      "status": "canonical"
+    },
+    "skill-preflight": {
+      "description": "Preflight de escopo, baseline, riscos, ownership e testes.",
+      "category": "workflow",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "preflight",
+        "pre-flight",
+        "antes de implementar"
+      ],
+      "aliases": [
+        "preflight"
+      ],
+      "status": "canonical"
+    },
+    "skill-systematic-debugging": {
+      "description": "Debugging sistemático orientado por evidência e causa raiz.",
+      "category": "engineering",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "debug sistematico",
+        "causa raiz",
+        "investigar bug"
+      ],
+      "aliases": [
+        "debug sistematico"
+      ],
+      "status": "canonical"
+    },
+    "skill-verification-before-completion": {
+      "description": "Verificação proporcional antes de declarar conclusão.",
+      "category": "quality",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "verificar conclusão",
+        "verification before completion",
+        "validar antes de concluir"
+      ],
+      "aliases": [
+        "verificação final"
+      ],
+      "status": "canonical"
+    },
+    "skill-webapp-testing": {
+      "description": "Testes web E2E, acessibilidade, estados e regressão visual.",
+      "category": "testing",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "webapp testing",
+        "teste e2e",
+        "playwright",
+        "teste de aplicação web"
+      ],
+      "aliases": [
+        "teste web",
+        "teste e2e"
+      ],
+      "status": "canonical"
+    },
+    "skill-mcp-builder": {
+      "description": "Construção segura de MCP servers tipados e testáveis.",
+      "category": "integrations",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "mcp builder",
+        "criar mcp",
+        "servidor mcp"
+      ],
+      "aliases": [
+        "mcp builder"
+      ],
+      "status": "canonical"
+    },
+    "skill-deep-wiki": {
+      "description": "Documentação técnica navegável com arquitetura, Mermaid e onboarding.",
+      "category": "documentation",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "deep wiki",
+        "wiki tecnica",
+        "documentar repositorio"
+      ],
+      "aliases": [
+        "deep wiki"
+      ],
+      "status": "canonical"
+    },
+    "skill-agent-observability": {
+      "description": "Observabilidade de agentes, custos, latência, qualidade e regressões.",
+      "category": "observability",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "agent observability",
+        "observabilidade de agente",
+        "tracing agente"
+      ],
+      "aliases": [
+        "agent observability"
+      ],
+      "status": "canonical"
+    },
+    "skill-release-engineering": {
+      "description": "Engenharia de release, smoke tests, rollback e checklist operacional.",
+      "category": "delivery",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "release engineering",
+        "preparar release",
+        "rollback"
+      ],
+      "aliases": [
+        "release engineering"
+      ],
+      "status": "canonical"
+    },
+    "skill-database-migrations": {
+      "description": "Migrações de banco seguras, compatíveis, idempotentes e verificáveis.",
+      "category": "database",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "database migration",
+        "migração de banco",
+        "migration sql"
+      ],
+      "aliases": [
+        "migração de banco"
+      ],
+      "status": "canonical"
+    },
+    "skill-dependency-upgrade": {
+      "description": "Atualização controlada de dependências e lockfiles.",
+      "category": "maintenance",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "dependency upgrade",
+        "atualizar dependencias",
+        "upgrade dependencias"
+      ],
+      "aliases": [
+        "upgrade dependências"
+      ],
+      "status": "canonical"
+    },
+    "skill-incident-response": {
+      "description": "Resposta a incidentes, contenção, recuperação e postmortem.",
+      "category": "operations",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "incident response",
+        "incidente",
+        "postmortem"
+      ],
+      "aliases": [
+        "resposta a incidente"
+      ],
+      "status": "canonical"
+    },
+    "skill-adr": {
+      "description": "Registros de decisões arquiteturais com alternativas e consequências.",
+      "category": "architecture",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "adr",
+        "decisão arquitetural",
+        "architecture decision"
+      ],
+      "aliases": [
+        "adr"
+      ],
+      "status": "canonical"
+    },
+    "skill-research-and-synthesis": {
+      "description": "Pesquisa web rastreável, comparável e baseada em fontes primárias.",
+      "category": "research",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "research and synthesis",
+        "pesquisa web",
+        "pesquisar e sintetizar"
+      ],
+      "aliases": [
+        "pesquisa com fontes"
+      ],
+      "status": "canonical"
+    },
+    "skill-optimize-images": {
+      "description": "Otimiza imagens para blogs e sites, incluindo conversão de formato, redimensionamento, compressão, responsividade, acessibilidade e validação visual. Use quando pedirem para otimizar, reduzir, preparar, converter ou melhorar imagens para web.",
+      "category": "media",
+      "risk": "low",
+      "source": "local-media-patterns",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "otimizar imagem",
+        "otimizar imagens",
+        "imagem para blog",
+        "imagem para site",
+        "compressão de imagem",
+        "webp",
+        "avif",
+        "image optimization"
+      ],
+      "aliases": [
+        "otimizar imagem",
+        "otimizar imagens",
+        "imagens web",
+        "imagem para blog",
+        "imagem para site",
+        "compressão de imagens",
+        "webp",
+        "avif"
+      ],
+      "status": "canonical"
     }
   }
 }

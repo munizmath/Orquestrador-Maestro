@@ -17,6 +17,10 @@ try {
   if (-not $Full) {
     $installArgs += @("-CoreOnly", "-SkipSkillSync")
     $verifyArgs += "-CoreOnly"
+  } else {
+    $sessionDir = Join-Path $TempHome ".codex\sessions"
+    New-Item -ItemType Directory -Force -Path $sessionDir | Out-Null
+    Set-Content -LiteralPath (Join-Path $sessionDir "personal.jsonl") -Value "personal-session-must-survive" -Encoding UTF8
   }
 
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "install.ps1") @installArgs -DryRun
@@ -24,6 +28,15 @@ try {
 
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "install.ps1") @installArgs
   if ($LASTEXITCODE -ne 0) { throw "Install failed." }
+
+  if ($Full) {
+    $personalBackups = Get-ChildItem -LiteralPath (Join-Path $TempHome ".orquestrador-public-backups") -Recurse -File -Filter "personal.jsonl" -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -match '[\\/].codex__profile[\\/]sessions[\\/]personal\.jsonl$' }
+    if ($personalBackups) { throw "Installer backed up a personal Codex session." }
+    if (-not (Test-Path -LiteralPath (Join-Path $TempHome ".codex\sessions\personal.jsonl"))) {
+      throw "Installer removed a personal Codex session."
+    }
+  }
 
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "scripts\verify-install.ps1") @verifyArgs
   if ($LASTEXITCODE -ne 0) { throw "Verify failed." }
@@ -36,6 +49,15 @@ try {
 
   & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot "install.ps1") -HomePath $TempHome -Uninstall
   if ($LASTEXITCODE -ne 0) { throw "Uninstall failed." }
+
+  if ($Full) {
+    $personalBackups = Get-ChildItem -LiteralPath (Join-Path $TempHome ".orquestrador-public-backups") -Recurse -File -Filter "personal.jsonl" -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -match '[\\/].codex__profile[\\/]sessions[\\/]personal\.jsonl$' }
+    if ($personalBackups) { throw "Uninstaller backed up a personal Codex session." }
+    if (-not (Test-Path -LiteralPath (Join-Path $TempHome ".codex\sessions\personal.jsonl"))) {
+      throw "Uninstaller removed a personal Codex session."
+    }
+  }
 
   if (Test-Path -LiteralPath (Join-Path $TempHome ".orquestrador")) {
     throw "Uninstall left .orquestrador behind."

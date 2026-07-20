@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Hooks"
+  short_description: "Defensive Git hooks and CI gates"
+  default_prompt: "Use skill-security-hooks to add authorized, non-destructive security hooks or CI gates while preserving existing project hooks."

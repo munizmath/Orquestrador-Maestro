@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 # Orquestrador Maestro - Unix installer engine
 # Usage: bash scripts/install.sh [--home-path PATH] [--force] [--skip-skill-sync] [--skip-extra-skills] [--skip-community-skills] [--install-tool-profiles] [--only ID] [--dry-run] [--list-targets] [--uninstall]
@@ -16,6 +16,13 @@ LIST_TARGETS=false
 UNINSTALL=false
 NON_INTERACTIVE=false
 VERBOSE_PATHS=false
+
+if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ -z "${ORQUESTRADOR_ALLOW_ROOT_INSTALL:-}" ]; then
+  echo "Error: installer was run as root via sudo." >&2
+  echo "Run it again as the normal user, without sudo:" >&2
+  echo "  orquestrador-maestro install" >&2
+  exit 1
+fi
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -146,7 +153,7 @@ selected_component() {
   if [ -z "${ONLY_COMPONENTS[*]-}" ]; then
     return 0
   fi
-  for wanted in "${ONLY_COMPONENTS[@]+"${ONLY_COMPONENTS[@]}"}"; do
+  for wanted in "${ONLY_COMPONENTS[@]}"; do
     if [ "$wanted" = "all" ]; then
       return 0
     fi
@@ -162,7 +169,7 @@ selected_component() {
 validate_only_components() {
   local component
   local allowed=" all core orquestrador global-agents skills community-skills codex agents claude opencode cursor gemini windsurf antigravity tool-profiles codex-skills codex-agents codex-prompts prompts "
-  for component in "${ONLY_COMPONENTS[@]+"${ONLY_COMPONENTS[@]}"}"; do
+  for component in "${ONLY_COMPONENTS[@]}"; do
     case "$allowed" in
       *" $component "*) ;;
       *)
@@ -274,6 +281,26 @@ backup_path() {
   mkdir -p "$BACKUP_DIR"
   cp -R "$path" "$BACKUP_DIR/$label"
   BACKED_UP_DESTINATIONS+=("$path")
+}
+
+backup_mapped_directory() {
+  local src_dir="$1"
+  local dest_dir="$2"
+  local label="$3"
+  local src_file relative existing_file backup_file
+
+  [ -d "$src_dir" ] || return 0
+  [ -d "$dest_dir" ] || return 0
+
+  while IFS= read -r -d '' src_file; do
+    relative="${src_file#$src_dir/}"
+    existing_file="$dest_dir/$relative"
+    if [ -f "$existing_file" ] || [ -L "$existing_file" ]; then
+      backup_file="$BACKUP_DIR/$label/$relative"
+      mkdir -p "$(dirname "$backup_file")"
+      cp -p "$existing_file" "$backup_file"
+    fi
+  done < <(find "$src_dir" -type f -print0)
 }
 
 add_target() {
@@ -472,10 +499,10 @@ if [ "$UNINSTALL" = true ]; then
   fi
 
   for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
-    IFS='|' read -r _src dest label _component _kind <<EOF
+    IFS='|' read -r src dest label _component _kind <<EOF
 $entry
 EOF
-    backup_path "$dest" "$label"
+    backup_mapped_directory "$src" "$dest" "$label"
   done
 
   for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do
@@ -543,10 +570,10 @@ backup_path "$TARGET_ORQUESTRADOR" ".orquestrador"
 backup_path "$TARGET_AGENTS" "AGENTS.md"
 
 for entry in "${TARGETS[@]+"${TARGETS[@]}"}"; do
-  IFS='|' read -r _src dest label _component _kind <<EOF
+  IFS='|' read -r src dest label _component _kind <<EOF
 $entry
 EOF
-  backup_path "$dest" "$label"
+  backup_mapped_directory "$src" "$dest" "$label"
 done
 
 for entry in "${FILE_TARGETS[@]+"${FILE_TARGETS[@]}"}"; do

@@ -1,22 +1,22 @@
 {
-    "generatedAt":  "2026-06-27T12:28:32",
+    "generatedAt":  "2026-07-20T13:03:19",
     "source":  "sanitized-local-export",
     "packages":  {
                      "orquestrador":  {
                                           "path":  "orquestrador",
-                                          "files":  69,
-                                          "skillDirectories":  23
+                                          "files":  249,
+                                          "skillDirectories":  42
                                       },
                      "codex":  {
                                    "path":  "codex",
-                                   "skillFiles":  1491,
+                                   "skillFiles":  134,
                                    "agentFiles":  20,
                                    "promptFiles":  20
                                },
                      "communitySkills":  {
                                              "path":  "skill-library/community-skills",
-                                             "files":  1417,
-                                             "skillDirectories":  611
+                                             "files":  68,
+                                             "skillDirectories":  43
                                          },
                      "toolProfiles":  {
                                           "path":  "tool-profiles",

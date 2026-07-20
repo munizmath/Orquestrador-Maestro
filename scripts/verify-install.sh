@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 # Orquestrador Maestro - Unix install verification
 # Usage: bash scripts/verify-install.sh [--home-path PATH] [--skip-tool-profiles] [--core-only]
@@ -9,6 +9,11 @@ SKIP_TOOL_PROFILES=false
 CORE_ONLY=false
 VERBOSE_PATHS=false
 ISSUES=()
+
+if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ] && [ -z "${ORQUESTRADOR_ALLOW_ROOT_INSTALL:-}" ]; then
+  echo "Warning: verification is running as root via sudo and may inspect /var/root." >&2
+  echo "Run it again as the normal user or pass --home-path explicitly." >&2
+fi
 
 count_args() {
   echo "$#"

@@ -22,19 +22,20 @@ Create durable project docs under `DEV/` by default. After substantive work, upd
 A skill is a set of local instructions stored in a `SKILL.md` file. Paths follow `{{USER_HOME}}/.codex/skills/<name>/SKILL.md`, except `skill-creator` and `skill-installer`, which live under `.codex/skills/.system/<name>/SKILL.md`. Open the source only for the skill you decide to use.
 
 ### Available skills
-- orquestrador-maestro: Use for coding and project work in this machine so Codex follows the shared `orquestrador` constitution, `maestro` workflow, and global skill index stored in `{{USER_HOME}}/.orquestrador`.
-- deep-interview: Use when scope is unclear, assumptions are risky, or requirements need structured clarification before planning or implementation.
-- ralplan: Use when requirements are mostly clear and you want an implementation plan, tradeoff review, or approved execution path before coding.
-- ralph: Use when an approved plan should be carried through persistently to completion with verification.
-- team: Use when the work is large enough to benefit from coordinated parallel execution across multiple lanes.
-- ultrawork: Use when you explicitly want parallel agents or a heavier multi-lane workflow.
-- plan: Use when the user explicitly asks for a plan or planning pass.
-- code-review: Use when the user asks for review, especially bug/risk/regression-focused review.
-- security-review: Use when the user explicitly asks for a security review or audit.
-- web-clone: Use when the user asks to clone or closely reproduce a website.
-- doctor: Use when Codex or OMX installation/runtime health needs diagnosis.
-- skill-creator: Guide for creating effective skills. Use when creating or updating a skill that extends Codex with specialized knowledge, workflows, or tool integrations.
-- skill-installer: Install Codex skills into `$CODEX_HOME/skills` from a curated list or a GitHub repo path. Use to list installable skills, install a curated skill, or install a skill from another repo.
+- orquestrador-maestro: Use for coding and project work in this machine so Codex follows the shared `orquestrador` constitution, `maestro` workflow, and global skill index stored in `{{USER_HOME}}/.orquestrador`. (file: {{USER_HOME}}/.codex/skills/orquestrador-maestro/SKILL.md)
+- deep-interview: Use when scope is unclear, assumptions are risky, or requirements need structured clarification before planning or implementation. (file: {{USER_HOME}}/.codex/skills/deep-interview/SKILL.md)
+- ralplan: Use when requirements are mostly clear and you want an implementation plan, tradeoff review, or approved execution path before coding. (file: {{USER_HOME}}/.codex/skills/ralplan/SKILL.md)
+- ralph: Use when an approved plan should be carried through persistently to completion with verification. (file: {{USER_HOME}}/.codex/skills/ralph/SKILL.md)
+- team: Use when the work is large enough to benefit from coordinated parallel execution across multiple lanes. (file: {{USER_HOME}}/.codex/skills/team/SKILL.md)
+- ultrawork: Use when you explicitly want parallel agents or a heavier multi-lane workflow. (file: {{USER_HOME}}/.codex/skills/ultrawork/SKILL.md)
+- plan: Use when the user explicitly asks for a plan or planning pass. (file: {{USER_HOME}}/.codex/skills/plan/SKILL.md)
+- code-review: Use when the user asks for review, especially bug/risk/regression-focused review. (file: {{USER_HOME}}/.codex/skills/code-review/SKILL.md)
+- security-review: Use when the user explicitly asks for a security review or audit. (file: {{USER_HOME}}/.codex/skills/security-review/SKILL.md)
+- web-clone: Use when the user asks to clone or closely reproduce a website. (file: {{USER_HOME}}/.codex/skills/web-clone/SKILL.md)
+- doctor: Use when Codex or OMX installation/runtime health needs diagnosis. (file: {{USER_HOME}}/.codex/skills/doctor/SKILL.md)
+- skill-creator: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Codex's capabilities with specialized knowledge, workflows, or tool integrations. (file: {{USER_HOME}}/.codex/skills/.system/skill-creator/SKILL.md)
+- skill-installer: Install Codex skills into $CODEX_HOME/skills from a curated list or a GitHub repo path. Use when a user asks to list installable skills, install a curated skill, or install a skill from another repo (including private repos). (file: {{USER_HOME}}/.codex/skills/.system/skill-installer/SKILL.md)
+- skill-whatsapp-meta-ads-leads: Criar campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais, baseado no método de Filipe Detrey. (file: {{USER_HOME}}/.orquestrador/skills/skill-whatsapp-meta-ads-leads/SKILL.md)
 
 ### How to use skills
 - Discovery: The list above is the skills available in this session (name + description + file path). Skill bodies live on disk at the listed paths.

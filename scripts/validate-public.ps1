@@ -138,9 +138,14 @@ $forbiddenDirs = @(
   "orquestrador\backups",
   "tool-profiles\codex\rules"
 )
+$git = Get-Command git -ErrorAction SilentlyContinue
 foreach ($dir in $forbiddenDirs) {
   $path = Join-Path $repoRootFull $dir
-  if (Test-Path -LiteralPath $path) {
+  $trackedFiles = @()
+  if ($git) {
+    $trackedFiles = @(& git -C $repoRootFull ls-files -- $dir 2>$null)
+  }
+  if ((Test-Path -LiteralPath $path) -and $trackedFiles.Count -gt 0) {
     Add-Issue -Kind "forbidden-dir" -Path $dir -Detail "Local runtime directory must not be published."
   }
 }
@@ -156,7 +161,6 @@ foreach ($file in $forbiddenFiles) {
   }
 }
 
-$git = Get-Command git -ErrorAction SilentlyContinue
 if ($git) {
   foreach ($privateRoot in @(".omx", ".local", "DEV")) {
     $tracked = @(& git -C $repoRootFull ls-files -- $privateRoot 2>$null)
@@ -264,12 +268,20 @@ foreach ($file in Get-ChildItem -LiteralPath $repoRootFull -Recurse -File -Force
 }
 
 if (-not $SkipJsonValidation) {
-  foreach ($jsonFile in Get-ChildItem -LiteralPath (Join-Path $repoRootFull "orquestrador") -Recurse -Filter "*.json" -File -ErrorAction SilentlyContinue) {
-    $relative = Get-RelativePath -BasePath $repoRootFull -Path $jsonFile.FullName
-    try {
-      Get-Content -LiteralPath $jsonFile.FullName -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
-    } catch {
-      Add-Issue -Kind "invalid-json" -Path $relative -Detail $_.Exception.Message
+  $node = Get-Command node -ErrorAction SilentlyContinue
+  foreach ($json in Get-ChildItem -LiteralPath (Join-Path $repoRootFull "orquestrador") -Recurse -Filter "*.json" -File -ErrorAction SilentlyContinue) {
+    $relative = Get-RelativePath -BasePath $repoRootFull -Path $json.FullName
+    if ($node) {
+      & $node.Source -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" $json.FullName 2>$null
+      if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Kind "invalid-json" -Path $relative -Detail "Node.js JSON.parse failed."
+      }
+    } else {
+      try {
+        Get-Content -LiteralPath $json.FullName -Raw -Encoding UTF8 | ConvertFrom-Json | Out-Null
+      } catch {
+        Add-Issue -Kind "invalid-json" -Path $relative -Detail $_.Exception.Message
+      }
     }
   }
 }

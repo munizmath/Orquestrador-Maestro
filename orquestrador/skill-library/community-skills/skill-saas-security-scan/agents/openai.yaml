@@ -1,0 +1,4 @@
+interface:
+  display_name: "SaaS Security Scan"
+  short_description: "Authorized local SaaS repo security scans"
+  default_prompt: "Use skill-saas-security-scan to scan this authorized local repository defensively, keep raw reports under security-reports, and summarize findings by severity and gate impact."

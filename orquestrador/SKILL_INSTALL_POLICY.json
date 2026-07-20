@@ -8,7 +8,7 @@
   "nativeRoots": {
     "codex": {
       "path": ".codex/skills",
-      "maxDirectories": 40,
+      "maxDirectories": 64,
       "allowDirectories": [
         ".system",
         "ask-claude",
@@ -31,37 +31,37 @@
     },
     "opencode": {
       "path": ".opencode/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "agents": {
       "path": ".agents/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "claude": {
       "path": ".claude/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "cursor": {
       "path": ".cursor/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "gemini": {
       "path": ".gemini/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "windsurf": {
       "path": ".windsurf/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     },
     "antigravity": {
       "path": ".antigravity-skills/skills",
-      "maxDirectories": 30,
+      "maxDirectories": 48,
       "allowDirectories": []
     }
   }

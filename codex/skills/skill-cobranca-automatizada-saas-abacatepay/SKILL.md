@@ -112,7 +112,7 @@ States managed by `invoice-state-machine.ts`:
 
 Full details in `billing-tables.md`.
 
-## Core Workflow
+## Core Flows
 
 ### Dunning Flow (Régua de Cobrança)
 1. Cron runs billing-cron.ts at 8h/12h/16h BRT

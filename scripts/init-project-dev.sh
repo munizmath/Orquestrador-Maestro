@@ -36,7 +36,12 @@ PROJECT_ROOT="$(CDPATH= cd -- "$PROJECT_PATH" && pwd -P)"
 PROJECT_NAME="$(basename "$PROJECT_ROOT")"
 DEV_ROOT="$PROJECT_ROOT/DEV"
 CREATED_COUNT=0
-TOTAL_FILES=11
+TOTAL_FILES=18
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+BLUEPRINT_ROOTS=(
+  "$SCRIPT_DIR/../blueprints"
+  "$SCRIPT_DIR/../orquestrador/blueprints"
+)
 
 write_text_file_if_missing() {
   local path="$1"
@@ -48,6 +53,39 @@ write_text_file_if_missing() {
     return 1
   fi
 
+  mkdir -p "$(dirname "$path")"
+  printf '%s\n' "$content" > "$path"
+  return 0
+}
+
+find_blueprint_template() {
+  local relative_path="$1"
+  local root candidate
+
+  for root in "${BLUEPRINT_ROOTS[@]}"; do
+    candidate="$root/$relative_path"
+    if [ -f "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  echo "Error: missing blueprint template: $relative_path" >&2
+  return 1
+}
+
+write_template_file_if_missing() {
+  local path="$1"
+  local template_relative_path="$2"
+  local template_path content
+
+  if [ -e "$path" ]; then
+    return 1
+  fi
+
+  template_path="$(find_blueprint_template "$template_relative_path")"
+  content="$(cat "$template_path")"
+  content="${content//\{\{PROJECT_NAME\}\}/$PROJECT_NAME}"
   mkdir -p "$(dirname "$path")"
   printf '%s\n' "$content" > "$path"
   return 0
@@ -310,6 +348,34 @@ if write_text_file_if_missing "$DEV_ROOT/SPECS/ACTIVE.md" <<'EOF'
 - Last updated:
 EOF
 then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.github/copilot-instructions.md" "project/copilot-instructions.md.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.vscode/extensions.json" "project/vscode/extensions.json.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.aider.conf.yml" "project/aider.conf.yml.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.clinerules" "project/clinerules.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.windsurfrules" "project/windsurfrules.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.continue/rules/00-orquestrador-maestro.md" "project/continue/rules/00-orquestrador-maestro.md.template"; then
+  CREATED_COUNT=$((CREATED_COUNT + 1))
+fi
+
+if write_template_file_if_missing "$PROJECT_ROOT/.aiassistant/rules/orquestrador-maestro.md" "project/aiassistant/rules/orquestrador-maestro.md.template"; then
   CREATED_COUNT=$((CREATED_COUNT + 1))
 fi
 

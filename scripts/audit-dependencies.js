@@ -2,6 +2,7 @@
 "use strict";
 
 const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
 const path = require("node:path");
 
 const mode = process.argv[2] || "audit";
@@ -31,6 +32,11 @@ let hasAuditFailure = false;
 
 for (const [label, cwd] of targets) {
   console.log(`\n== ${label} ==`);
+
+  if (!fs.existsSync(path.join(cwd, "package.json"))) {
+    console.log("Skipped: package.json not present in this snapshot.");
+    continue;
+  }
 
   if (mode === "outdated") {
     const result = spawnSync(npmBin, ["outdated", "--json", "--package-lock-only"], {

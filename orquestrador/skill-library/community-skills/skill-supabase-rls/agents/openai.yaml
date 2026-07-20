@@ -1,0 +1,4 @@
+interface:
+  display_name: "Supabase RLS"
+  short_description: "Design and verify tenant-safe Supabase RLS"
+  default_prompt: "Use skill-supabase-rls to review or design Supabase RLS policies defensively, including authorization scope, severity, gates, and positive/negative validation."

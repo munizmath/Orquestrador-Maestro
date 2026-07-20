@@ -1,5 +1,14 @@
 # Tool Profiles
 
+## Grok CLI
+
+The Grok CLI reads the Orquestrador through the same portable `AGENTS.md` and skill roots used by the other agents. Configure a user installation with:
+
+- Windows PowerShell: `scripts/install-grok-orquestrador.ps1`
+- Linux/macOS: `scripts/install-grok-orquestrador.sh`
+
+The installer writes `~/.grok/config.toml` and points Grok at `~/.orquestrador/skills` and `~/.agents/skills`. Verify discovery with `grok inspect`.
+
 `tool-profiles/` guarda hooks e perfis textuais selecionados para reaproveitar o comportamento do Orquestrador em outras ferramentas sem publicar o diretório completo de cada uma.
 
 Os hooks e entrypoints estão detalhados em [orquestrador-reference.md](orquestrador-reference.md). Este arquivo explica principalmente quais perfis são empacotados e onde o instalador os coloca.
@@ -17,6 +26,7 @@ Os hooks e entrypoints estão detalhados em [orquestrador-reference.md](orquestr
 - `tool-profiles/antigravity-home/`: `antigravity-rules.json` instalado no home do usuário.
 - `tool-profiles/antigravity/`: `antigravity.json` e `settings.json`.
 - `tool-profiles/ai-standards/`: standards portáteis instalados em `~/.ai-standards`.
+- `orquestrador/blueprints/project/`: bootstrap de workspace para VS Code, GitHub Copilot, Continue, JetBrains AI Assistant, Aider, Cline e Windsurf.
 
 ## Excluído
 
@@ -83,8 +93,16 @@ O pacote instala arquivos nos locais que as ferramentas costumam ler como regra,
 | Cursor | `%USERPROFILE%\.cursor\rules\orquestrador-maestro.mdc` e `%USERPROFILE%\.cursor\AGENTS.md` |
 | Windsurf/Cascade | `%USERPROFILE%\.codeium\windsurf\memories\global_rules.md` |
 | Antigravity | `%USERPROFILE%\antigravity-rules.json`, `%USERPROFILE%\.antigravity\antigravity.json`, `%USERPROFILE%\.antigravity\settings.json` e `%USERPROFILE%\.ai-standards` |
+| VS Code + GitHub Copilot | projeto aberto: `.github\copilot-instructions.md` e `.vscode\extensions.json` |
+| Continue | projeto aberto: `.continue\rules\00-orquestrador-maestro.md` |
+| JetBrains AI Assistant | projeto aberto: `.aiassistant\rules\orquestrador-maestro.md` |
+| Aider | projeto aberto: `.aider.conf.yml` |
+| Cline | projeto aberto: `.clinerules` |
+| Windsurf (projeto) | projeto aberto: `.windsurfrules` |
 
 Todos esses pontos de entrada mandam a ferramenta usar o `AGENTS.md` global, o Orquestrador e, quando existir no projeto aberto, a documentação `DEV/` antes das skills globais. Eles também orientam a manter documentação durável do projeto em `DEV/` e registrar trabalho substancial em `DEV/WORKLOG.md`.
+
+Para VS Code e GitHub Copilot, o bootstrap de projeto cria `.github/copilot-instructions.md` e `.vscode/extensions.json`. Para Continue, JetBrains AI Assistant, Aider, Cline e Windsurf no nível do projeto, o bootstrap cria arquivos reconhecidos por cada ferramenta com o mesmo contrato compacto do Orquestrador. Isso cobre o uso mais comum do ecossistema AI-native dentro do editor ou CLI sem depender de um perfil global específico.
 
 No Linux/macOS, os mesmos pontos ficam sob `$HOME`, como `$HOME/AGENTS.md`, `$HOME/.config/opencode/opencode.json`, `$HOME/.claude/CLAUDE.md`, `$HOME/.cursor/AGENTS.md`, `$HOME/.gemini/GEMINI.md`, `$HOME/.codeium/windsurf/memories/global_rules.md` e `$HOME/.ai-standards`.
 
@@ -103,5 +121,11 @@ A fonte estruturada da matriz é `orquestrador/PROGRAM_ENTRYPOINTS.json`. A tabe
 | Gemini CLI | `gemini` | Sim | `GEMINI.md`, hooks e skills | Não |
 | Windsurf | `windsurf` | Sim | `global_rules.md`, hooks e skills | Não |
 | Antigravity | `antigravity` | Sim | `antigravity-rules.json`, `.antigravity`, `.ai-standards` e skills | Não |
+| VS Code + Copilot | `workspace` | Sim, via bootstrap do projeto | `.github/copilot-instructions.md`, `.vscode/extensions.json` | Não |
+| Continue | `workspace` | Sim, via bootstrap do projeto | `.continue/rules/00-orquestrador-maestro.md` | Não |
+| JetBrains AI Assistant | `workspace` | Sim, via bootstrap do projeto | `.aiassistant/rules/orquestrador-maestro.md` | Não |
+| Aider | `workspace` | Sim, via bootstrap do projeto | `.aider.conf.yml` | Não |
+| Cline | `workspace` | Sim, via bootstrap do projeto | `.clinerules` | Não |
+| Windsurf (projeto) | `workspace` | Sim, via bootstrap do projeto | `.windsurfrules` | Não |
 
 A inspiração do RTK deve ser tratada como futuro wrapper opt-in para saídas compactas, não como hook automático instalado no fluxo padrão. Isso evita alterar comandos do usuário sem consentimento.

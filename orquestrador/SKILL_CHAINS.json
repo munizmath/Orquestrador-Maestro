@@ -300,6 +300,17 @@
         "skill-github-mcp-automation": "Use when skill changes are reviewed through GitHub issues, PRs, Actions, or repository automation.",
         "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
       }
+    },
+    "skill-whatsapp-meta-ads-leads": {
+      "mayInvoke": [
+        "skill-evolution-api",
+        "skill-cobranca-automatizada-saas-abacatepay"
+      ],
+      "rules": [
+        "Use when the user asks about WhatsApp campaigns for leads in Meta Ads.",
+        "Combine with Evolution API skill for WhatsApp API integration.",
+        "Combine with billing skill for payment collection via WhatsApp."
+      ]
     }
   }
 }

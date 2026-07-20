@@ -1,0 +1,82 @@
+{
+  "name": "skill-supabase-rls",
+  "description": "Defensive Row Level Security guidance for Supabase SaaS projects.",
+  "version": "1.1.0",
+  "category": "database-security",
+  "type": "guidance",
+  "instructions": "Use as a defensive guide for Supabase RLS design, validation, tenant isolation, service-role boundaries, and migration review.",
+  "orientation": {
+    "purpose": "Design and verify safe Supabase RLS policies.",
+    "authorization": "Do not run production migrations or destructive SQL without explicit user approval.",
+    "adaptation": "Adapt examples to the project's schema, roles, memberships, and storage model."
+  },
+  "referenceFiles": [
+    "SKILL.md",
+    "RULES.md",
+    "TROUBLESHOOTING.md",
+    "https://supabase.com/docs/guides/auth/row-level-security"
+  ],
+  "prerequisites": [
+    "Supabase JavaScript client v2 or equivalent",
+    "PostgreSQL RLS support",
+    "Project-specific tenant and role model"
+  ],
+  "recommendations": [
+    {
+      "id": "RLS-001",
+      "description": "Enable RLS on user-facing tables in exposed schemas.",
+      "priority": "critical",
+      "rationale": "RLS protects data even when tables are accessed through browser-safe API keys."
+    },
+    {
+      "id": "RLS-002",
+      "description": "Keep service-role keys out of frontend code.",
+      "priority": "critical",
+      "rationale": "Service-role keys bypass RLS and can expose all tenant data if leaked."
+    },
+    {
+      "id": "RLS-003",
+      "description": "Use explicit roles in policies.",
+      "priority": "medium",
+      "rationale": "Explicit roles make anonymous and authenticated access reviewable."
+    },
+    {
+      "id": "RLS-004",
+      "description": "Use USING for visibility and WITH CHECK for writes.",
+      "priority": "high",
+      "rationale": "Write checks prevent users from inserting or updating rows into another user's or tenant's scope."
+    },
+    {
+      "id": "RLS-005",
+      "description": "Validate tenant membership for tenant-scoped rows.",
+      "priority": "critical",
+      "rationale": "Tenant predicates prevent cross-tenant reads and writes."
+    },
+    {
+      "id": "RLS-006",
+      "description": "Index policy predicates.",
+      "priority": "medium",
+      "rationale": "Indexes reduce latency and avoid policy-driven table scans."
+    },
+    {
+      "id": "RLS-007",
+      "description": "Test positive and negative access cases.",
+      "priority": "high",
+      "rationale": "A policy is not validated until both allowed and denied paths are proven."
+    }
+  ],
+  "safeCommands": {
+    "newMigration": "supabase migration new add_rls_policies",
+    "dryRunPush": "supabase db push --dry-run",
+    "generateTypes": "supabase gen types typescript --local > src/types/supabase.ts"
+  },
+  "dangerousCommands": {
+    "reset": "supabase db reset",
+    "productionPush": "supabase db push"
+  },
+  "metadata": {
+    "updated": "2026-05-12",
+    "qualityBaseline": "Codex skill-creator",
+    "safety": "defensive-data-isolation"
+  }
+}

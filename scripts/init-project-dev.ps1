@@ -5,6 +5,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$blueprintRoots = @(
+  (Join-Path $scriptRoot "..\blueprints"),
+  (Join-Path $scriptRoot "..\orquestrador\blueprints")
+)
+
 $projectRoot = [System.IO.Path]::GetFullPath($ProjectPath)
 $projectName = Split-Path -Leaf $projectRoot
 $devRoot = Join-Path $projectRoot "DEV"
@@ -20,6 +26,37 @@ function Write-TextFileIfMissing {
   $directory = Split-Path -Parent $Path
   New-Item -ItemType Directory -Force -Path $directory | Out-Null
   [System.IO.File]::WriteAllText($Path, $Content, [System.Text.UTF8Encoding]::new($false))
+  return $true
+}
+
+function Get-BlueprintTemplatePath {
+  param([string]$RelativePath)
+
+  foreach ($root in $script:blueprintRoots) {
+    $candidate = Join-Path $root $RelativePath
+    if (Test-Path -LiteralPath $candidate) {
+      return $candidate
+    }
+  }
+
+  throw "Missing blueprint template: $RelativePath"
+}
+
+function Write-TemplateFileIfMissing {
+  param(
+    [string]$Path,
+    [string]$TemplateRelativePath
+  )
+
+  if (Test-Path -LiteralPath $Path) { return $false }
+
+  $templatePath = Get-BlueprintTemplatePath -RelativePath $TemplateRelativePath
+  $content = Get-Content -LiteralPath $templatePath -Raw -Encoding UTF8
+  $content = $content.Replace("{{PROJECT_NAME}}", $projectName)
+
+  $directory = Split-Path -Parent $Path
+  New-Item -ItemType Directory -Force -Path $directory | Out-Null
+  [System.IO.File]::WriteAllText($Path, $content, [System.Text.UTF8Encoding]::new($false))
   return $true
 }
 
@@ -285,9 +322,25 @@ foreach ($file in $files) {
   }
 }
 
+$workspaceFiles = @(
+  @{ Path = (Join-Path $projectRoot ".github\copilot-instructions.md"); Template = "project\copilot-instructions.md.template" },
+  @{ Path = (Join-Path $projectRoot ".vscode\extensions.json"); Template = "project\vscode\extensions.json.template" },
+  @{ Path = (Join-Path $projectRoot ".aider.conf.yml"); Template = "project\aider.conf.yml.template" },
+  @{ Path = (Join-Path $projectRoot ".clinerules"); Template = "project\clinerules.template" },
+  @{ Path = (Join-Path $projectRoot ".windsurfrules"); Template = "project\windsurfrules.template" },
+  @{ Path = (Join-Path $projectRoot ".continue\rules\00-orquestrador-maestro.md"); Template = "project\continue\rules\00-orquestrador-maestro.md.template" },
+  @{ Path = (Join-Path $projectRoot ".aiassistant\rules\orquestrador-maestro.md"); Template = "project\aiassistant\rules\orquestrador-maestro.md.template" }
+)
+
+foreach ($workspaceFile in $workspaceFiles) {
+  if (Write-TemplateFileIfMissing -Path $workspaceFile.Path -TemplateRelativePath $workspaceFile.Template) {
+    $created.Add($workspaceFile.Path)
+  }
+}
+
 [pscustomobject]@{
   ProjectPath = $projectRoot
   DevPath = $devRoot
   CreatedFiles = $created.Count
-  ExistingFilesPreserved = $files.Count - $created.Count
+  ExistingFilesPreserved = ($files.Count + $workspaceFiles.Count) - $created.Count
 } | Format-List

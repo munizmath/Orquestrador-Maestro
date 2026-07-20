@@ -36,7 +36,7 @@ O fluxo esperado agora e:
 | `orquestrador/SKILL_CHAINS.json` | Define quais skills podem ser combinadas depois que uma skill principal e escolhida. |
 | `orquestrador/SKILL_EXECUTION_PROFILES.json` | Define perfis `fast`, `standard`, `deep`, `multiagent`, `saas` e `security`. |
 | `orquestrador/SKILL_USAGE_SCHEMA.json` | Esquema para logar uso de skills em JSONL quando a ferramenta suportar. |
-| `orquestrador/PROGRAM_ENTRYPOINTS.json` | Mapa dos arquivos que cada ferramenta deve ler no home do usuario. |
+| `orquestrador/PROGRAM_ENTRYPOINTS.json` | Mapa dos arquivos que cada ferramenta deve ler no home do usuario e dos bootstraps de workspace para VS Code/GitHub Copilot, Continue, JetBrains AI Assistant, Aider, Cline e Windsurf. |
 | `orquestrador/PROJECT_DEV_HIERARCHY.md` | Convencao da pasta `DEV/` em projetos. |
 | `orquestrador/bin/dev-context-tools.js` | Helpers de compactacao e gate para manter `DEV/` utilizavel com baixo contexto. |
 
@@ -79,7 +79,7 @@ No repositorio, "hook" significa uma regra operacional que dispara antes, durant
 | DEV compaction hook | `orquestrador/bin/dev-context-tools.js` | Mantem `WORKLOG` curto, move historico para `HANDOFFS/WORKLOG_ARCHIVE.md` e atualiza `HANDOFF.md`. |
 | Sync hook | `orquestrador/hooks.md` | Depois de mudar uma skill compartilhada, manda rodar `sync-skills.ps1 -Apply` no Windows ou `sync-skills.sh --apply` no Linux/macOS. |
 | Usage log hook | `SKILL_USAGE_SCHEMA.json` | Define um log JSONL opcional para medir quais skills foram selecionadas e abertas. |
-| Tool entrypoint hook | `PROGRAM_ENTRYPOINTS.json` e `tool-profiles/` | Faz Codex, OpenCode, Claude, Cursor, Gemini, Windsurf e Antigravity chamarem o Orquestrador por padrao. |
+| Tool entrypoint hook | `PROGRAM_ENTRYPOINTS.json` e `tool-profiles/` | Faz Codex, OpenCode, Claude, Cursor, Gemini, Windsurf e Antigravity chamarem o Orquestrador por padrao; VS Code/GitHub Copilot, Continue, JetBrains AI Assistant, Aider, Cline e Windsurf em nivel de projeto entram via bootstrap de workspace. |
 | Security Git hooks | `skill-security-hooks/scripts/install-security-hooks.cmd` | Instala `.githooks/pre-commit` e `.githooks/pre-push` em repositorio autorizado. |
 
 Em outras palavras: o hook da ferramenta nao deve ser a arvore de decisao completa. Ele so precisa lembrar a ordem correta de leitura e apontar para o roteador central. Isso preserva o mesmo comportamento com custo de contexto muito menor.
@@ -137,6 +137,8 @@ O `sync-skills.ps1` e o `sync-skills.sh` mantem as skills canonicas do manifesto
 .windsurf\skills
 .antigravity-skills\skills
 ```
+
+Para VS Code e GitHub Copilot, o caminho suportado e o bootstrap de projeto: `orquestrador-maestro init-dev --project-path <repo>` cria `.github/copilot-instructions.md` e `.vscode/extensions.json` com o contrato do Orquestrador. O mesmo bootstrap também cria arquivos de projeto para Continue, JetBrains AI Assistant, Aider, Cline e Windsurf quando presentes no suporte atual.
 
 No caso do Codex, o sync tambem mantem apenas um subconjunto nativo de workflows OMX (`orquestrador-maestro`, `autopilot`, `doctor`, `plan`, `ralplan`, `ralph`, `team`, `ultrawork`, `deep-interview`, `code-review`, `security-review`, `web-clone`, `worker`, `ask-claude`, `ask-gemini` e `.system`).
 

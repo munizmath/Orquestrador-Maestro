@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 # Orquestrador Maestro - Unix skill synchronizer
 # Usage: bash ~/.orquestrador/sync-skills.sh [--check|--dry-run|--apply] [--home-path PATH]
@@ -58,14 +58,14 @@ CODEX_LIBRARY="$(resolve_home_relative ".orquestrador/skill-library/codex-skills
 DISABLED_NATIVE_ROOT="$(resolve_home_relative ".orquestrador/skill-library/disabled-native")"
 
 TARGET_SPECS=(
-  "codex|.codex/skills|40|.system,ask-claude,ask-gemini,autopilot,cancel,code-review,deep-interview,doctor,orquestrador-maestro,plan,ralplan,ralph,security-review,team,ultrawork,web-clone,worker"
-  "opencode|.opencode/skills|30|"
-  "agents|.agents/skills|30|"
-  "claude|.claude/skills|30|"
-  "cursor|.cursor/skills|30|"
-  "gemini|.gemini/skills|30|"
-  "windsurf|.windsurf/skills|30|"
-  "antigravity|.antigravity-skills/skills|30|"
+  "codex|.codex/skills|64|.system,ask-claude,ask-gemini,autopilot,cancel,code-review,deep-interview,doctor,orquestrador-maestro,plan,ralplan,ralph,security-review,team,ultrawork,web-clone,worker"
+  "opencode|.opencode/skills|48|"
+  "agents|.agents/skills|48|"
+  "claude|.claude/skills|48|"
+  "cursor|.cursor/skills|48|"
+  "gemini|.gemini/skills|48|"
+  "windsurf|.windsurf/skills|48|"
+  "antigravity|.antigravity-skills/skills|48|"
 )
 
 if [ -f "$POLICY_PATH" ] && command -v node >/dev/null 2>&1; then

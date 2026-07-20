@@ -1,0 +1,4 @@
+interface:
+  display_name: "SaaS DAST Recon"
+  short_description: "Scoped authorized SaaS DAST and recon"
+  default_prompt: "Use skill-saas-dast-recon against this explicitly authorized URL, keep scans conservative and scoped, and produce a severity-based risk report with gate impact."
