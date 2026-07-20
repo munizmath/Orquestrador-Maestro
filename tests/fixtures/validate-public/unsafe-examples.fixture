@@ -1,0 +1,9 @@
+This file uses a non-scanned fixture extension so the repository validator
+does not fail while still documenting unsafe shapes covered by temporary tests.
+
+Unsafe examples:
+
+- concrete Windows home path
+- assigned secret-like value
+- browser download metadata such as Zone.Identifier
+- private runtime roots such as DEV or .local when tracked

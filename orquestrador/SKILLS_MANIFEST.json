@@ -47,7 +47,10 @@
         "onboarding saas",
         "auth saas"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low-first-then-progressive",
+      "safety": "defensive-product-engineering"
     },
     "skill-saas-admin-dashboard": {
       "description": "SaaS admin dashboard and internal panel patterns for users, plans, payments, logs, metrics, settings, and onboarding.",
@@ -71,7 +74,10 @@
         "painel admin",
         "admin"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "frontend-and-admin-access-controls"
     },
     "skill-abacatepay-integration": {
       "description": "AbacatePay PIX/card billing, CPF/CNPJ, BRL checkout, billing webhooks, and entitlement sync.",
@@ -95,7 +101,10 @@
         "pix",
         "pagamento br"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-payment-secrets-only"
     },
     "skill-stripe-integration": {
       "description": "Stripe Checkout, Billing subscriptions, customer portal, webhook verification, and SaaS entitlement sync.",
@@ -117,7 +126,10 @@
         "stripe",
         "checkout"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-payment-secrets-only"
     },
     "skill-saas-core-limits": {
       "description": "SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, and blocked account states.",
@@ -141,7 +153,10 @@
         "planos",
         "assinaturas"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "backend-enforced-access"
     },
     "skill-saas-security-scan": {
       "description": "Authorized local SaaS repository security scan using maintained OSS tools.",
@@ -162,7 +177,10 @@
         "scan seguranca",
         "seguranca saas"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "medium",
+      "safety": "local-owned-repositories-only"
     },
     "skill-saas-dast-recon": {
       "description": "Authorized staging/preview DAST and recon workflow for owned SaaS systems.",
@@ -183,7 +201,10 @@
         "zap",
         "nuclei"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "high",
+      "safety": "owned-authorized-targets-only"
     },
     "skill-security-hooks": {
       "description": "Git hooks and CI security gates for SaaS repositories.",
@@ -203,7 +224,10 @@
         "pre commit",
         "ci security"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "defensive-controls-only"
     },
     "skill-supabase-rls": {
       "description": "Supabase/Postgres RLS design, tenant isolation, policies, indexes, and verification.",
@@ -226,7 +250,10 @@
         "rls",
         "tenant isolation"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "medium",
+      "safety": "high-risk-data-isolation"
     },
     "skill-ai-orchestration": {
       "description": "Server-side AI provider orchestration, routing, budgets, fallbacks, observability, and safe key handling.",
@@ -251,34 +278,10 @@
         "llm",
         "token budget"
       ],
-      "status": "canonical"
-    },
-    "skill-browser-agent": {
-      "description": "Reliable web-browser agents using semantic page state, accessibility-tree inspection, structured Playwright actions, post-action validation, replay, and bounded visual fallbacks.",
-      "category": "automation",
-      "risk": "medium",
-      "source": "local-browser-agent-patterns",
-      "mirrorEverywhere": true,
-      "triggers": [
-        "browser agent",
-        "agente de navegador",
-        "automacao web",
-        "automação web",
-        "navegar na web",
-        "playwright agent",
-        "semantic browser",
-        "accessibility tree",
-        "arvore de acessibilidade",
-        "browser automation",
-        "web agent"
-      ],
-      "aliases": [
-        "browser agent",
-        "agente web",
-        "automação de navegador",
-        "playwright"
-      ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-secrets-and-budget-limits"
     },
     "skill-multiagent-orchestration": {
       "description": "Multiagent and subagent orchestration for splitting independent engineering work, assigning ownership, reducing token waste, and integrating results safely.",
@@ -315,10 +318,13 @@
         "delegar",
         "orquestrar agentes"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low-first-then-progressive",
+      "safety": "disjoint-work-ownership-and-integration-gates"
     },
     "skill-aionui-cowork-orchestration": {
-      "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the user orchestrator without replacing the existing workflow.",
+      "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the {{USER_NAME}} orchestrator without replacing the existing workflow.",
       "category": "orchestration",
       "risk": "medium",
       "source": "local-orchestration-patterns",
@@ -347,7 +353,10 @@
         "multi-agent cowork",
         "mcp unified management"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "coordination-only-safe-defaults-no-yolo-for-risky-work"
     },
     "skill-evolution-api": {
       "description": "Evolution API WhatsApp integration with webhook idempotency, queueing, consent, and rate limits.",
@@ -368,7 +377,10 @@
         "whatsapp",
         "evolution api"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "consent-rate-limits-and-idempotency"
     },
     "skill-frontend-ux-guardrails": {
       "description": "Frontend UX quality gates for responsive layouts, overflow, accessibility, and dashboard ergonomics.",
@@ -391,7 +403,10 @@
         "responsivo",
         "mobile quebrado"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "visual-regression-and-usability"
     },
     "skill-modern-ui-patterns": {
       "description": "Modern SaaS UI composition, compact admin surfaces, component behavior, and polished interaction states.",
@@ -412,7 +427,10 @@
         "ui moderna",
         "design system"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "consistent-product-ui"
     },
     "skill-open-design-ui": {
       "description": "Open-design UI workflow for product screens, design tokens, components, and visual QA.",
@@ -432,7 +450,10 @@
         "open design",
         "visual qa"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "design-consistency"
     },
     "skill-live-processing": {
       "description": "Live media processing pipeline with capture, queueing, worker state, retries, and observability.",
@@ -452,7 +473,10 @@
         "live video",
         "processamento ao vivo"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "resource-limits-and-idempotent-jobs"
     },
     "skill-manual-video-processing": {
       "description": "Manual upload video processing with secure storage, validation, job states, and retryable workers.",
@@ -472,7 +496,10 @@
         "upload video",
         "processar video"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "file-validation-and-async-processing"
     },
     "skill-smart-clip-detection": {
       "description": "Smart clip candidate detection for video/audio using scored moments, metadata, and review workflows.",
@@ -492,7 +519,10 @@
         "clips",
         "cortes"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "reviewable-non-destructive-media-output"
     },
     "skill-unified-analytics": {
       "description": "Unified SaaS/product analytics event taxonomy, metrics, funnels, dashboards, and privacy guardrails.",
@@ -514,7 +544,10 @@
         "metricas",
         "event tracking"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 3,
+      "cost": "low",
+      "safety": "privacy-aware-product-analytics"
     },
     "skill-elevenlabs-voice-cloning": {
       "description": "ElevenLabs voice generation/cloning integration with consent, asset handling, and server-side API use.",
@@ -534,7 +567,10 @@
         "elevenlabs",
         "voz"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "consent-and-server-side-api-keys"
     },
     "skill-google-workspace-sync": {
       "description": "Google Workspace sync patterns for Drive/Sheets/Calendar data, OAuth scopes, webhooks, and reconciliation.",
@@ -555,7 +591,88 @@
         "google calendar",
         "meet"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "least-privilege-oauth-and-sync-audit"
+    },
+    "skill-n8n-whatsapp-claude": {
+      "description": "n8n workflows connecting WhatsApp automation with Claude/LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
+      "category": "integrations",
+      "risk": "medium",
+      "source": "local-integration-patterns",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "n8n",
+        "n8n whatsapp",
+        "whatsapp claude",
+        "claude whatsapp",
+        "workflow n8n",
+        "automacao whatsapp",
+        "automação whatsapp"
+      ],
+      "aliases": [
+        "n8n",
+        "n8n whatsapp",
+        "whatsapp claude",
+        "claude whatsapp"
+      ],
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-secrets-consent-idempotency-and-validation"
+    },
+    "skill-github-mcp-automation": {
+      "description": "GitHub MCP automation for repositories, issues, pull requests, Actions, releases, code search, security findings, and maintenance with explicit permission gates.",
+      "category": "integrations",
+      "risk": "medium",
+      "source": "github-mcp-server-patterns",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "github mcp",
+        "github automation",
+        "github actions",
+        "pull request automation",
+        "pr automation",
+        "issue triage",
+        "repo maintenance",
+        "repository maintenance"
+      ],
+      "aliases": [
+        "github mcp",
+        "github automation",
+        "github actions",
+        "pr automation",
+        "issue triage"
+      ],
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "explicit-permission-gates-and-sanitized-github-visible-output"
+    },
+    "skill-quality-review": {
+      "description": "Review new or changed Orquestrador skills for actionable scope, compact structure, progressive disclosure, risk guardrails, verification, routing metadata, catalog coverage, and safe local/public boundaries before they enter the canonical registry.",
+      "category": "governance",
+      "risk": "medium",
+      "source": "local-skill-quality-patterns",
+      "priorityScore": 5,
+      "mirrorEverywhere": true,
+      "triggers": [
+        "skill quality",
+        "review skill",
+        "nova skill",
+        "canonical skill",
+        "skill registry",
+        "validar skill"
+      ],
+      "aliases": [
+        "skill quality",
+        "review skill",
+        "validar skill"
+      ],
+      "status": "canonical",
+      "cost": "medium",
+      "safety": "skill-registry-quality-and-sanitization"
     },
     "skill-lgpd-brasil": {
       "description": "LGPD-focused privacy and data-governance skill for Brazilian software products. Use for data mapping, legal basis selection, consent, privacy notices, RIPD, rights requests, retention, vendor risk, incident response, and international transfer review.",
@@ -584,25 +701,10 @@
         "dpo",
         "encarregado lgpd"
       ],
-      "status": "canonical"
-    },
-    "skill-whatsapp-meta-ads-leads": {
-      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
-      "category": "marketing",
-      "risk": "low",
-      "source": "filipe-detrey-campanha-whatsapp-2026",
-      "mirrorEverywhere": true,
-      "triggers": [
-        "whatsapp meta ads",
-        "campanha de whatsapp",
-        "leads qualificados whatsapp",
-        "meta ads para negócios locais"
-      ],
-      "aliases": [
-        "whatsapp meta ads leads",
-        "campanha whatsapp"
-      ],
-      "status": "canonical"
+      "status": "canonical",
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "privacy-law-and-data-governance"
     },
     "skill-cobranca-automatizada-saas-abacatepay": {
       "description": "Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics.",
@@ -636,23 +738,301 @@
         "billing automatizado",
         "regua de cobranca"
       ],
+      "status": "canonical",
+      "priorityScore": 3,
+      "cost": "high",
+      "safety": "server-side-payment-secrets-and-data-integrity"
+    },
+    "skill-browser-agent": {
+      "description": "Reliable web-browser agents using semantic page state, accessibility-tree inspection, structured Playwright actions, post-action validation, replay, and bounded visual fallbacks.",
+      "category": "automation",
+      "risk": "medium",
+      "source": "local-browser-agent-patterns",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "browser agent",
+        "agente de navegador",
+        "automacao web",
+        "automação web",
+        "navegar na web",
+        "playwright agent",
+        "semantic browser",
+        "accessibility tree",
+        "arvore de acessibilidade",
+        "browser automation",
+        "web agent"
+      ],
+      "aliases": [
+        "browser agent",
+        "agente web",
+        "automação de navegador",
+        "playwright"
+      ],
       "status": "canonical"
     },
-    "skill-quality-gate": {"description":"Avalia skills, plugins e MCPs antes da adoção.","category":"governance","risk":"high","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["quality gate","skill gate","avaliar skill","auditar plugin"],"aliases":["quality gate","skill gate"],"status":"canonical"},
-    "skill-repo-health": {"description":"Diagnóstico de saúde, stack, verificação e riscos de repositórios.","category":"engineering","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["repo health","saúde do repositorio","inspecionar repositorio"],"aliases":["repo health","health check repositorio"],"status":"canonical"},
-    "skill-preflight": {"description":"Preflight de escopo, baseline, riscos, ownership e testes.","category":"workflow","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["preflight","pre-flight","antes de implementar"],"aliases":["preflight"],"status":"canonical"},
-    "skill-systematic-debugging": {"description":"Debugging sistemático orientado por evidência e causa raiz.","category":"engineering","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["debug sistematico","causa raiz","investigar bug"],"aliases":["debug sistematico"],"status":"canonical"},
-    "skill-verification-before-completion": {"description":"Verificação proporcional antes de declarar conclusão.","category":"quality","risk":"low","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["verificar conclusão","verification before completion","validar antes de concluir"],"aliases":["verificação final"],"status":"canonical"},
-    "skill-webapp-testing": {"description":"Testes web E2E, acessibilidade, estados e regressão visual.","category":"testing","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["webapp testing","teste e2e","playwright","teste de aplicação web"],"aliases":["teste web","teste e2e"],"status":"canonical"},
-    "skill-mcp-builder": {"description":"Construção segura de MCP servers tipados e testáveis.","category":"integrations","risk":"high","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["mcp builder","criar mcp","servidor mcp"],"aliases":["mcp builder"],"status":"canonical"},
-    "skill-deep-wiki": {"description":"Documentação técnica navegável com arquitetura, Mermaid e onboarding.","category":"documentation","risk":"low","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["deep wiki","wiki tecnica","documentar repositorio"],"aliases":["deep wiki"],"status":"canonical"},
-    "skill-agent-observability": {"description":"Observabilidade de agentes, custos, latência, qualidade e regressões.","category":"observability","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["agent observability","observabilidade de agente","tracing agente"],"aliases":["agent observability"],"status":"canonical"},
-    "skill-release-engineering": {"description":"Engenharia de release, smoke tests, rollback e checklist operacional.","category":"delivery","risk":"high","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["release engineering","preparar release","rollback"],"aliases":["release engineering"],"status":"canonical"},
-    "skill-database-migrations": {"description":"Migrações de banco seguras, compatíveis, idempotentes e verificáveis.","category":"database","risk":"high","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["database migration","migração de banco","migration sql"],"aliases":["migração de banco"],"status":"canonical"},
-    "skill-dependency-upgrade": {"description":"Atualização controlada de dependências e lockfiles.","category":"maintenance","risk":"medium","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["dependency upgrade","atualizar dependencias","upgrade dependencias"],"aliases":["upgrade dependências"],"status":"canonical"},
-    "skill-incident-response": {"description":"Resposta a incidentes, contenção, recuperação e postmortem.","category":"operations","risk":"high","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["incident response","incidente","postmortem"],"aliases":["resposta a incidente"],"status":"canonical"},
-    "skill-adr": {"description":"Registros de decisões arquiteturais com alternativas e consequências.","category":"architecture","risk":"low","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["adr","decisão arquitetural","architecture decision"],"aliases":["adr"],"status":"canonical"},
-    "skill-research-and-synthesis": {"description":"Pesquisa web rastreável, comparável e baseada em fontes primárias.","category":"research","risk":"low","source":"orquestrador-native","mirrorEverywhere":true,"triggers":["research and synthesis","pesquisa web","pesquisar e sintetizar"],"aliases":["pesquisa com fontes"],"status":"canonical"},
+    "skill-whatsapp-meta-ads-leads": {
+      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
+      "category": "marketing",
+      "risk": "low",
+      "source": "filipe-detrey-campanha-whatsapp-2026",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "whatsapp meta ads",
+        "campanha de whatsapp",
+        "leads qualificados whatsapp",
+        "meta ads para negócios locais"
+      ],
+      "aliases": [
+        "whatsapp meta ads leads",
+        "campanha whatsapp"
+      ],
+      "status": "canonical"
+    },
+    "skill-quality-gate": {
+      "description": "Avalia skills, plugins e MCPs antes da adoção.",
+      "category": "governance",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "quality gate",
+        "skill gate",
+        "avaliar skill",
+        "auditar plugin"
+      ],
+      "aliases": [
+        "quality gate",
+        "skill gate"
+      ],
+      "status": "canonical"
+    },
+    "skill-repo-health": {
+      "description": "Diagnóstico de saúde, stack, verificação e riscos de repositórios.",
+      "category": "engineering",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "repo health",
+        "saúde do repositorio",
+        "inspecionar repositorio"
+      ],
+      "aliases": [
+        "repo health",
+        "health check repositorio"
+      ],
+      "status": "canonical"
+    },
+    "skill-preflight": {
+      "description": "Preflight de escopo, baseline, riscos, ownership e testes.",
+      "category": "workflow",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "preflight",
+        "pre-flight",
+        "antes de implementar"
+      ],
+      "aliases": [
+        "preflight"
+      ],
+      "status": "canonical"
+    },
+    "skill-systematic-debugging": {
+      "description": "Debugging sistemático orientado por evidência e causa raiz.",
+      "category": "engineering",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "debug sistematico",
+        "causa raiz",
+        "investigar bug"
+      ],
+      "aliases": [
+        "debug sistematico"
+      ],
+      "status": "canonical"
+    },
+    "skill-verification-before-completion": {
+      "description": "Verificação proporcional antes de declarar conclusão.",
+      "category": "quality",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "verificar conclusão",
+        "verification before completion",
+        "validar antes de concluir"
+      ],
+      "aliases": [
+        "verificação final"
+      ],
+      "status": "canonical"
+    },
+    "skill-webapp-testing": {
+      "description": "Testes web E2E, acessibilidade, estados e regressão visual.",
+      "category": "testing",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "webapp testing",
+        "teste e2e",
+        "playwright",
+        "teste de aplicação web"
+      ],
+      "aliases": [
+        "teste web",
+        "teste e2e"
+      ],
+      "status": "canonical"
+    },
+    "skill-mcp-builder": {
+      "description": "Construção segura de MCP servers tipados e testáveis.",
+      "category": "integrations",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "mcp builder",
+        "criar mcp",
+        "servidor mcp"
+      ],
+      "aliases": [
+        "mcp builder"
+      ],
+      "status": "canonical"
+    },
+    "skill-deep-wiki": {
+      "description": "Documentação técnica navegável com arquitetura, Mermaid e onboarding.",
+      "category": "documentation",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "deep wiki",
+        "wiki tecnica",
+        "documentar repositorio"
+      ],
+      "aliases": [
+        "deep wiki"
+      ],
+      "status": "canonical"
+    },
+    "skill-agent-observability": {
+      "description": "Observabilidade de agentes, custos, latência, qualidade e regressões.",
+      "category": "observability",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "agent observability",
+        "observabilidade de agente",
+        "tracing agente"
+      ],
+      "aliases": [
+        "agent observability"
+      ],
+      "status": "canonical"
+    },
+    "skill-release-engineering": {
+      "description": "Engenharia de release, smoke tests, rollback e checklist operacional.",
+      "category": "delivery",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "release engineering",
+        "preparar release",
+        "rollback"
+      ],
+      "aliases": [
+        "release engineering"
+      ],
+      "status": "canonical"
+    },
+    "skill-database-migrations": {
+      "description": "Migrações de banco seguras, compatíveis, idempotentes e verificáveis.",
+      "category": "database",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "database migration",
+        "migração de banco",
+        "migration sql"
+      ],
+      "aliases": [
+        "migração de banco"
+      ],
+      "status": "canonical"
+    },
+    "skill-dependency-upgrade": {
+      "description": "Atualização controlada de dependências e lockfiles.",
+      "category": "maintenance",
+      "risk": "medium",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "dependency upgrade",
+        "atualizar dependencias",
+        "upgrade dependencias"
+      ],
+      "aliases": [
+        "upgrade dependências"
+      ],
+      "status": "canonical"
+    },
+    "skill-incident-response": {
+      "description": "Resposta a incidentes, contenção, recuperação e postmortem.",
+      "category": "operations",
+      "risk": "high",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "incident response",
+        "incidente",
+        "postmortem"
+      ],
+      "aliases": [
+        "resposta a incidente"
+      ],
+      "status": "canonical"
+    },
+    "skill-adr": {
+      "description": "Registros de decisões arquiteturais com alternativas e consequências.",
+      "category": "architecture",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "adr",
+        "decisão arquitetural",
+        "architecture decision"
+      ],
+      "aliases": [
+        "adr"
+      ],
+      "status": "canonical"
+    },
+    "skill-research-and-synthesis": {
+      "description": "Pesquisa web rastreável, comparável e baseada em fontes primárias.",
+      "category": "research",
+      "risk": "low",
+      "source": "orquestrador-native",
+      "mirrorEverywhere": true,
+      "triggers": [
+        "research and synthesis",
+        "pesquisa web",
+        "pesquisar e sintetizar"
+      ],
+      "aliases": [
+        "pesquisa com fontes"
+      ],
+      "status": "canonical"
+    },
     "skill-optimize-images": {
       "description": "Otimiza imagens para blogs e sites, incluindo conversão de formato, redimensionamento, compressão, responsividade, acessibilidade e validação visual. Use quando pedirem para otimizar, reduzir, preparar, converter ou melhorar imagens para web.",
       "category": "media",

@@ -77,3 +77,10 @@ Use [Impeccable](https://impeccable.style/) as a design-thinking layer, not as a
 - Loading, empty, error, and success states are implemented where relevant.
 - Responsive behavior is verified.
 - Lint, typecheck, build, or targeted tests run when available.
+
+## Related Skills
+
+- `skill-frontend-ux-guardrails`
+- `skill-open-design-ui`
+- `skill-saas-admin-dashboard`
+- `skill-saas-factory`

@@ -75,15 +75,41 @@ Each delegated task must include:
 Use these lanes when they match the task:
 
 - `explore`: map files, symbols, project structure, and likely touchpoints.
+- `planner`: turn ambiguous initiatives into acceptance criteria, sequencing, risk, and verification gates without editing code.
 - `executor`: implement a bounded feature or refactor in owned files.
+- `reviewer` or `code-reviewer`: review final diffs for regressions, maintainability, and missing requirements.
 - `security-reviewer`: review auth, secrets, tenancy, RLS, payments, SSRF, injection, and webhook risks.
+- `documentation maintainer`: update user-facing docs, operational notes, and migration guidance after behavior changes.
 - `test-engineer`: add or fix tests and define validation strategy.
-- `code-reviewer`: review final diff for regressions and maintainability.
 - `designer`: UI/UX review or implementation for frontend surfaces.
 - `dependency-expert`: check external SDK docs, package versions, and integration constraints.
 - `verifier`: confirm completion claims against commands, diffs, and acceptance criteria.
 
 Prefer fewer agents with better scopes over many agents with vague scopes.
+
+## Ownership And Handoff
+
+Before parallel execution, assign one owner per lane and keep shared files with the lead agent unless ownership is explicit.
+
+Each handoff must include:
+
+- files read and files changed;
+- assumptions made and evidence used;
+- tests or checks run, including exact command names;
+- unresolved blockers and risk;
+- next owner when additional work remains.
+
+The lead agent integrates results. Worker output is evidence, not an automatic merge decision.
+
+## When Not To Use Multiagents
+
+Do not split work when:
+
+- the task is a single-file edit or a direct question;
+- correctness depends on one continuous model of a complex algorithm;
+- the same files would need concurrent edits;
+- the project has no validation gate and the split would create unreviewable claims;
+- the user asked for a quick local answer rather than a durable team workflow.
 
 ## SaaS Default Split
 

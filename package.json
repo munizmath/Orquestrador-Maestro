@@ -76,6 +76,7 @@
     "scripts/*.py",
     "scripts/*.ps1",
     "scripts/*.sh",
+    "src/",
     "skill-library/MANIFEST.json",
     "skill-library/community-skills/",
     "tool-profiles/",
@@ -85,7 +86,12 @@
     "audit": "node scripts/audit-dependencies.js audit",
     "outdated:all": "node scripts/audit-dependencies.js outdated",
     "pack:dry-run": "npm pack --dry-run",
-    "validate": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/validate-public.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/validate-skills.ps1"
+    "package:check": "node scripts/package-check.js",
+    "context-budget": "node scripts/context-budget.js",
+    "registry:build": "node scripts/skill-catalog.js build-registry",
+    "registry:check": "node scripts/skill-catalog.js build-registry --check",
+    "test": "node scripts/test-scripts.js && node scripts/test-public-validator.js && node scripts/context-budget.js && node scripts/skill-catalog.js build-registry --check && node scripts/test-architecture.js && npm run validate -- --check-sync && npm run package:check",
+    "validate": "node scripts/run-validate.js"
   },
   "config": {
     "telemetryEndpoint": ""

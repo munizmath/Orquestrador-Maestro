@@ -66,3 +66,10 @@ Score the target from 0 to 4 for hierarchy, contrast, responsiveness, accessibil
 - User actions and system states are clear.
 - Text is spelled correctly and UTF-8 safe.
 - Existing routes, form behavior, and analytics are preserved unless the task explicitly changes them.
+
+## Related Skills
+
+- `skill-modern-ui-patterns`
+- `skill-open-design-ui`
+- `skill-saas-admin-dashboard`
+- `skill-unified-analytics`

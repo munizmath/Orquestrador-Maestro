@@ -1,0 +1,44 @@
+services:
+  orquestrador:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    image: orquestrador-maestro-dev:local
+    container_name: orquestrador-maestro-dev
+    environment:
+      ORQUESTRADOR_CONTAINER: "1"
+      CI: "true"
+      HOME: "/tmp/Public"
+    ports:
+      - "8787:8787"
+    volumes:
+      - orquestrador_omx:/workspace/.omx
+      - orquestrador_local:/workspace/.local
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8787/version >/dev/null"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  test:
+    image: orquestrador-maestro-dev:local
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    environment:
+      ORQUESTRADOR_CONTAINER: "1"
+      CI: "true"
+      HOME: "/tmp/Public"
+    volumes:
+      - orquestrador_test_omx:/workspace/.omx
+      - orquestrador_test_local:/workspace/.local
+    command: ["npm", "test"]
+    profiles:
+      - test
+
+volumes:
+  orquestrador_omx:
+  orquestrador_local:
+  orquestrador_test_omx:
+  orquestrador_test_local:

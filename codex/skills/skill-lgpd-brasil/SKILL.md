@@ -18,7 +18,7 @@ Use this skill when the task involves Brazilian privacy and data protection work
 - RIPD, processing records, vendor or processor reviews, or international transfers.
 - AI, analytics, CRM, support, WhatsApp, email, or admin flows that touch personal data.
 
-## Operating Model
+## Core Workflow
 
 1. Identify the role model first: controller, operator, sub-operator, joint controller, and encarregado/DPO.
 2. Build a factual data map before drafting policy text or code.

@@ -12,11 +12,11 @@ Read these compact files before loading skill catalogs:
 
 `{{USER_HOME}}/.orquestrador\SKILLS_ROUTER.json`
 
-`{{USER_HOME}}/.orquestrador\SKILL_CHAINS.json`
-
-`{{USER_HOME}}/.orquestrador\SKILLS_MANIFEST.json`
+`{{USER_HOME}}/.orquestrador\SKILL_CHAINS.json` (only after the primary skill is selected)
 
 Then open only the selected `SKILL.md` files and their directly referenced files.
+
+`SKILLS_MANIFEST.json` is the sync source of truth, not a routing input: do not load it to decide what to do.
 
 ## Canonical Skill Roots
 
@@ -42,11 +42,13 @@ Then open only the selected `SKILL.md` files and their directly referenced files
 | Local SaaS repository security scan | `/skill:skill-saas-security-scan` |
 | Authorized staging/preview DAST | `/skill:skill-saas-dast-recon` |
 | Git hooks and CI security gates | `/skill:skill-security-hooks` |
-| Supabase RLS and tenant isolation | `/skill:skill-supabase-rls` |
 | AI provider routing and token budget | `/skill:skill-ai-orchestration` |
 | Multiagent/subagent orchestration | `/skill:skill-multiagent-orchestration` |
 | AionUi cowork/team orchestration | `/skill:skill-aionui-cowork-orchestration` |
 | WhatsApp via Evolution API | `/skill:skill-evolution-api` |
+| GitHub MCP automation | `/skill:skill-github-mcp-automation` |
+| n8n + WhatsApp + Claude workflows | `/skill:skill-n8n-whatsapp-claude` |
+| Skill quality review | `/skill:skill-quality-review` |
 | Frontend UX guardrails | `/skill:skill-frontend-ux-guardrails` |
 | Modern SaaS UI patterns | `/skill:skill-modern-ui-patterns` |
 | Open-design UI workflow | `/skill:skill-open-design-ui` |

@@ -20,13 +20,14 @@ Ordem recomendada para qualquer IA instalada:
 2. `.orquestrador/rules.md`.
 3. `.orquestrador/maestro.md`.
 4. `AGENTS.md` do projeto atual.
-5. `DEV/README.md` ou `DEV/INDEX.md`.
-6. `DEV/HANDOFF.md`.
-7. `DEV/CONTEXT.md`.
-8. `DEV/SPECS/ACTIVE.md`.
-9. Roteadores compactos de skill.
-10. `SKILL.md` especifico da tarefa.
-11. Referencias internas da skill somente quando necessarias.
+5. **CCP (mais fresco e barato): `DEV/context/_meta.json` → se fresco, `DEV/context/CONTEXT.md` + `INDEX.md` + `WORKLOG-DIGEST.md`** (ver "Compact Context Pack (CCP) E Frescor" abaixo). Caso contrário, siga para os arquivos DEV abaixo.
+6. `DEV/README.md` ou `DEV/INDEX.md`.
+7. `DEV/HANDOFF.md`.
+8. `DEV/CONTEXT.md`.
+9. `DEV/SPECS/ACTIVE.md`.
+10. Roteadores compactos de skill.
+11. `SKILL.md` especifico da tarefa.
+12. Referencias internas da skill somente quando necessarias.
 
 A IA nao deve abrir `skill-library/community-skills/` inteira, nem carregar a arvore `DEV/` completa por padrao.
 
@@ -38,12 +39,36 @@ A IA nao deve abrir `skill-library/community-skills/` inteira, nem carregar a ar
 | `SKILL_ALIASES.json` | Traduzir termos do usuario para uma skill canonica. |
 | `SKILLS_ROUTER.json` | Confirmar skill, gatilhos, custo e risco. |
 | `SKILL_CHAINS.json` | Saber quais skills auxiliares podem ser chamadas. |
+| `SKILL_EXECUTION_PROFILES.json` | Limitar profundidade, paralelismo e validação. |
 | `DEV/INDEX.md` | Mapear a documentacao local do projeto. |
 | `DEV/HANDOFF.md` | Recuperar o snapshot atual sem reler historico. |
 | `DEV/CONTEXT.md` | Recuperar estado, comandos, riscos e restricoes vivas. |
 | `DEV/SPECS/ACTIVE.md` | Entender objetivo, escopo, aceite e verificacao esperada. |
 | `DEV/WORKLOG.md` | Entender alteracoes recentes em poucas linhas. |
 | `DEV/VERIFY.md` | Ver a ultima evidencia de conclusao sem reabrir logs completos. |
+| `DEV/context/CONTEXT.md` | Snapshot fresco (repo+diff+testes) sem re-derivar estado. |
+| `DEV/context/_meta.json` | Frescor do CCP (generated_at, head_sha, ttl) p/ o staleness guard. |
+| `DEV/context/WORKLOG-DIGEST.md` | Últimas entradas do WORKLOG (~KBs) em vez do arquivo inteiro. |
+
+## Compact Context Pack (CCP) E Frescor
+
+Quando um projeto tem `DEV/context/` (gerado por coletores read-only; local-only,
+não versionado), a IA deve **preferir o CCP a re-derivar estado** (rodar
+`git status` / `docker ps` / grep) ou ler arquivos grandes (ex.: `DEV/WORKLOG.md`
+inteiro). O CCP é opcional e retrocompatível: projeto sem `DEV/context/` segue o
+fluxo normal.
+
+Staleness guard (lazy — só reidrata quando vai usar):
+
+1. Leia `DEV/context/_meta.json`.
+2. Considere **fresco** se `agora - generated_at <= ttl_minutes` **e** `head_sha`
+   == HEAD atual (`git rev-parse --short HEAD`).
+3. Fresco → use `CONTEXT.md` / `INDEX.md` / `WORKLOG-DIGEST.md` do CCP.
+4. Stale (TTL vencido, HEAD mudou ou sem `_meta.json`) → rode o refresh do projeto
+   (ex.: `bash infra/rundeck/scripts/refresh_context_ccp.sh`) e então use; se não
+   houver refresh disponível, caia para comandos ao vivo.
+
+Nunca edite arquivos do CCP à mão (são gerados). Nada de segredo/PII no CCP.
 
 ## Hooks Compactos
 

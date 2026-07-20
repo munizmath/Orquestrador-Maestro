@@ -19,7 +19,7 @@ Existing sub-hierarchies such as `DEV/LOGS/`, `DEV/SQL/`, `DEV/ARCH/`, `DEV/WORK
 Create durable project docs under `DEV/` by default. After substantive work, update `DEV/WORKLOG.md`, `DEV/VERIFY.md`, and `DEV/HANDOFF.md` with what changed, why, verification, and next context. Keep `DEV/SPECS/ACTIVE.md` current as the task contract.
 
 ## Skills
-A skill is a set of local instructions to follow that is stored in a `SKILL.md` file. Below is the list of skills that can be used. Each entry includes a name, description, and file path so you can open the source for full instructions when using a specific skill.
+A skill is a set of local instructions stored in a `SKILL.md` file. Paths follow `{{USER_HOME}}/.codex/skills/<name>/SKILL.md`, except `skill-creator` and `skill-installer`, which live under `.codex/skills/.system/<name>/SKILL.md`. Open the source only for the skill you decide to use.
 
 ### Available skills
 - orquestrador-maestro: Use for coding and project work in this machine so Codex follows the shared `orquestrador` constitution, `maestro` workflow, and global skill index stored in `{{USER_HOME}}/.orquestrador`. (file: {{USER_HOME}}/.codex/skills/orquestrador-maestro/SKILL.md)

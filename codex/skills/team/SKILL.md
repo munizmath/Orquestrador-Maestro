@@ -15,6 +15,13 @@ This skill is operationally sensitive. Treat it as an operator workflow, not a g
 - Use **`omx team`** when you need durable tmux workers, shared task state, mailbox/dispatch coordination, worktrees, explicit lifecycle control, or long-running parallel execution that must survive beyond one local reasoning burst.
 - Native subagents can complement team/ralph execution, but they do **not** replace the tmux team runtime's stateful coordination contract.
 
+## Ownership And Handoff
+
+- Assign each worker a lane, owned files/directories, forbidden overlap, output format, and verification command before launch.
+- Keep shared governance files, dependency manifests, lockfiles, and release metadata with the leader unless a worker is explicitly assigned them.
+- Worker handoff must include files read, files changed, tests run, findings, blockers, and residual risk.
+- The leader integrates and verifies; worker completion is not final completion.
+
 ## What This Skill Must Do
 
 ## GPT-5.4 Guidance Alignment

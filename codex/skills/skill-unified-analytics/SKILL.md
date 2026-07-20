@@ -63,3 +63,9 @@ Use this skill when adding or improving telemetry, metrics, funnels, product das
 - Dashboard queries match the event definition and use realistic sample data.
 - Tests, provider debug output, query results, or logs are checked before claiming completion.
 
+## Related Skills
+
+- `skill-saas-factory`
+- `skill-saas-admin-dashboard`
+- `skill-saas-core-limits`
+- `skill-ai-orchestration`

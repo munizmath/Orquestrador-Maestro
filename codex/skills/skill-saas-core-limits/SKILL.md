@@ -43,10 +43,16 @@ source: local-saas-entitlement-patterns
 
 For a concrete local pattern, inspect `{{USER_HOME}}/Documents\Code\Nina\src\lib\planLimitChecker.ts` only when implementing similar Supabase/RPC usage checks.
 
+## Verification
+
+- Test at least one allowed, warning, limit reached, expired, and blocked access path.
+- Confirm server-side enforcement rejects over-limit actions even if the frontend allows the click.
+- Replay the same payment or admin entitlement update and confirm idempotency prevents duplicate state changes.
+- Check audit records include actor, reason, before/after state, source, and timestamp for manual overrides.
+
 ## Related Skills
 
 - `skill-saas-factory`
 - `skill-abacatepay-integration`
 - `skill-stripe-integration`
 - `skill-supabase-rls`
-

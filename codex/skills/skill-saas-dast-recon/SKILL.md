@@ -77,3 +77,15 @@ For active DAST, stop after the first critical finding unless the user explicitl
 - Do not bypass authentication or access another tenant's data unless the user provided a controlled test tenant pair.
 - Do not follow redirects to third-party domains unless they are explicitly in scope.
 
+## Verification
+
+- Confirm the final report includes target, environment, scope, authorization, tools run, and rate-limit posture.
+- Confirm raw findings are stored under `security-reports/dast/` and summaries omit secrets, cookies, and sensitive response bodies.
+- Manually verify every critical/high finding before calling it exploitable.
+- Distinguish confirmed issues, likely false positives, skipped checks, and tool failures.
+
+## Related Skills
+
+- `skill-saas-security-scan`
+- `skill-security-hooks`
+- `skill-saas-factory`

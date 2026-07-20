@@ -6,6 +6,7 @@ DEV/
 .env.*
 *.log
 *.tmp
+*:Zone.Identifier
 *.bak
 *.bak-*
 *.orig
