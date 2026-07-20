@@ -15,14 +15,14 @@
     "dashboard": "skill-saas-admin-dashboard",
     "painel admin": "skill-saas-admin-dashboard",
     "admin": "skill-saas-admin-dashboard",
-    "limites": "skill-saas-core-limits",
-    "planos": "skill-saas-core-limits",
-    "assinaturas": "skill-saas-core-limits",
     "abacatepay": "skill-abacatepay-integration",
     "pix": "skill-abacatepay-integration",
     "pagamento br": "skill-abacatepay-integration",
     "stripe": "skill-stripe-integration",
     "checkout": "skill-stripe-integration",
+    "limites": "skill-saas-core-limits",
+    "planos": "skill-saas-core-limits",
+    "assinaturas": "skill-saas-core-limits",
     "security scan": "skill-saas-security-scan",
     "scan seguranca": "skill-saas-security-scan",
     "seguranca saas": "skill-saas-security-scan",
@@ -96,6 +96,9 @@
     "anpd": "skill-lgpd-brasil",
     "ripd": "skill-lgpd-brasil",
     "dpo": "skill-lgpd-brasil",
-    "encarregado lgpd": "skill-lgpd-brasil"
+    "encarregado lgpd": "skill-lgpd-brasil",
+    "cobranca": "skill-cobranca-automatizada-saas-abacatepay",
+    "billing automatizado": "skill-cobranca-automatizada-saas-abacatepay",
+    "regua de cobranca": "skill-cobranca-automatizada-saas-abacatepay"
   }
 }

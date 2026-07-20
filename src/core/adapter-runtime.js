@@ -1,7 +1,7 @@
 "use strict";
 
 const ADAPTER_MODES = Object.freeze({
-  MOCK: "mock",
+  LOCAL_DRY_RUN: "local-dry-run",
   DRY_RUN: "dry-run",
   LIVE_DISABLED: "live-disabled",
   LIVE_READY: "live-ready",

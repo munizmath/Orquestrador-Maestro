@@ -38,10 +38,11 @@ function parseArgs(argv) {
       continue;
     }
     const key = arg.slice(2);
-    if (key === "mirror-everywhere" || key === "json" || key === "check-sync") {
+    if (key === "mirror-everywhere" || key === "json" || key === "check-sync" || key === "check") {
       if (key === "mirror-everywhere") args.mirrorEverywhere = true;
       if (key === "json") args.json = true;
       if (key === "check-sync") args.checkSync = true;
+      if (key === "check") args.check = true;
       continue;
     }
     const value = argv[index + 1];
@@ -157,25 +158,13 @@ function createSkill(args) {
     triggers,
     aliases,
     status: "canonical",
-  };
-  writeJson(paths.manifestPath, manifest);
-
-  const router = readJson(paths.routerPath);
-  router.skills[name] = {
-    description,
-    triggers,
-    canonicalPath: `{{USER_HOME}}/.orquestrador/skills/${name}/SKILL.md`,
-    codexPath: `{{USER_HOME}}/.codex/skills/${name}/SKILL.md`,
     cost: risk === "high" ? "high" : risk === "medium" ? "medium" : "low",
     safety: "task-specific-guardrails",
   };
-  writeJson(paths.routerPath, router);
+  writeJson(paths.manifestPath, manifest);
 
-  const aliasDoc = readJson(paths.aliasesPath);
-  for (const alias of aliases) {
-    aliasDoc.aliases[alias] = name;
-  }
-  writeJson(paths.aliasesPath, aliasDoc);
+  // SKILLS_ROUTER.json and SKILL_ALIASES.json are generated from the manifest.
+  buildRegistry({ repoRoot: paths.repoRoot });
 
   console.log(`Created ${path.relative(paths.repoRoot, skillFile)}`);
   console.log(`Updated ${path.relative(paths.repoRoot, paths.manifestPath)}, SKILLS_ROUTER.json, and SKILL_ALIASES.json`);
@@ -387,6 +376,70 @@ function printMirrorEverywhere(args = {}) {
   }
 }
 
+function generatedRouterSkills(manifestSkills) {
+  const skills = {};
+  for (const [name, entry] of Object.entries(manifestSkills || {})) {
+    skills[name] = {
+      description: entry.description,
+      triggers: entry.triggers || [],
+      canonicalPath: `{{USER_HOME}}/.orquestrador/skills/${name}/SKILL.md`,
+      codexPath: `{{USER_HOME}}/.codex/skills/${name}/SKILL.md`,
+      cost: entry.cost,
+      safety: entry.safety,
+    };
+  }
+  return skills;
+}
+
+function generatedAliases(manifestSkills) {
+  const aliases = {};
+  for (const [name, entry] of Object.entries(manifestSkills || {})) {
+    for (const alias of entry.aliases || []) {
+      aliases[alias] = name;
+    }
+  }
+  return aliases;
+}
+
+// Order-independent structural comparison so drift is detected by content,
+// not by key order or formatting.
+function stableStringify(value) {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+// SKILLS_MANIFEST.json is the single source of truth. SKILLS_ROUTER.json and
+// SKILL_ALIASES.json are generated from it. `--check` fails on drift instead of writing.
+function buildRegistry(args = {}) {
+  const paths = getPaths(args.repoRoot ? path.resolve(args.repoRoot) : defaultRepoRoot);
+  const manifestSkills = readJson(paths.manifestPath).skills || {};
+  const router = readJson(paths.routerPath);
+  const aliasesDoc = readJson(paths.aliasesPath);
+
+  const nextRouterSkills = generatedRouterSkills(manifestSkills);
+  const nextAliases = generatedAliases(manifestSkills);
+
+  if (args.check) {
+    const issues = [];
+    if (stableStringify(router.skills || {}) !== stableStringify(nextRouterSkills)) {
+      issues.push("SKILLS_ROUTER.json is out of sync with SKILLS_MANIFEST.json (run: skill-catalog.js build-registry)");
+    }
+    if (stableStringify(aliasesDoc.aliases || {}) !== stableStringify(nextAliases)) {
+      issues.push("SKILL_ALIASES.json is out of sync with SKILLS_MANIFEST.json (run: skill-catalog.js build-registry)");
+    }
+    return { ok: issues.length === 0, issues, changed: [] };
+  }
+
+  router.skills = nextRouterSkills;
+  writeJson(paths.routerPath, router);
+  aliasesDoc.aliases = nextAliases;
+  writeJson(paths.aliasesPath, aliasesDoc);
+  return { ok: true, issues: [], changed: ["SKILLS_ROUTER.json", "SKILL_ALIASES.json"] };
+}
+
 function runCli(argv = process.argv.slice(2)) {
   const [command, ...rest] = argv;
   try {
@@ -406,8 +459,19 @@ function runCli(argv = process.argv.slice(2)) {
       if (args.json) console.log(JSON.stringify({ skills }, null, 2));
       else for (const skill of skills) console.log(`${skill.name}\t${skill.category}\t${skill.risk}\t${skill.priorityScore || ""}\t${skill.description}`);
     } else if (command === "mirror-everywhere") printMirrorEverywhere(args);
-    else {
-      console.error("Usage: skill-catalog.js <new|validate|list|mirror-everywhere> [options]");
+    else if (command === "build-registry") {
+      const result = buildRegistry(args);
+      if (args.check) {
+        if (result.ok) console.log("Registry in sync with SKILLS_MANIFEST.json.");
+        else {
+          console.error("Registry drift detected:");
+          for (const issue of result.issues) console.error(`  - ${issue}`);
+        }
+        return result.ok ? 0 : 1;
+      }
+      console.log(`Registry rebuilt from manifest: ${result.changed.join(", ")}`);
+    } else {
+      console.error("Usage: skill-catalog.js <new|validate|list|mirror-everywhere|build-registry> [options]");
       return 2;
     }
     return 0;
@@ -423,6 +487,7 @@ if (require.main === module) {
 
 module.exports = {
   assertSkillName,
+  buildRegistry,
   hasHeading,
   isGenericDescription,
   listSkills,

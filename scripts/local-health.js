@@ -12,7 +12,7 @@ function run(command, args) {
   const result = spawnSync(command, args, {
     cwd: repoRoot,
     encoding: "utf8",
-    shell: false,
+    shell: process.platform === "win32",
   });
   return {
     command: [command, ...args].join(" "),
@@ -25,6 +25,9 @@ function run(command, args) {
 }
 
 function gitStatus() {
+  if (!fs.existsSync(path.join(repoRoot, ".git")) && process.env.ORQUESTRADOR_CONTAINER === "1") {
+    return { ok: true, skipped: true, reason: "git metadata is intentionally excluded from the container image" };
+  }
   const result = run("git", ["status", "--short"]);
   const lines = result.stdout.split(/\r?\n/).filter(Boolean);
   const suspicious = lines.filter((line) =>

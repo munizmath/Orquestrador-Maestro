@@ -29,7 +29,7 @@ function exampleConfig() {
         allowedHosts: ["127.0.0.1", "localhost"],
       },
       llm: {
-        provider: "mock",
+        provider: "local-dry-run",
         apiKeyEnv: "ORQUESTRADOR_LLM_API_KEY",
         endpointEnv: "ORQUESTRADOR_LLM_API_URL",
         allowedHosts: ["127.0.0.1", "localhost"],

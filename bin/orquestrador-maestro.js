@@ -22,7 +22,7 @@ const { checkConnector, dryRunConnector, listConnectors } = require(path.join(ro
 const { dryRunWorkflowTrigger, listWorkflows } = require(path.join(rootDir, "src", "application", "workflow-service.js"));
 const { previewMessage } = require(path.join(rootDir, "src", "application", "message-service.js"));
 const { listLiveAdapters } = require(path.join(rootDir, "src", "application", "live-adapters.js"));
-const { cancelTask, enqueueTask, listTasks, runTask } = require(path.join(rootDir, "src", "application", "queue-service.js"));
+const { cancelTask, enqueueTask, listTasks, processQueue, runTask, startQueueWorker } = require(path.join(rootDir, "src", "application", "queue-service.js"));
 const { buildMetrics, purgeRuns, retentionPlan } = require(path.join(rootDir, "src", "application", "metrics-service.js"));
 const { startServer } = require(path.join(rootDir, "src", "interfaces", "http", "server.js"));
 const { exampleConfig, explainConfig, validateConfig, loadConfig, writeExampleConfig } = require(path.join(rootDir, "src", "infrastructure", "config-loader.js"));
@@ -30,6 +30,7 @@ const { checkWebhook, dryRunWebhook, sendWebhook } = require(path.join(rootDir, 
 const { checkN8n, dryRunN8n, triggerN8n } = require(path.join(rootDir, "src", "application", "n8n-service.js"));
 const { checkWhatsApp, dryRunWhatsApp, sendWhatsApp } = require(path.join(rootDir, "src", "application", "whatsapp-service.js"));
 const { checkLlmLive, completeLlmLive, dryRunLlmLive } = require(path.join(rootDir, "src", "application", "llm-live-service.js"));
+const { buildSetupDoctor } = require(path.join(rootDir, "src", "application", "setup-service.js"));
 const telemetryTimeoutMs = 1200;
 const telemetryConsentVersion = 1;
 
@@ -65,7 +66,7 @@ function printHelp() {
 Uso:
   orquestrador-maestro install [opcoes]
   orquestrador-maestro update [opcoes]
-  orquestrador-maestro setup local [--json] [--dry-run] [--home-path <path>]
+  orquestrador-maestro setup local|doctor [--json] [--dry-run] [--home-path <path>]
   orquestrador-maestro verify [opcoes]
   orquestrador-maestro validate [--json] [--check-sync]
   orquestrador-maestro skills list [--json]
@@ -76,14 +77,14 @@ Uso:
   orquestrador-maestro insights [--json] [--state-dir <path>]
   orquestrador-maestro local migrate [--dry-run|--apply] [--json] [--state-dir <path>]
   orquestrador-maestro runs list|show <id> [--json] [--state-dir <path>]
-  orquestrador-maestro server start [--port <n>]
+  orquestrador-maestro server start [--port <n>] [--host <host>]
   orquestrador-maestro panel path
   orquestrador-maestro integrations capabilities|dry-run [--json]
   orquestrador-maestro llm providers|check|explain-routing [--json]
   orquestrador-maestro connectors list|check|dry-run [--json]
   orquestrador-maestro workflows list|dry-run [--json]
   orquestrador-maestro messages preview [--json]
-  orquestrador-maestro queue list|enqueue|run|cancel [--json]
+  orquestrador-maestro queue list|enqueue|run|cancel|work [--json]
   orquestrador-maestro metrics summary|retention|purge [--json]
   orquestrador-maestro adapters live [--json]
   orquestrador-maestro config validate|explain|example|init [--json]
@@ -141,16 +142,17 @@ Opcoes de runs:
 
 Opcoes de server:
   --port <n>                Porta local. Use 0 para porta aleatoria
+  --host <host>             127.0.0.1 por padrao. 0.0.0.0 apenas em container
 
 Opcoes de integrations dry-run:
   --action <name>           Acao, ex: webhook.emit
-  --target <id>             Destino logico, ex: mock-webhook
+  --target <id>             Destino logico, ex: local-webhook-dry-run
   --payload-json <json>     Payload seguro de teste
   --confirmed               Simula confirmacao explicita
   --consent                 Simula consentimento do canal
 
 Opcoes de llm explain-routing:
-  --prompt <text>           Prompt para explicar roteamento mock
+  --prompt <text>           Prompt para explicar roteamento local
 
 Opcoes de doctor:
   --home-path <path>          Diagnostica outro home
@@ -393,6 +395,17 @@ function setupStep(name, command, args, options = {}) {
 
 function runSetupCommand(args) {
   const [subcommand = "local", ...rest] = args;
+  if (subcommand === "doctor") {
+    const options = parseStatefulArgs(rest);
+    const data = buildSetupDoctor(rootDir, { cwd: process.cwd() });
+    if (options.json) emitEnvelope("setup doctor", options, data, data.issues || []);
+    else {
+      console.log(data.ok ? "Setup doctor passed." : "Setup doctor found issues.");
+      for (const check of data.checks) console.log(`${check.ok ? "ok" : "fail"}\t${check.name}`);
+      for (const issue of data.issues) console.log(`- ${issue.message}`);
+    }
+    return data.ok ? 0 : 1;
+  }
   if (subcommand !== "local") throw new Error(`Subcomando de setup desconhecido: ${subcommand}`);
   const options = parseSetupLocalArgs(rest);
   const capture = options.json;
@@ -640,9 +653,10 @@ async function runServerCommand(args) {
   const [subcommand = "start", ...rest] = args;
   if (subcommand !== "start") throw new Error(`Subcomando de server desconhecido: ${subcommand}`);
   const port = Number(valueAfter(rest, "--port", "8787"));
-  const server = await startServer({ repoRoot: rootDir, port });
+  const host = valueAfter(rest, "--host", "127.0.0.1");
+  const server = await startServer({ repoRoot: rootDir, port, host });
   const address = server.address();
-  console.log(`API local em http://127.0.0.1:${address.port}`);
+  console.log(`API local em http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${address.port}`);
   return new Promise(() => {});
 }
 
@@ -673,7 +687,7 @@ function runIntegrationsCommand(args) {
   }
   if (subcommand === "dry-run") {
     const action = valueAfter(rest, "--action", "webhook.emit");
-    const target = valueAfter(rest, "--target", "mock-webhook");
+    const target = valueAfter(rest, "--target", "local-webhook-dry-run");
     const payload = parsePayloadJson(valueAfter(rest, "--payload-json", "{}"));
     const result = dryRunIntegration({
       action,
@@ -700,7 +714,7 @@ async function runLlmCommand(args) {
   if (subcommand === "providers") {
     const data = { schemaVersion: 1, providers: listProviders() };
     if (options.json) emitEnvelope("llm providers", options, data);
-    else for (const provider of data.providers) console.log(`${provider.id}\t${provider.models.length} modelos\tmock`);
+    else for (const provider of data.providers) console.log(`${provider.id}\t${provider.models.length} modelos\t${provider.id.startsWith("local-") ? "local-dry-run" : "live"}`);
     return 0;
   }
   if (subcommand === "check") {
@@ -760,7 +774,7 @@ function runConnectorsCommand(args) {
     else for (const connector of data.connectors) console.log(`${connector.id}\t${connector.type}\t${connector.healthy ? "ok" : "disabled"}`);
     return 0;
   }
-  const id = valueAfter(rest, "--id", "mock-webhook");
+  const id = valueAfter(rest, "--id", "local-webhook-dry-run");
   if (subcommand === "check") {
     const data = checkConnector(id);
     const code = data.code || (data.mode === "live-disabled" ? "live_disabled" : "connector_check_failed");
@@ -792,7 +806,7 @@ function runWorkflowsCommand(args) {
     return 0;
   }
   if (subcommand === "dry-run") {
-    const workflowId = valueAfter(rest, "--workflow-id", "wf_mock_onboarding");
+    const workflowId = valueAfter(rest, "--workflow-id", "wf_local_onboarding");
     const data = dryRunWorkflowTrigger(workflowId, parsePayloadJson(valueAfter(rest, "--payload-json", "{}")));
     if (options.json) emitEnvelope("workflows dry-run", options, data, data.ok ? [] : [{ code: data.code, message: data.code }]);
     else console.log(data.ok ? `workflow dry-run ok\t${workflowId}` : `workflow dry-run blocked\t${workflowId}`);
@@ -806,7 +820,7 @@ function runMessagesCommand(args) {
   const options = parseStatefulArgs(rest, ["--recipient", "--body", "--consent"]);
   if (subcommand !== "preview") throw new Error(`Subcomando de messages desconhecido: ${subcommand}`);
   const data = previewMessage({
-    recipient: valueAfter(rest, "--recipient", "placeholder-recipient"),
+    recipient: valueAfter(rest, "--recipient", "unknown-recipient"),
     body: valueAfter(rest, "--body", "Mensagem de teste"),
     consent: rest.includes("--consent"),
   });
@@ -817,7 +831,7 @@ function runMessagesCommand(args) {
 
 function runQueueCommand(args) {
   const [subcommand = "list", ...rest] = args;
-  const options = parseStatefulArgs(rest, ["--type", "--id"]);
+  const options = parseStatefulArgs(rest, ["--type", "--id", "--limit", "--concurrency", "--interval-ms"]);
   const store = createLocalStore({ repoRoot: rootDir, rootDir: options.stateDir || undefined });
   if (subcommand === "list") {
     const data = { schemaVersion: 1, tasks: listTasks(store) };
@@ -833,9 +847,23 @@ function runQueueCommand(args) {
   }
   const id = valueAfter(rest, "--id");
   if (subcommand === "run") {
-    const data = runTask(store, id);
+    const data = runTask(store, id, { repoRoot: rootDir });
     if (options.json) emitEnvelope("queue run", options, data);
     else console.log(`${data.taskId}\t${data.status}`);
+    return 0;
+  }
+  if (subcommand === "work") {
+    const limit = Number(valueAfter(rest, "--concurrency", valueAfter(rest, "--limit", "1")));
+    if (rest.includes("--once")) {
+      const data = processQueue(store, { repoRoot: rootDir, concurrency: limit });
+      if (options.json) emitEnvelope("queue work", options, data);
+      else console.log(`processed=${data.processed}`);
+      return 0;
+    }
+    const intervalMs = Number(valueAfter(rest, "--interval-ms", "1000"));
+    startQueueWorker(store, { repoRoot: rootDir, concurrency: limit, intervalMs });
+    console.log(`queue worker running\tintervalMs=${intervalMs}\tconcurrency=${limit}`);
+    process.stdin.resume();
     return 0;
   }
   if (subcommand === "cancel") {
@@ -1025,9 +1053,9 @@ async function runWhatsAppCommand(args) {
     liveHttpEnabled: rest.includes("--enable-live-http"),
   };
   const input = {
-    recipient: valueAfter(rest, "--recipient", "placeholder-recipient"),
+    recipient: valueAfter(rest, "--recipient", "unknown-recipient"),
     body: valueAfter(rest, "--body", "Mensagem de teste"),
-    templateId: valueAfter(rest, "--template-id", "mock-template"),
+    templateId: valueAfter(rest, "--template-id", "local-template"),
   };
   if (subcommand === "check") {
     const data = checkWhatsApp(context);

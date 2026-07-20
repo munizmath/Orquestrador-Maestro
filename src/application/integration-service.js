@@ -72,7 +72,7 @@ function dryRunIntegration(input, options = {}) {
 }
 
 function listCapabilities() {
-  return CAPABILITIES.map((name) => ({ name, mode: "mock-or-dry-run" }));
+  return CAPABILITIES.map((name) => ({ name, mode: "local-dry-run-or-live" }));
 }
 
 module.exports = {

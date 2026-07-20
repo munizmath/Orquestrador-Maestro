@@ -12,7 +12,7 @@ function getLlmConfig(context = {}) {
   const endpointEnv = llm.endpointEnv || "ORQUESTRADOR_LLM_API_URL";
   return {
     loaded,
-    provider: llm.provider || "mock",
+    provider: llm.provider || "local-dry-run",
     apiKeyEnv,
     endpointEnv,
     apiKeyConfigured: Boolean(process.env[apiKeyEnv]),

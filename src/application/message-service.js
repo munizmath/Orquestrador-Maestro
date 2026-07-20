@@ -9,14 +9,14 @@ function recipientRef(value) {
 
 function previewMessage(input = {}) {
   const consent = Boolean(input.consent);
-  const recipient = recipientRef(input.recipient || "placeholder");
+  const recipient = recipientRef(input.recipient || "unknown-recipient");
   const body = String(input.body || "").slice(0, 500);
-  const result = dryRunConnector("mock-message-channel", {
+  const result = dryRunConnector("local-message-dry-run", {
     action: "message.send",
     payload: {
       recipientRef: recipient,
       body,
-      templateId: input.templateId || "mock-template",
+      templateId: input.templateId || "local-template",
       locale: input.locale || "pt-BR",
     },
   }, {

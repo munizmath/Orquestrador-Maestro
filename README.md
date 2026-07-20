@@ -1044,6 +1044,9 @@ O validador público verifica:
 - [docs/installer-options.md](docs/installer-options.md): flags do instalador, dry-run, listagem, `Only`, uninstall e teste em home temporário.
 - [docs/orquestrador.md](docs/orquestrador.md): download, instalação, verificação, uso e atualização.
 - [docs/orquestrador-reference.md](docs/orquestrador-reference.md): lógica interna, roteamento, hooks, perfis, agentes, sync e verificação.
+- [docs/next-experience-architecture.md](docs/next-experience-architecture.md): arquitetura de cockpit, fluxos, contratos, UI/UX e evolução da experiência operacional.
+- [docs/next-experience-implementation-plan.md](docs/next-experience-implementation-plan.md): plano multi-PR query-first com RBAC server-side, isolamento de tenant, fail-closed e auditoria.
+- [docs/container-dev.md](docs/container-dev.md): container de desenvolvimento para API/painel, testes e volumes locais isolados.
 - [docs/context-economy.md](docs/context-economy.md): economia de contexto inspirada em RTK/Caveman, leitura em camadas e roadmap de wrappers compactos.
 - [docs/research/repo-radar-2026-05.md](docs/research/repo-radar-2026-05.md): radar de repositórios recentes e padrões extraíveis para próximas melhorias.
 - [docs/research/repo-radar-2026-06.md](docs/research/repo-radar-2026-06.md): radar de junho de 2026 com UX/UI, changelog canônico, doctor/changelog no CLI, uso seguro de bibliotecas externas, gate de implementação mínima, gate React e compressão opt-in de contexto.

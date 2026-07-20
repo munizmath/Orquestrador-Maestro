@@ -48,7 +48,9 @@
         "auth saas"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low-first-then-progressive",
+      "safety": "defensive-product-engineering"
     },
     "skill-saas-admin-dashboard": {
       "description": "SaaS admin dashboard and internal panel patterns for users, plans, payments, logs, metrics, settings, and onboarding.",
@@ -73,7 +75,9 @@
         "admin"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "frontend-and-admin-access-controls"
     },
     "skill-abacatepay-integration": {
       "description": "AbacatePay PIX/card billing, CPF/CNPJ, BRL checkout, billing webhooks, and entitlement sync.",
@@ -98,7 +102,9 @@
         "pagamento br"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-payment-secrets-only"
     },
     "skill-stripe-integration": {
       "description": "Stripe Checkout, Billing subscriptions, customer portal, webhook verification, and SaaS entitlement sync.",
@@ -121,7 +127,9 @@
         "checkout"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-payment-secrets-only"
     },
     "skill-saas-core-limits": {
       "description": "SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, and blocked account states.",
@@ -146,7 +154,9 @@
         "assinaturas"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "backend-enforced-access"
     },
     "skill-saas-security-scan": {
       "description": "Authorized local SaaS repository security scan using maintained OSS tools.",
@@ -168,7 +178,9 @@
         "seguranca saas"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "medium",
+      "safety": "local-owned-repositories-only"
     },
     "skill-saas-dast-recon": {
       "description": "Authorized staging/preview DAST and recon workflow for owned SaaS systems.",
@@ -190,7 +202,9 @@
         "nuclei"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "high",
+      "safety": "owned-authorized-targets-only"
     },
     "skill-security-hooks": {
       "description": "Git hooks and CI security gates for SaaS repositories.",
@@ -211,7 +225,9 @@
         "ci security"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "defensive-controls-only"
     },
     "skill-supabase-rls": {
       "description": "Supabase/Postgres RLS design, tenant isolation, policies, indexes, and verification.",
@@ -235,7 +251,9 @@
         "tenant isolation"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "medium",
+      "safety": "high-risk-data-isolation"
     },
     "skill-ai-orchestration": {
       "description": "Server-side AI provider orchestration, routing, budgets, fallbacks, observability, and safe key handling.",
@@ -261,7 +279,9 @@
         "token budget"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-secrets-and-budget-limits"
     },
     "skill-multiagent-orchestration": {
       "description": "Multiagent and subagent orchestration for splitting independent engineering work, assigning ownership, reducing token waste, and integrating results safely.",
@@ -299,10 +319,12 @@
         "orquestrar agentes"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low-first-then-progressive",
+      "safety": "disjoint-work-ownership-and-integration-gates"
     },
     "skill-aionui-cowork-orchestration": {
-      "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the user orchestrator without replacing the existing workflow.",
+      "description": "Safe AionUi cowork/team integration around Codex, Claude, Gemini, OpenCode, MCPs, and the {{USER_NAME}} orchestrator without replacing the existing workflow.",
       "category": "orchestration",
       "risk": "medium",
       "source": "local-orchestration-patterns",
@@ -332,7 +354,9 @@
         "mcp unified management"
       ],
       "status": "canonical",
-      "priorityScore": 5
+      "priorityScore": 5,
+      "cost": "low",
+      "safety": "coordination-only-safe-defaults-no-yolo-for-risky-work"
     },
     "skill-evolution-api": {
       "description": "Evolution API WhatsApp integration with webhook idempotency, queueing, consent, and rate limits.",
@@ -354,7 +378,9 @@
         "evolution api"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "consent-rate-limits-and-idempotency"
     },
     "skill-frontend-ux-guardrails": {
       "description": "Frontend UX quality gates for responsive layouts, overflow, accessibility, and dashboard ergonomics.",
@@ -378,7 +404,9 @@
         "mobile quebrado"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "visual-regression-and-usability"
     },
     "skill-modern-ui-patterns": {
       "description": "Modern SaaS UI composition, compact admin surfaces, component behavior, and polished interaction states.",
@@ -400,7 +428,9 @@
         "design system"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "consistent-product-ui"
     },
     "skill-open-design-ui": {
       "description": "Open-design UI workflow for product screens, design tokens, components, and visual QA.",
@@ -421,7 +451,9 @@
         "visual qa"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "low",
+      "safety": "design-consistency"
     },
     "skill-live-processing": {
       "description": "Live media processing pipeline with capture, queueing, worker state, retries, and observability.",
@@ -442,7 +474,9 @@
         "processamento ao vivo"
       ],
       "status": "canonical",
-      "priorityScore": 3
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "resource-limits-and-idempotent-jobs"
     },
     "skill-manual-video-processing": {
       "description": "Manual upload video processing with secure storage, validation, job states, and retryable workers.",
@@ -463,7 +497,9 @@
         "processar video"
       ],
       "status": "canonical",
-      "priorityScore": 3
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "file-validation-and-async-processing"
     },
     "skill-smart-clip-detection": {
       "description": "Smart clip candidate detection for video/audio using scored moments, metadata, and review workflows.",
@@ -484,7 +520,9 @@
         "cortes"
       ],
       "status": "canonical",
-      "priorityScore": 3
+      "priorityScore": 3,
+      "cost": "medium",
+      "safety": "reviewable-non-destructive-media-output"
     },
     "skill-unified-analytics": {
       "description": "Unified SaaS/product analytics event taxonomy, metrics, funnels, dashboards, and privacy guardrails.",
@@ -507,7 +545,9 @@
         "event tracking"
       ],
       "status": "canonical",
-      "priorityScore": 3
+      "priorityScore": 3,
+      "cost": "low",
+      "safety": "privacy-aware-product-analytics"
     },
     "skill-elevenlabs-voice-cloning": {
       "description": "ElevenLabs voice generation/cloning integration with consent, asset handling, and server-side API use.",
@@ -528,7 +568,9 @@
         "voz"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "consent-and-server-side-api-keys"
     },
     "skill-google-workspace-sync": {
       "description": "Google Workspace sync patterns for Drive/Sheets/Calendar data, OAuth scopes, webhooks, and reconciliation.",
@@ -550,10 +592,12 @@
         "meet"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "least-privilege-oauth-and-sync-audit"
     },
     "skill-n8n-whatsapp-claude": {
-      "description": "n8n workflows that connect WhatsApp automation with Claude or other LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
+      "description": "n8n workflows connecting WhatsApp automation with Claude/LLMs through secure webhooks, queues, idempotency, consent, and provider routing.",
       "category": "integrations",
       "risk": "medium",
       "source": "local-integration-patterns",
@@ -574,10 +618,12 @@
         "claude whatsapp"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "server-side-secrets-consent-idempotency-and-validation"
     },
     "skill-github-mcp-automation": {
-      "description": "GitHub MCP automation around repositories, issues, pull requests, Actions, releases, code search, security findings, and repository maintenance with explicit permission gates.",
+      "description": "GitHub MCP automation for repositories, issues, pull requests, Actions, releases, code search, security findings, and maintenance with explicit permission gates.",
       "category": "integrations",
       "risk": "medium",
       "source": "github-mcp-server-patterns",
@@ -600,7 +646,9 @@
         "issue triage"
       ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "explicit-permission-gates-and-sanitized-github-visible-output"
     },
     "skill-quality-review": {
       "description": "Review new or changed Orquestrador skills for actionable scope, compact structure, progressive disclosure, risk guardrails, verification, routing metadata, catalog coverage, and safe local/public boundaries before they enter the canonical registry.",
@@ -622,7 +670,9 @@
         "review skill",
         "validar skill"
       ],
-      "status": "canonical"
+      "status": "canonical",
+      "cost": "medium",
+      "safety": "skill-registry-quality-and-sanitization"
     },
     "skill-lgpd-brasil": {
       "description": "LGPD-focused privacy and data-governance skill for Brazilian software products. Use for data mapping, legal basis selection, consent, privacy notices, RIPD, rights requests, retention, vendor risk, incident response, and international transfer review.",
@@ -630,10 +680,31 @@
       "risk": "high",
       "source": "local-privacy-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["lgpd", "lgpd brasil", "lei geral de protecao de dados", "anpd", "ripd", "dpo", "encarregado", "privacidade lgpd", "dados pessoais", "dados sensiveis"],
-      "aliases": ["lgpd", "lgpd brasil", "lei geral de protecao de dados", "anpd", "ripd", "dpo", "encarregado lgpd"],
+      "triggers": [
+        "lgpd",
+        "lgpd brasil",
+        "lei geral de protecao de dados",
+        "anpd",
+        "ripd",
+        "dpo",
+        "encarregado",
+        "privacidade lgpd",
+        "dados pessoais",
+        "dados sensiveis"
+      ],
+      "aliases": [
+        "lgpd",
+        "lgpd brasil",
+        "lei geral de protecao de dados",
+        "anpd",
+        "ripd",
+        "dpo",
+        "encarregado lgpd"
+      ],
       "status": "canonical",
-      "priorityScore": 4
+      "priorityScore": 4,
+      "cost": "medium",
+      "safety": "privacy-law-and-data-governance"
     },
     "skill-cobranca-automatizada-saas-abacatepay": {
       "description": "Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics.",
@@ -641,10 +712,36 @@
       "risk": "high",
       "source": "local-saas-billing-patterns",
       "mirrorEverywhere": true,
-      "triggers": ["cobranca", "cobrança", "billing automatizado", "regua de cobranca", "régua de cobrança", "fatura", "invoice", "dunning", "abacatepay cobranca", "billing cron", "trial expiration", "invoice portal", "notificacao cobranca", "notificação cobrança", "billing metrics", "mrr", "billing admin", "planos", "plans"],
-      "aliases": ["cobranca", "billing automatizado", "regua de cobranca"],
+      "triggers": [
+        "cobranca",
+        "cobrança",
+        "billing automatizado",
+        "regua de cobranca",
+        "régua de cobrança",
+        "fatura",
+        "invoice",
+        "dunning",
+        "abacatepay cobranca",
+        "billing cron",
+        "trial expiration",
+        "invoice portal",
+        "notificacao cobranca",
+        "notificação cobrança",
+        "billing metrics",
+        "mrr",
+        "billing admin",
+        "planos",
+        "plans"
+      ],
+      "aliases": [
+        "cobranca",
+        "billing automatizado",
+        "regua de cobranca"
+      ],
       "status": "canonical",
-      "priorityScore": 3
+      "priorityScore": 3,
+      "cost": "high",
+      "safety": "server-side-payment-secrets-and-data-integrity"
     }
   }
 }

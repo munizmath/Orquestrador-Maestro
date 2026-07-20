@@ -44,9 +44,9 @@ function checkWhatsApp(context = {}) {
 
 function buildMessagePayload(input = {}) {
   return {
-    recipientRef: recipientRef(input.recipient || "placeholder-recipient"),
+    recipientRef: recipientRef(input.recipient || "unknown-recipient"),
     body: String(input.body || "").slice(0, 1000),
-    templateId: input.templateId || "mock-template",
+    templateId: input.templateId || "local-template",
     locale: input.locale || "pt-BR",
   };
 }

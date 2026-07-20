@@ -11,16 +11,16 @@ function descriptor(id, type, mode, capabilities, permissions = {}, requiredConf
   return createAdapterDescriptor({ id, type, mode, capabilities, permissions, requiredConfig });
 }
 
-function mockLifecycle(id, type) {
+function localDryRunLifecycle(id, type) {
   return {
     configure() {
-      return { ok: true, mode: ADAPTER_MODES.MOCK, id };
+      return { ok: true, mode: ADAPTER_MODES.LOCAL_DRY_RUN, id };
     },
     check() {
-      return { ok: true, id, mode: ADAPTER_MODES.MOCK };
+      return { ok: true, id, mode: ADAPTER_MODES.LOCAL_DRY_RUN };
     },
     plan(intent = {}) {
-      return { ok: true, id, mode: ADAPTER_MODES.MOCK, intent };
+      return { ok: true, id, mode: ADAPTER_MODES.LOCAL_DRY_RUN, intent };
     },
     dryRun(intent = {}, context = {}) {
       const action = intent.action || (type === "message" ? "message.send" : type === "workflow" ? "workflow.trigger" : "webhook.emit");
@@ -37,7 +37,7 @@ function mockLifecycle(id, type) {
       return { ok: result.dryRun.wouldExecute, id, ...result };
     },
     execute() {
-      return { ok: false, id, code: "mock_execute_disabled", mode: ADAPTER_MODES.MOCK };
+      return { ok: false, id, code: "local_dry_run_execute_disabled", mode: ADAPTER_MODES.LOCAL_DRY_RUN };
     },
   };
 }
@@ -113,9 +113,9 @@ function liveLifecycle(id, configKey, action) {
 }
 
 const adapters = [
-  createAdapter(descriptor("mock-webhook", "webhook", ADAPTER_MODES.MOCK, ["webhook.preview", "webhook.emit.dry_run"], { webhook: true }), mockLifecycle("mock-webhook", "webhook")),
-  createAdapter(descriptor("mock-n8n", "workflow", ADAPTER_MODES.MOCK, ["workflow.list", "workflow.trigger.dry_run", "workflow.status"], { webhook: true }), mockLifecycle("mock-n8n", "workflow")),
-  createAdapter(descriptor("mock-message-channel", "message", ADAPTER_MODES.MOCK, ["message.preview", "message.send.dry_run", "message.status"], {}), mockLifecycle("mock-message-channel", "message")),
+  createAdapter(descriptor("local-webhook-dry-run", "webhook", ADAPTER_MODES.LOCAL_DRY_RUN, ["webhook.preview", "webhook.emit.dry_run"], { webhook: true }), localDryRunLifecycle("local-webhook-dry-run", "webhook")),
+  createAdapter(descriptor("local-n8n-dry-run", "workflow", ADAPTER_MODES.LOCAL_DRY_RUN, ["workflow.list", "workflow.trigger.dry_run", "workflow.status"], { webhook: true }), localDryRunLifecycle("local-n8n-dry-run", "workflow")),
+  createAdapter(descriptor("local-message-dry-run", "message", ADAPTER_MODES.LOCAL_DRY_RUN, ["message.preview", "message.send.dry_run", "message.status"], {}), localDryRunLifecycle("local-message-dry-run", "message")),
   createAdapter(descriptor("live-webhook", "webhook-live", ADAPTER_MODES.LIVE_DISABLED, ["webhook.check", "webhook.plan", "webhook.dryRun", "webhook.execute"], { network: true, webhook: true, externalSend: true }, ["ORQUESTRADOR_WEBHOOK_URL"]), liveLifecycle("live-webhook", "webhook", "webhook.emit")),
   createAdapter(descriptor("live-n8n", "workflow-live", ADAPTER_MODES.LIVE_DISABLED, ["n8n.check", "n8n.workflow.plan", "n8n.workflow.dryRun", "n8n.workflow.execute"], { network: true, webhook: true, externalSend: true }, ["ORQUESTRADOR_N8N_WEBHOOK_URL"]), liveLifecycle("live-n8n", "n8n", "workflow.trigger")),
   createAdapter(descriptor("live-whatsapp", "message-live", ADAPTER_MODES.LIVE_DISABLED, ["whatsapp.check", "whatsapp.preview", "whatsapp.dryRun", "whatsapp.execute"], { network: true, externalSend: true }, ["ORQUESTRADOR_WHATSAPP_TOKEN", "ORQUESTRADOR_WHATSAPP_PHONE_ID"]), liveLifecycle("live-whatsapp", "whatsapp", "message.send")),

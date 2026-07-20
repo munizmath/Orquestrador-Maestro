@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuração Local - Orquestrador Maestro</title>
+  <link rel="stylesheet" href="/setup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Configuração Local</h1>
+        <p>Configure WhatsApp, IA e verificações locais com segurança.</p>
+      </div>
+      <nav>
+        <a href="/panel">Painel</a>
+        <button id="refresh" type="button">Verificar</button>
+        <button id="support-report" type="button">Gerar relatório</button>
+      </nav>
+    </header>
+
+    <section class="summary" aria-label="Resumo">
+      <article>
+        <h2>Ambiente</h2>
+        <div id="doctor">Carregando...</div>
+      </article>
+      <article>
+        <h2>Próximos passos</h2>
+        <div id="next-actions">Carregando...</div>
+      </article>
+      <article>
+        <h2>Configuração salva</h2>
+        <div id="config-status">Carregando...</div>
+      </article>
+    </section>
+
+    <form id="setup-form">
+      <section>
+        <h2>WhatsApp</h2>
+        <div class="field">
+          <label for="whatsapp-token">Token de acesso</label>
+          <input id="whatsapp-token" name="whatsappToken" type="password" autocomplete="off" placeholder="Cole aqui o token gerado na Meta">
+        </div>
+        <div class="field">
+          <label for="whatsapp-phone-id">ID do número do WhatsApp</label>
+          <input id="whatsapp-phone-id" name="whatsappPhoneId" type="text" autocomplete="off" placeholder="ID do número exibido na Meta">
+        </div>
+        <div class="field">
+          <label for="whatsapp-api-url">Endereço da API da Meta</label>
+          <input id="whatsapp-api-url" name="whatsappApiUrl" type="url" autocomplete="off" placeholder="URL da API da Meta para envio de mensagens">
+        </div>
+        <div class="field">
+          <label for="whatsapp-recipient">Número de teste autorizado</label>
+          <input id="whatsapp-recipient" name="whatsappSandboxRecipient" type="text" autocomplete="off" placeholder="Digite somente números, sem +">
+        </div>
+      </section>
+
+      <section>
+        <h2>IA de texto</h2>
+        <div class="field">
+          <label for="llm-provider">Provedor</label>
+          <input id="llm-provider" name="llmProvider" type="text" value="local" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="llm-key">Chave de acesso da IA</label>
+          <input id="llm-key" name="llmApiKey" type="password" autocomplete="off" placeholder="Cole a chave do serviço de IA">
+        </div>
+        <div class="field">
+          <label for="llm-url">Endereço da API da IA</label>
+          <input id="llm-url" name="llmApiUrl" type="url" autocomplete="off" placeholder="URL do serviço de IA">
+        </div>
+      </section>
+
+      <section class="actions">
+        <button type="submit">Salvar configuração local</button>
+        <button id="whatsapp-check" type="button">Verificar WhatsApp</button>
+        <button id="whatsapp-dry-run" type="button">Simular WhatsApp</button>
+        <button id="llm-check" type="button">Verificar IA</button>
+        <button id="llm-dry-run" type="button">Simular IA</button>
+      </section>
+    </form>
+
+    <section>
+      <h2>Comandos seguros para copiar</h2>
+      <div class="commands">
+        <button class="copy-command secondary" type="button" data-command="whatsappCheck">Copiar verificação do WhatsApp</button>
+        <button class="copy-command secondary" type="button" data-command="whatsappDryRun">Copiar simulação do WhatsApp</button>
+        <button class="copy-command secondary" type="button" data-command="whatsappSend">Copiar envio do WhatsApp</button>
+        <button class="copy-command secondary" type="button" data-command="llmCheck">Copiar verificação da IA</button>
+        <button class="copy-command secondary" type="button" data-command="llmDryRun">Copiar simulação da IA</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Resultado</h2>
+      <pre id="result">Aguardando ação.</pre>
+    </section>
+  </main>
+  <script src="/setup.js"></script>
+</body>
+</html>

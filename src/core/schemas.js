@@ -2,9 +2,38 @@
 
 const { CLASSIFICATIONS } = require("./security.js");
 
-const VALID_STATUSES = new Set(["pending", "blocked", "ready", "running", "succeeded", "failed", "cancelled", "retrying"]);
+const VALID_STATUSES = new Set(["pending", "blocked", "ready", "running", "succeeded", "failed", "cancelled", "retrying", "dead-letter"]);
 const VALID_SEVERITIES = new Set(["info", "warning", "error", "critical"]);
 const VALID_CLASSIFICATIONS = new Set(Object.values(CLASSIFICATIONS));
+const VALID_QUERY_NAMES = new Set([
+  "cockpit.overview.get",
+  "cockpit.summary.get",
+  "skills.routes.search",
+  "validation.status.get",
+  "runs.timeline.list",
+  "runs.record.get",
+  "audit.events.list",
+  "insights.snapshot.get",
+  "alerts.list",
+  "integrations.capabilities.list",
+  "connectors.list",
+  "queue.tasks.list",
+  "metrics.summary.get",
+  "llm.providers.list",
+  "adapters.live.list",
+  "actions.list",
+]);
+const VALID_ROLES = new Set([
+  "maestro.owner",
+  "maestro.operator",
+  "maestro.viewer",
+  "service.validator",
+  "service.panel",
+]);
+const VALID_AUTHZ_EFFECTS = new Set(["allow", "deny", "redact", "require_confirmation"]);
+const VALID_ACTION_NAMES = new Set([
+  "validation.run",
+]);
 
 function issue(path, message) {
   return { path, message };
@@ -41,6 +70,14 @@ function requireNumber(value, path, issues) {
 function requireSchemaVersion(value, path, issues) {
   if (value !== 1) {
     issues.push(issue(`${path}.schemaVersion`, "expected schemaVersion 1"));
+  }
+}
+
+function requireNoGenericKeyNames(value, path, issues) {
+  for (const key of Object.keys(value || {})) {
+    if (key === "id" || key === "user" || key === "tenant" || key === "item") {
+      issues.push(issue(`${path}.${key}`, "generic identifier names are not allowed in Next Experience contracts"));
+    }
   }
 }
 
@@ -201,6 +238,147 @@ function validateTask(value, path = "$") {
   return issues;
 }
 
+function validateActorContext(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.actorKey, `${path}.actorKey`, issues);
+  if (requireArray(value.roles, `${path}.roles`, issues)) {
+    value.roles.forEach((role, index) => {
+      requireString(role, `${path}.roles[${index}]`, issues);
+      if (!VALID_ROLES.has(role)) issues.push(issue(`${path}.roles[${index}]`, "expected known role"));
+    });
+  }
+  if (value.sessionKey !== undefined && value.sessionKey !== null) requireString(value.sessionKey, `${path}.sessionKey`, issues);
+  return issues;
+}
+
+function validateTenantScope(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.workspaceKey, `${path}.workspaceKey`, issues);
+  requireString(value.projectKey, `${path}.projectKey`, issues);
+  requireString(value.projectRootRef, `${path}.projectRootRef`, issues);
+  if (value.mode !== "local-only") issues.push(issue(`${path}.mode`, "expected local-only"));
+  return issues;
+}
+
+function validateQueryEnvelope(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.queryName, `${path}.queryName`, issues);
+  if (!VALID_QUERY_NAMES.has(value.queryName)) issues.push(issue(`${path}.queryName`, "query is not registered"));
+  requireString(value.workspaceKey, `${path}.workspaceKey`, issues);
+  requireString(value.projectKey, `${path}.projectKey`, issues);
+  requireString(value.actorKey, `${path}.actorKey`, issues);
+  requireString(value.purpose, `${path}.purpose`, issues);
+  if (!isPlainObject(value.filters)) issues.push(issue(`${path}.filters`, "expected filters object"));
+  if (!isPlainObject(value.pagination)) issues.push(issue(`${path}.pagination`, "expected pagination object"));
+  if (value.pagination) {
+    if (typeof value.pagination.limit !== "number" || value.pagination.limit < 1 || value.pagination.limit > 100) {
+      issues.push(issue(`${path}.pagination.limit`, "expected number between 1 and 100"));
+    }
+    if (typeof value.pagination.offset !== "number" || value.pagination.offset < 0) {
+      issues.push(issue(`${path}.pagination.offset`, "expected non-negative number"));
+    }
+  }
+  if (requireArray(value.fields, `${path}.fields`, issues)) {
+    if (value.fields.length === 0) issues.push(issue(`${path}.fields`, "expected at least one projected field"));
+    value.fields.forEach((field, index) => requireString(field, `${path}.fields[${index}]`, issues));
+  }
+  return issues;
+}
+
+function validateAuthorizationDecision(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.decisionKey, `${path}.decisionKey`, issues);
+  if (!VALID_AUTHZ_EFFECTS.has(value.effect)) issues.push(issue(`${path}.effect`, "expected valid authorization effect"));
+  requireString(value.reasonCode, `${path}.reasonCode`, issues);
+  requireString(value.safeSummary, `${path}.safeSummary`, issues);
+  if (requireArray(value.requiredRoles || [], `${path}.requiredRoles`, issues)) {
+    (value.requiredRoles || []).forEach((role, index) => requireString(role, `${path}.requiredRoles[${index}]`, issues));
+  }
+  return issues;
+}
+
+function validatePolicyDenial(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.denialKey, `${path}.denialKey`, issues);
+  requireString(value.reasonCode, `${path}.reasonCode`, issues);
+  requireString(value.safeSummary, `${path}.safeSummary`, issues);
+  if (value.httpStatus !== 400 && value.httpStatus !== 401 && value.httpStatus !== 403 && value.httpStatus !== 404) {
+    issues.push(issue(`${path}.httpStatus`, "expected fail-closed HTTP status"));
+  }
+  return issues;
+}
+
+function validatePanelViewModelEnvelope(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  if (typeof value.ok !== "boolean") issues.push(issue(`${path}.ok`, "expected boolean"));
+  requireString(value.queryName, `${path}.queryName`, issues);
+  requireString(value.workspaceKey, `${path}.workspaceKey`, issues);
+  requireString(value.projectKey, `${path}.projectKey`, issues);
+  if (!isPlainObject(value.data) && value.data !== null) issues.push(issue(`${path}.data`, "expected object or null"));
+  if (requireArray(value.issues || [], `${path}.issues`, issues)) {
+    (value.issues || []).forEach((item, index) => issues.push(...validateOperationalIssue(item, `${path}.issues[${index}]`)));
+  }
+  if (requireArray(value.warnings || [], `${path}.warnings`, issues)) {
+    (value.warnings || []).forEach((item, index) => issues.push(...validateOperationalIssue(item, `${path}.warnings[${index}]`)));
+  }
+  return issues;
+}
+
+function validateActionEnvelope(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  requireString(value.actionName, `${path}.actionName`, issues);
+  if (!VALID_ACTION_NAMES.has(value.actionName)) issues.push(issue(`${path}.actionName`, "action is not registered"));
+  requireString(value.workspaceKey, `${path}.workspaceKey`, issues);
+  requireString(value.projectKey, `${path}.projectKey`, issues);
+  requireString(value.actorKey, `${path}.actorKey`, issues);
+  requireString(value.idempotencyKey, `${path}.idempotencyKey`, issues);
+  requireString(value.purpose, `${path}.purpose`, issues);
+  if (!isPlainObject(value.payload)) issues.push(issue(`${path}.payload`, "expected payload object"));
+  if (value.dryRunKey !== undefined && value.dryRunKey !== null) requireString(value.dryRunKey, `${path}.dryRunKey`, issues);
+  if (value.confirmationKey !== undefined && value.confirmationKey !== null) requireString(value.confirmationKey, `${path}.confirmationKey`, issues);
+  return issues;
+}
+
+function validateActionResult(value, path = "$") {
+  const issues = [];
+  if (!requireObject(value, path, issues)) return issues;
+  requireSchemaVersion(value.schemaVersion, path, issues);
+  requireNoGenericKeyNames(value, path, issues);
+  if (typeof value.ok !== "boolean") issues.push(issue(`${path}.ok`, "expected boolean"));
+  requireString(value.actionName, `${path}.actionName`, issues);
+  requireString(value.workspaceKey, `${path}.workspaceKey`, issues);
+  requireString(value.projectKey, `${path}.projectKey`, issues);
+  if (!isPlainObject(value.data) && value.data !== null) issues.push(issue(`${path}.data`, "expected object or null"));
+  if (requireArray(value.issues || [], `${path}.issues`, issues)) {
+    (value.issues || []).forEach((item, index) => issues.push(...validateOperationalIssue(item, `${path}.issues[${index}]`)));
+  }
+  if (requireArray(value.warnings || [], `${path}.warnings`, issues)) {
+    (value.warnings || []).forEach((item, index) => issues.push(...validateOperationalIssue(item, `${path}.warnings[${index}]`)));
+  }
+  return issues;
+}
+
 const validators = {
   OperationalIssue: validateOperationalIssue,
   ValidationResult: validateValidationResult,
@@ -212,6 +390,14 @@ const validators = {
   DryRunResult: validateDryRunResult,
   AuditEvent: validateAuditEvent,
   Task: validateTask,
+  ActorContext: validateActorContext,
+  TenantScope: validateTenantScope,
+  QueryEnvelope: validateQueryEnvelope,
+  AuthorizationDecision: validateAuthorizationDecision,
+  PolicyDenial: validatePolicyDenial,
+  PanelViewModelEnvelope: validatePanelViewModelEnvelope,
+  ActionEnvelope: validateActionEnvelope,
+  ActionResult: validateActionResult,
 };
 
 function validateSchema(name, value) {

@@ -25,7 +25,7 @@ const { createTempStore } = require("../src/infrastructure/local-store.js");
 const { planMigrations, applyMigrations } = require("../src/infrastructure/migrations.js");
 const { createRun, getRun, listRuns, updateRun } = require("../src/application/run-registry.js");
 const { readAuditEvents } = require("../src/application/audit-log.js");
-const { enqueueTask, listTasks, runTask } = require("../src/application/queue-service.js");
+const { enqueueTask, listDeadLetters, listTasks, processQueue, runTask } = require("../src/application/queue-service.js");
 const { buildMetrics, purgeRuns } = require("../src/application/metrics-service.js");
 const { listLiveAdapters } = require("../src/application/live-adapters.js");
 const { explainConfig, validateConfig } = require("../src/infrastructure/config-loader.js");
@@ -36,6 +36,10 @@ const { sendWebhook } = require("../src/application/webhook-service.js");
 const { triggerN8n } = require("../src/application/n8n-service.js");
 const { sendWhatsApp } = require("../src/application/whatsapp-service.js");
 const { completeLlmLive } = require("../src/application/llm-live-service.js");
+const { createQueryGateway } = require("../src/application/query-gateway.js");
+const { createActionGateway } = require("../src/application/action-gateway.js");
+const { buildActorContext } = require("../src/application/rbac-service.js");
+const { buildTenantScope } = require("../src/application/tenant-scope-service.js");
 
 function testRedaction() {
   const payload = {
@@ -232,7 +236,7 @@ function testOperationalCliCommands() {
 
   const llm = runCli(["llm", "check", "--json"]);
   assertExit(llm);
-  assert.equal(assertJsonEnvelope(parseJsonStdout(llm)).data.checks[0].id, "mock-llm");
+  assert.equal(assertJsonEnvelope(parseJsonStdout(llm)).data.checks[0].id, "local-llm");
 
   const integration = runCli([
     "integrations",
@@ -242,7 +246,7 @@ function testOperationalCliCommands() {
     "--action",
     "webhook.emit",
     "--target",
-    "mock-webhook",
+    "local-webhook-dry-run",
     "--payload-json",
     "{\"message\":\"hello\"}",
   ]);
@@ -251,13 +255,13 @@ function testOperationalCliCommands() {
 
   const connectors = runCli(["connectors", "list", "--json"]);
   assertExit(connectors);
-  assert(assertJsonEnvelope(parseJsonStdout(connectors)).data.connectors.some((item) => item.id === "mock-webhook"));
+  assert(assertJsonEnvelope(parseJsonStdout(connectors)).data.connectors.some((item) => item.id === "local-webhook-dry-run"));
 
-  const workflow = runCli(["workflows", "dry-run", "--json", "--workflow-id", "wf_mock_onboarding"]);
+  const workflow = runCli(["workflows", "dry-run", "--json", "--workflow-id", "wf_local_onboarding"]);
   assertExit(workflow);
-  assert.equal(assertJsonEnvelope(parseJsonStdout(workflow)).data.workflow.id, "wf_mock_onboarding");
+  assert.equal(assertJsonEnvelope(parseJsonStdout(workflow)).data.workflow.id, "wf_local_onboarding");
 
-  const message = runCli(["messages", "preview", "--json", "--consent", "--recipient", "placeholder", "--body", "hello"]);
+  const message = runCli(["messages", "preview", "--json", "--consent", "--recipient", "recipient-test", "--body", "hello"]);
   assertExit(message);
   assert.equal(assertJsonEnvelope(parseJsonStdout(message)).data.consent, true);
 
@@ -294,21 +298,69 @@ function testOperationalCliCommands() {
   const setupJson = assertJsonEnvelope(parseJsonStdout(setup));
   assert.equal(setupJson.data.mode, "local-only");
   assert(setupJson.data.steps.some((step) => step.name === "install-plan"));
+
+  const doctor = runCli(["setup", "doctor", "--json"]);
+  assertExit(doctor);
+  assert.equal(assertJsonEnvelope(parseJsonStdout(doctor)).data.mode, "local-only");
 }
 
 function testQueueMetricsAndRetention() {
   const store = createTempStore();
-  const task = enqueueTask(store, { type: "validate", taskId: "task_test" });
+  const task = enqueueTask(store, { type: "validate", taskId: "task_test", payload: { checkSync: false } });
   assert.equal(task.status, "pending");
   assert.equal(listTasks(store).length, 1);
-  const finished = runTask(store, "task_test");
+  const finished = runTask(store, "task_test", { repoRoot });
   assert.equal(finished.status, "succeeded");
+  assert.equal(finished.attempts, 1);
   const metrics = buildMetrics(store);
   assert.equal(metrics.runs.total, 1);
   assert(metrics.audit.total >= 1);
   const purge = purgeRuns(store, 0, { dryRun: true });
   assert.equal(purge.dryRun, true);
   assert.equal(listLiveAdapters()[0].execute().code, "live_adapter_disabled");
+}
+
+function testQueueWorkerRetryBackoff() {
+  const store = createTempStore();
+  enqueueTask(store, {
+    type: "llm.complete",
+    taskId: "task_retry_test",
+    idempotencyKey: "idem_retry_test",
+    dryRun: { ok: true },
+    retryPolicy: { maxAttempts: 2, baseDelayMs: 5000, maxDelayMs: 5000 },
+  });
+  const first = processQueue(store, { repoRoot, limit: 1 });
+  assert.equal(first.processed, 1);
+  assert.equal(first.tasks[0].status, "retrying");
+  assert.equal(first.tasks[0].attempts, 1);
+  assert(Date.parse(first.tasks[0].availableAt) > Date.now());
+  const second = processQueue(store, { repoRoot, limit: 1 });
+  assert.equal(second.processed, 0);
+
+  store.writeJson("queue/task_retry_test.json", {
+    ...first.tasks[0],
+    availableAt: "2026-01-01T00:00:00.000Z",
+  });
+  const final = processQueue(store, { repoRoot, concurrency: 2 });
+  assert.equal(final.processed, 1);
+  assert.equal(final.tasks[0].status, "dead-letter");
+  assert.equal(final.tasks[0].attempts, 2);
+  assert.equal(listDeadLetters(store).length, 1);
+  assert(readAuditEvents(store).some((event) => event.type === "job.dead_lettered"));
+}
+
+function testSkillRouteTask() {
+  const store = createTempStore();
+  enqueueTask(store, {
+    type: "skill.route",
+    taskId: "task_skill_route_test",
+    payload: { prompt: "orquestrar whatsapp com webhook e retry" },
+  });
+  const result = processQueue(store, { repoRoot, concurrency: 2 });
+  assert.equal(result.processed, 1);
+  assert.equal(result.tasks[0].status, "succeeded");
+  const run = getRun(store, result.tasks[0].runId);
+  assert(run.artifacts.some((artifact) => artifact.type === "skill-route"));
 }
 
 function testAdapterRuntimeConfigTransportAndEgress() {
@@ -325,6 +377,134 @@ function testAdapterRuntimeConfigTransportAndEgress() {
   });
   assert.equal(blocked.ok, false);
   assert.equal(blocked.policy, "dry-run-required");
+}
+
+function testNextExperienceContractsFailClosed() {
+  const store = createTempStore();
+  const gateway = createQueryGateway({ repoRoot, store });
+  const scope = buildTenantScope(repoRoot);
+  const actorContext = buildActorContext({
+    actorKey: "actor_local_test",
+    roles: ["service.panel"],
+    sessionKey: "session_local_test",
+  });
+
+  const allowed = gateway.execute({
+    actorContext,
+    query: queryEnvelope(scope),
+  });
+  assert.equal(allowed.ok, true);
+  assert.equal(allowed.queryName, "cockpit.summary.get");
+
+  const missingScope = gateway.execute({
+    actorContext,
+    query: { ...queryEnvelope(scope), projectKey: "" },
+  });
+  assert.equal(missingScope.ok, false);
+  assert.equal(missingScope.data.denial.reasonCode, "query_schema_invalid");
+
+  const wrongRole = gateway.execute({
+    actorContext: buildActorContext({
+      actorKey: "actor_local_test",
+      roles: ["maestro.viewer"],
+      sessionKey: "session_local_test",
+    }),
+    query: queryEnvelope(scope, {
+      queryName: "audit.events.list",
+      fields: ["schemaVersion", "events", "count"],
+      purpose: "audit.read",
+    }),
+  });
+  assert.equal(wrongRole.ok, false);
+  assert.equal(wrongRole.data.denial.reasonCode, "role_denied");
+
+  const crossProject = gateway.execute({
+    actorContext,
+    query: queryEnvelope(scope, { projectKey: "project_other" }),
+  });
+  assert.equal(crossProject.ok, false);
+  assert.equal(crossProject.data.denial.reasonCode, "tenant_scope_denied");
+
+  const runs = gateway.execute({
+    actorContext,
+    query: queryEnvelope(scope, {
+      queryName: "runs.timeline.list",
+      fields: ["schemaVersion", "recent", "count"],
+      purpose: "runs.read",
+    }),
+  });
+  assert.equal(runs.ok, true);
+  assert(!JSON.stringify(runs.data).includes("\"id\""));
+
+  const connectors = gateway.execute({
+    actorContext,
+    query: queryEnvelope(scope, {
+      queryName: "connectors.list",
+      fields: ["schemaVersion", "connectors"],
+      purpose: "connectors.read",
+    }),
+  });
+  assert.equal(connectors.ok, true);
+  assert.equal(connectors.data.connectors[0].connectorKey, "local-webhook-dry-run");
+
+  const overview = gateway.execute({
+    actorContext,
+    query: queryEnvelope(scope, {
+      queryName: "cockpit.overview.get",
+      fields: ["schemaVersion", "readiness", "queue", "metrics", "audit"],
+      purpose: "panel.read",
+    }),
+  });
+  assert.equal(overview.ok, true);
+  assert(Object.prototype.hasOwnProperty.call(overview.data, "readiness"));
+}
+
+function testActionGatewayDryRunAndExecution() {
+  const store = createTempStore();
+  const gateway = createActionGateway({ repoRoot, store });
+  const scope = buildTenantScope(repoRoot);
+  const operator = buildActorContext({
+    actorKey: "actor_local_test",
+    roles: ["maestro.operator"],
+    sessionKey: "session_action_test",
+  });
+
+  const viewerDenied = gateway.dryRun({
+    actorContext: buildActorContext({
+      actorKey: "actor_local_test",
+      roles: ["maestro.viewer"],
+      sessionKey: "session_action_test",
+    }),
+    action: actionEnvelope(scope),
+  });
+  assert.equal(viewerDenied.ok, false);
+  assert.equal(viewerDenied.data.denial.reasonCode, "role_denied");
+
+  const blockedExecute = gateway.execute({
+    actorContext: operator,
+    action: actionEnvelope(scope),
+  });
+  assert.equal(blockedExecute.ok, false);
+  assert.equal(blockedExecute.data.denial.reasonCode, "dry_run_required");
+
+  const dryRun = gateway.dryRun({
+    actorContext: operator,
+    action: actionEnvelope(scope),
+  });
+  assert.equal(dryRun.ok, true);
+  assert.equal(dryRun.data.dryRun.wouldExecute, true);
+  assert(dryRun.data.dryRun.dryRunKey.startsWith("dryrun_"));
+
+  const executed = gateway.execute({
+    actorContext: operator,
+    action: actionEnvelope(scope, { dryRunKey: dryRun.data.dryRun.dryRunKey }),
+  });
+  assert.equal(executed.ok, true);
+  assert(executed.data.runKey.startsWith("run_"));
+  assert.equal(listRuns(store).length, 1);
+  const auditTypes = readAuditEvents(store).map((event) => event.type);
+  assert(auditTypes.includes("action.started"));
+  assert(auditTypes.includes("action.finished"));
 }
 
 function requestJson(port, pathname) {
@@ -347,6 +527,85 @@ function requestJson(port, pathname) {
       });
     }).on("error", reject);
   });
+}
+
+function requestText(port, pathname) {
+  return new Promise((resolve, reject) => {
+    http.get({
+      host: "127.0.0.1",
+      port,
+      path: pathname,
+      timeout: 5000,
+    }, (response) => {
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk) => { body += chunk; });
+      response.on("end", () => {
+        resolve({ statusCode: response.statusCode, headers: response.headers, body });
+      });
+    }).on("error", reject);
+  });
+}
+
+function postJson(port, pathname, payload, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const request = http.request({
+      host: "127.0.0.1",
+      port,
+      path: pathname,
+      method: "POST",
+      timeout: 5000,
+      headers: {
+        "content-type": "application/json",
+        "content-length": Buffer.byteLength(body),
+        ...headers,
+      },
+    }, (response) => {
+      let data = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk) => { data += chunk; });
+      response.on("end", () => {
+        try {
+          resolve({ statusCode: response.statusCode, json: JSON.parse(data) });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+    request.on("error", reject);
+    request.write(body);
+    request.end();
+  });
+}
+
+function queryEnvelope(scope, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    queryName: overrides.queryName || "cockpit.summary.get",
+    workspaceKey: overrides.workspaceKey || scope.workspaceKey,
+    projectKey: overrides.projectKey || scope.projectKey,
+    actorKey: overrides.actorKey || "actor_local_test",
+    filters: overrides.filters || {},
+    pagination: overrides.pagination || { limit: 25, offset: 0 },
+    fields: overrides.fields || ["schemaVersion", "ok", "mode", "health"],
+    purpose: overrides.purpose || "panel.read",
+  };
+}
+
+function actionEnvelope(scope, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    actionName: overrides.actionName || "validation.run",
+    workspaceKey: overrides.workspaceKey || scope.workspaceKey,
+    projectKey: overrides.projectKey || scope.projectKey,
+    actorKey: overrides.actorKey || "actor_local_test",
+    idempotencyKey: overrides.idempotencyKey || "idem_validation_test",
+    purpose: overrides.purpose || "validation.run",
+    payload: overrides.payload || { checkSync: false, includePackageCheck: false },
+    dryRunKey: overrides.dryRunKey || null,
+    confirmationKey: overrides.confirmationKey || null,
+  };
 }
 
 function startWebhookReceiver() {
@@ -482,7 +741,7 @@ async function testWhatsAppLiveLocalFlow() {
       },
     }, null, 2), "utf8");
 
-    const blocked = await sendWhatsApp({ recipient: "placeholder", body: "hello" }, {
+    const blocked = await sendWhatsApp({ recipient: "recipient-test", body: "hello" }, {
       repoRoot,
       configPath,
       idempotencyKey: "idem_whatsapp_test",
@@ -495,7 +754,7 @@ async function testWhatsAppLiveLocalFlow() {
     assert.equal(blocked.code, "consent-required");
     assert.equal(receiver.requests.length, 0);
 
-    const sent = await sendWhatsApp({ recipient: "placeholder", body: "hello" }, {
+    const sent = await sendWhatsApp({ recipient: "recipient-test", body: "hello" }, {
       repoRoot,
       configPath,
       idempotencyKey: "idem_whatsapp_test",
@@ -574,16 +833,31 @@ async function testHttpApi() {
   const server = await startServer({ repoRoot, port: 0, store });
   try {
     const port = server.address().port;
+    const panel = await requestText(port, "/panel");
+    assert.equal(panel.statusCode, 200);
+    assert.match(panel.headers["content-type"], /text\/html/);
+    assert(panel.body.includes("/panel.js"));
+    assert(!panel.body.includes("Painel do Orquestrador.html"));
+    const designRedirect = await requestText(port, "/design");
+    assert.equal(designRedirect.statusCode, 302);
+    assert.equal(designRedirect.headers.location, "/design/");
+    const designPanel = await requestText(port, "/design/painel");
+    assert.equal(designPanel.statusCode, 200);
+    assert(designPanel.body.includes("Orquestrador"));
+    const designIndex = await requestText(port, "/design/");
+    assert.equal(designIndex.statusCode, 200);
+    assert(designIndex.body.includes("dash-app.jsx"));
     const health = await requestJson(port, "/health");
     assert.equal(health.statusCode, 200);
     assert.equal(health.json.ok, true);
+    assert.equal(health.json.data.schemaVersion, 1);
     const skills = await requestJson(port, "/skills");
     assert.equal(skills.statusCode, 200);
     assert(skills.json.data.count > 0);
     const llm = await requestJson(port, "/llm/providers");
-    assert.equal(llm.json.data.providers[0].id, "mock-llm");
+    assert.equal(llm.json.data.providers[0].id, "local-llm");
     const connectors = await requestJson(port, "/connectors");
-    assert.equal(connectors.json.data.connectors[0].id, "mock-webhook");
+    assert.equal(connectors.json.data.connectors[0].id, "local-webhook-dry-run");
     const metrics = await requestJson(port, "/metrics");
     assert.equal(metrics.json.data.schemaVersion, 1);
     const actions = await requestJson(port, "/actions");
@@ -594,6 +868,140 @@ async function testHttpApi() {
     assert.equal(overview.json.data.schemaVersion, 1);
     assert(Object.prototype.hasOwnProperty.call(overview.json.data, "readiness"));
     assert(Object.prototype.hasOwnProperty.call(overview.json.data, "audit"));
+    assert(Object.prototype.hasOwnProperty.call(overview.json.data.queue, "deadLetter"));
+    const setup = await requestJson(port, "/setup/status");
+    assert.equal(setup.statusCode, 200);
+    assert.equal(setup.json.data.mode, "local-only");
+    assert(Object.prototype.hasOwnProperty.call(setup.json.data, "env"));
+    assert(Object.prototype.hasOwnProperty.call(setup.json.data, "fields"));
+    assert(Object.prototype.hasOwnProperty.call(setup.json.data, "commands"));
+    assert(!JSON.stringify(setup.json.data.fields).includes("test-token"));
+    const report = await requestJson(port, "/setup/report");
+    assert.equal(report.statusCode, 200);
+    assert.equal(report.json.data.summary.mode, "local-only");
+    const saved = await postJson(port, "/setup/config", {
+      whatsappToken: "test-token",
+      whatsappPhoneId: "phone-id",
+      whatsappApiUrl: "http://127.0.0.1:9999/messages",
+      whatsappSandboxRecipient: "5511999999999",
+      llmApiKey: "test-key",
+      llmApiUrl: "http://127.0.0.1:9999/llm",
+    });
+    assert.equal(saved.statusCode, 200);
+    assert.equal(saved.json.data.ok, true);
+    assert(!JSON.stringify(saved.json).includes("test-token"));
+    const dryRun = await postJson(port, "/setup/whatsapp/dry-run", {
+      whatsappToken: "test-token",
+      whatsappPhoneId: "phone-id",
+      whatsappApiUrl: "http://127.0.0.1:9999/messages",
+      whatsappSandboxRecipient: "5511999999999",
+      consent: true,
+      confirmExternal: true,
+    });
+    assert.equal(dryRun.statusCode, 200);
+    assert.equal(dryRun.json.data.ok, true);
+
+    const scope = buildTenantScope(repoRoot);
+    const scopeResponse = await requestJson(port, "/query/scope");
+    assert.equal(scopeResponse.statusCode, 200);
+    assert.equal(scopeResponse.json.data.scope.projectKey, scope.projectKey);
+    assert.equal(scopeResponse.json.data.actorContext.roles[0], "service.panel");
+
+    const blockedQuery = await postJson(port, "/query", {
+      ...queryEnvelope(scope),
+    });
+    assert.equal(blockedQuery.statusCode, 401);
+    assert.equal(blockedQuery.json.error, "session_required");
+
+    const allowedQuery = await postJson(port, "/query", {
+      ...queryEnvelope(scope),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "service.panel",
+    });
+    assert.equal(allowedQuery.statusCode, 200);
+    assert.equal(allowedQuery.json.ok, true);
+
+    const deniedQuery = await postJson(port, "/query", {
+      ...queryEnvelope(scope, {
+        queryName: "audit.events.list",
+        fields: ["schemaVersion", "events", "count"],
+        purpose: "audit.read",
+      }),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "service.panel",
+    });
+    assert.equal(deniedQuery.statusCode, 403);
+    assert.equal(deniedQuery.json.data.denial.reasonCode, "role_denied");
+
+    const connectorsQuery = await postJson(port, "/query", {
+      ...queryEnvelope(scope, {
+        queryName: "connectors.list",
+        fields: ["schemaVersion", "connectors"],
+        purpose: "connectors.read",
+      }),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "service.panel",
+    });
+    assert.equal(connectorsQuery.statusCode, 200);
+    assert.equal(connectorsQuery.json.data.connectors[0].connectorKey, "local-webhook-dry-run");
+
+    const actionScope = scopeResponse.json.data.scope;
+    const blockedAction = await postJson(port, "/action/dry-run", {
+      ...actionEnvelope(actionScope, { actorKey: "actor_http_test" }),
+    });
+    assert.equal(blockedAction.statusCode, 401);
+
+    const viewerAction = await postJson(port, "/action/dry-run", {
+      ...actionEnvelope(actionScope, { actorKey: "actor_http_test" }),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "maestro.viewer",
+    });
+    assert.equal(viewerAction.statusCode, 403);
+    assert.equal(viewerAction.json.data.denial.reasonCode, "role_denied");
+
+    const dryRunAction = await postJson(port, "/action/dry-run", {
+      ...actionEnvelope(actionScope, { actorKey: "actor_http_test" }),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "maestro.operator",
+    });
+    assert.equal(dryRunAction.statusCode, 200);
+    assert.equal(dryRunAction.json.data.dryRun.wouldExecute, true);
+
+    const executeAction = await postJson(port, "/action/execute", {
+      ...actionEnvelope(actionScope, {
+        actorKey: "actor_http_test",
+        dryRunKey: dryRunAction.json.data.dryRun.dryRunKey,
+      }),
+    }, {
+      "x-omx-session": "session_http_test",
+      "x-omx-roles": "maestro.operator",
+    });
+    assert.equal(executeAction.statusCode, 200);
+    assert(executeAction.json.data.runKey.startsWith("run_"));
+
+    const inbound = await postJson(port, "/webhooks/inbound", {
+      source: "test-provider",
+      eventId: "event_http_inbound_test",
+      eventType: "whatsapp.message.received",
+      prompt: "rotear mensagem whatsapp para skill",
+    });
+    assert.equal(inbound.statusCode, 202);
+    assert.equal(inbound.json.data.task.type, "skill.route");
+    assert.equal(inbound.json.data.deduped, false);
+
+    const duplicateInbound = await postJson(port, "/webhooks/inbound", {
+      source: "test-provider",
+      eventId: "event_http_inbound_test",
+      eventType: "whatsapp.message.received",
+      prompt: "rotear mensagem whatsapp para skill",
+    });
+    assert.equal(duplicateInbound.statusCode, 200);
+    assert.equal(duplicateInbound.json.data.deduped, true);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -601,7 +1009,7 @@ async function testHttpApi() {
 
 function testPanelAssetsAreLocalOnly() {
   const panelDir = path.join(repoRoot, "src", "interfaces", "panel");
-  for (const file of ["index.html", "panel.js", "panel.css"]) {
+  for (const file of ["index.html", "panel.js", "panel.css", "setup.html", "setup.js", "setup.css"]) {
     const content = fs.readFileSync(path.join(panelDir, file), "utf8");
     assert(!/https?:\/\//i.test(content), `${file} references an external URL`);
   }
@@ -634,7 +1042,11 @@ async function run() {
   testCliRunsShowJsonAndError();
   testOperationalCliCommands();
   testQueueMetricsAndRetention();
+  testQueueWorkerRetryBackoff();
+  testSkillRouteTask();
   testAdapterRuntimeConfigTransportAndEgress();
+  testNextExperienceContractsFailClosed();
+  testActionGatewayDryRunAndExecution();
   await testWebhookLiveLocalFlow();
   await testN8nLiveLocalFlow();
   await testWhatsAppLiveLocalFlow();
