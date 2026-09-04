@@ -453,7 +453,9 @@
         "meta ads para negócios locais"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-whatsapp-meta-ads-leads/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
+      "cost": "medium",
+      "safety": "marketing-platform-and-personal-data"
     },
     "skill-cobranca-automatizada-saas-abacatepay": {
       "description": "Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics.",
@@ -497,7 +499,9 @@
         "web agent"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-browser-agent/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-browser-agent/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-browser-agent/SKILL.md",
+      "cost": "medium",
+      "safety": "approved-origins-validated-actions-private-browser-state"
     },
     "skill-quality-gate": {
       "description": "Avalia skills, plugins e MCPs antes da adoção.",
@@ -508,7 +512,9 @@
         "auditar plugin"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-quality-gate/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-gate/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-gate/SKILL.md",
+      "cost": "medium",
+      "safety": "supply-chain-review"
     },
     "skill-repo-health": {
       "description": "Diagnóstico de saúde, stack, verificação e riscos de repositórios.",
@@ -518,7 +524,9 @@
         "inspecionar repositorio"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-repo-health/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-repo-health/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-repo-health/SKILL.md",
+      "cost": "low",
+      "safety": "read-only-diagnostics"
     },
     "skill-preflight": {
       "description": "Preflight de escopo, baseline, riscos, ownership e testes.",
@@ -528,7 +536,9 @@
         "antes de implementar"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-preflight/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-preflight/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-preflight/SKILL.md",
+      "cost": "low",
+      "safety": "read-only-analysis-before-implementation"
     },
     "skill-systematic-debugging": {
       "description": "Debugging sistemático orientado por evidência e causa raiz.",
@@ -538,7 +548,9 @@
         "investigar bug"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-systematic-debugging/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-systematic-debugging/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-systematic-debugging/SKILL.md",
+      "cost": "medium",
+      "safety": "evidence-based-non-destructive-investigation"
     },
     "skill-verification-before-completion": {
       "description": "Verificação proporcional antes de declarar conclusão.",
@@ -548,7 +560,9 @@
         "validar antes de concluir"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-verification-before-completion/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-verification-before-completion/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-verification-before-completion/SKILL.md",
+      "cost": "low",
+      "safety": "proportional-verification-no-false-completion-claims"
     },
     "skill-webapp-testing": {
       "description": "Testes web E2E, acessibilidade, estados e regressão visual.",
@@ -559,7 +573,9 @@
         "teste de aplicação web"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-webapp-testing/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md",
+      "cost": "medium",
+      "safety": "authorized-origins-only"
     },
     "skill-mcp-builder": {
       "description": "Construção segura de MCP servers tipados e testáveis.",
@@ -569,7 +585,9 @@
         "servidor mcp"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-mcp-builder/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-mcp-builder/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-mcp-builder/SKILL.md",
+      "cost": "high",
+      "safety": "least-privilege-tools"
     },
     "skill-deep-wiki": {
       "description": "Documentação técnica navegável com arquitetura, Mermaid e onboarding.",
@@ -579,7 +597,9 @@
         "documentar repositorio"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-deep-wiki/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md",
+      "cost": "low",
+      "safety": "read-only-documentation-generation"
     },
     "skill-agent-observability": {
       "description": "Observabilidade de agentes, custos, latência, qualidade e regressões.",
@@ -589,7 +609,9 @@
         "tracing agente"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-agent-observability/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-agent-observability/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-agent-observability/SKILL.md",
+      "cost": "medium",
+      "safety": "telemetry-privacy-and-cost-visibility"
     },
     "skill-release-engineering": {
       "description": "Engenharia de release, smoke tests, rollback e checklist operacional.",
@@ -599,7 +621,9 @@
         "rollback"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-release-engineering/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-release-engineering/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-release-engineering/SKILL.md",
+      "cost": "high",
+      "safety": "rollback-ready-controlled-release"
     },
     "skill-database-migrations": {
       "description": "Migrações de banco seguras, compatíveis, idempotentes e verificáveis.",
@@ -609,7 +633,9 @@
         "migration sql"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-database-migrations/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-database-migrations/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-database-migrations/SKILL.md",
+      "cost": "high",
+      "safety": "backward-compatible-and-reversible-migrations"
     },
     "skill-dependency-upgrade": {
       "description": "Atualização controlada de dependências e lockfiles.",
@@ -619,7 +645,9 @@
         "upgrade dependencias"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-dependency-upgrade/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-dependency-upgrade/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-dependency-upgrade/SKILL.md",
+      "cost": "medium",
+      "safety": "compatibility-verified-before-upgrade"
     },
     "skill-incident-response": {
       "description": "Resposta a incidentes, contenção, recuperação e postmortem.",
@@ -629,7 +657,9 @@
         "postmortem"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-incident-response/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-incident-response/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-incident-response/SKILL.md",
+      "cost": "high",
+      "safety": "containment-before-root-cause-blameless-postmortem"
     },
     "skill-adr": {
       "description": "Registros de decisões arquiteturais com alternativas e consequências.",
@@ -639,7 +669,9 @@
         "architecture decision"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-adr/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-adr/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-adr/SKILL.md",
+      "cost": "low",
+      "safety": "decision-record"
     },
     "skill-research-and-synthesis": {
       "description": "Pesquisa web rastreável, comparável e baseada em fontes primárias.",
@@ -649,7 +681,9 @@
         "pesquisar e sintetizar"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-research-and-synthesis/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-research-and-synthesis/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-research-and-synthesis/SKILL.md",
+      "cost": "low",
+      "safety": "sourced-and-traceable-claims"
     },
     "skill-web-clone": {
       "description": "Clonagem de uma página web por URL com extração de estrutura, reprodução visual, interações essenciais e verificação no navegador.",
@@ -664,7 +698,9 @@
         "copiar página"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-web-clone/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-web-clone/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-web-clone/SKILL.md",
+      "cost": "medium",
+      "safety": "authorized-origin-and-single-page-scope"
     },
     "skill-optimize-images": {
       "description": "Otimiza imagens para blogs e sites, incluindo conversão de formato, redimensionamento, compressão, responsividade, acessibilidade e validação visual. Use quando pedirem para otimizar, reduzir, preparar, converter ou melhorar imagens para web.",
@@ -679,7 +715,9 @@
         "image optimization"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-optimize-images/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-optimize-images/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-optimize-images/SKILL.md",
+      "cost": "low",
+      "safety": "non-destructive-lossless-first-processing"
     },
     "skill-impeccable": {
       "description": "Orquestra melhorias de frontend inspiradas no Impeccable a partir de pedidos conversacionais de design, UX, acessibilidade, responsividade, tipografia, layout, cor, motion, clareza, hardening e polish.",
@@ -687,7 +725,9 @@
         "impeccable"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-impeccable/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-impeccable/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-impeccable/SKILL.md",
+      "cost": "medium",
+      "safety": "visual-regression-and-accessibility-checked"
     },
     "skill-scope-control": {
       "description": "Analisa se alterações, diffs e PRs continuam alinhados ao objetivo declarado, identificando escopo extra e propondo manter, separar ou justificar.",
@@ -701,7 +741,9 @@
         "o que não deveria estar aqui"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-scope-control/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-scope-control/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-scope-control/SKILL.md",
+      "cost": "low",
+      "safety": "read-only-scope-analysis"
     },
     "skill-doublecheck": {
       "description": "Verifica afirmações, fontes e risco de alucinação em respostas, pesquisas e documentos, com modo pontual ou contínuo.",
@@ -714,7 +756,9 @@
         "faça um doublecheck"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-doublecheck/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-doublecheck/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-doublecheck/SKILL.md",
+      "cost": "medium",
+      "safety": "source-verification-before-claims"
     },
     "skill-threat-modeling": {
       "description": "Conduz threat modeling estruturado com STRIDE-A, fluxos de dados, fronteiras de confiança, riscos priorizados e comparação incremental.",
@@ -728,7 +772,9 @@
         "o que pode dar errado de segurança"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-threat-modeling/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-threat-modeling/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-threat-modeling/SKILL.md",
+      "cost": "medium",
+      "safety": "structured-risk-analysis-no-exploitation"
     },
     "skill-skill-development": {
       "description": "Cria, revisa e melhora skills do Orquestrador com gatilhos claros, divulgação progressiva, referências focadas, validação e testes de comportamento.",
@@ -741,7 +787,9 @@
         "publicar skill"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-skill-development/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-skill-development/SKILL.md"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-skill-development/SKILL.md",
+      "cost": "medium",
+      "safety": "skill-authoring-and-validation-quality"
     }
   },
   "riskClasses": {
