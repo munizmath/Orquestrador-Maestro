@@ -16,6 +16,7 @@ orquestrador/logs/
 orquestrador/backups/
 orquestrador/doctor-last-report.json
 orquestrador/memoria.md
+.orq-backup-*/
 
 .codex/
 .agents/
