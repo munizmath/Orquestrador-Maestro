@@ -146,13 +146,13 @@ function Get-DefaultInstallPolicy {
           "worker"
         )
       }
-      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 48; allowDirectories = @() }
-      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 48; allowDirectories = @() }
-      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 48; allowDirectories = @() }
-      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 48; allowDirectories = @() }
-      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 48; allowDirectories = @() }
-      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 48; allowDirectories = @() }
-      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 48; allowDirectories = @() }
+      opencode = [pscustomobject]@{ path = ".opencode/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "code-review", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      agents = [pscustomobject]@{ path = ".agents/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      claude = [pscustomobject]@{ path = ".claude/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      cursor = [pscustomobject]@{ path = ".cursor/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      gemini = [pscustomobject]@{ path = ".gemini/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      windsurf = [pscustomobject]@{ path = ".windsurf/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
+      antigravity = [pscustomobject]@{ path = ".antigravity-skills/skills"; maxDirectories = 64; allowDirectories = @("orquestrador-maestro", "plan", "ralplan", "ralph", "team", "ultrawork", "deep-interview", "security-review", "web-clone", "worker") }
     }
   }
 }
@@ -263,13 +263,22 @@ function Get-OrchestratorRoutingHealth {
   $profilesDoc = $docs | Where-Object { $_.Name -eq "profiles" }
   $profileCount = 0
   if ($profilesDoc.Parsed -and $profilesDoc.Value.profiles) {
+    # Profiles may start with a native Codex/OMX workflow skill that is
+    # intentionally outside the canonical Orquestrador router.
+    $nativeStartSkills = @(
+      "orquestrador-maestro", "autopilot", "code-review", "deep-interview",
+      "plan", "ralph", "ralplan", "security-review", "team", "ultrawork",
+      "web-clone"
+    )
     foreach ($prop in $profilesDoc.Value.profiles.PSObject.Properties) {
       $profileCount++
       $maxSkills = $prop.Value.maxSkills
       if (($null -eq $maxSkills) -or ([int]$maxSkills -lt 1) -or ([int]$maxSkills -gt 8)) {
         Add-RoutingIssue -Issues $issues -Kind "profile-bad-maxSkills" -Name $prop.Name -Detail ([string]$maxSkills)
       }
-      if ($prop.Value.startSkill -and (-not $routerSet.ContainsKey([string]$prop.Value.startSkill))) {
+      if ($prop.Value.startSkill -and
+          (-not $routerSet.ContainsKey([string]$prop.Value.startSkill)) -and
+          ([string]$prop.Value.startSkill -notin $nativeStartSkills)) {
         Add-RoutingIssue -Issues $issues -Kind "profile-bad-startSkill" -Name $prop.Name -Detail ([string]$prop.Value.startSkill)
       }
     }

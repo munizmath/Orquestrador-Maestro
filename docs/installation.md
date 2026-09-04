@@ -6,7 +6,7 @@ Este guia é para quem baixou o repositório e quer instalar o Orquestrador no p
 
 - Windows com PowerShell ou Linux/macOS com Bash.
 - Git instalado para clonar o repositório.
-- Codex, Claude, Gemini, Grok CLI, Cursor, OpenCode, Windsurf ou Antigravity são opcionais. O instalador prepara as pastas e os arquivos; cada ferramenta continua responsável pelo próprio login, runtime e credenciais.
+- Codex, Claude, Gemini, Grok CLI, MiMo Code, Kimi Code, Cursor, OpenCode, Windsurf ou Antigravity são opcionais. O instalador prepara as pastas e os arquivos; cada ferramenta continua responsável pelo próprio login, runtime e credenciais.
 
 ## Instalação Completa Recomendada
 
@@ -75,6 +75,7 @@ Em uma máquina de exemplo, se o usuário for `maria`, os destinos ficam abaixo 
 | `%USERPROFILE%\.config\opencode` | `AGENTS.md` e `opencode.json` globais para OpenCode |
 | `%USERPROFILE%\.claude\CLAUDE.md` | Memória global do Claude Code apontando para o Orquestrador |
 | `%USERPROFILE%\.cursor\rules\orquestrador-maestro.mdc` | Regra local do Cursor para ativar o Orquestrador |
+| `%USERPROFILE%\.cursor\commands\maestro.md` | Comando `/maestro` para reidratar o contexto ativo |
 | `%USERPROFILE%\.gemini\GEMINI.md` | Contexto global do Gemini CLI |
 | `%USERPROFILE%\.codeium\windsurf\memories\global_rules.md` | Regras globais do Windsurf/Cascade |
 | `%USERPROFILE%\antigravity-rules.json` | Regras globais do Antigravity apontando para Orquestrador e AI standards |
@@ -184,6 +185,8 @@ Use o Orquestrador Maestro, escolha a skill correta e resolva a tarefa com verif
 
 Quando o projeto tiver `DEV/`, essa pasta é tratada como documentação operacional local. A IA deve começar pelos arquivos curtos de controle: `DEV/README.md` ou `DEV/INDEX.md`, depois `DEV/HANDOFF.md`, `DEV/CONTEXT.md` e `DEV/SPECS/ACTIVE.md`. Só depois ela deve abrir os documentos específicos da tarefa.
 
+Essa recuperação é regida pelo contrato compartilhado em `%USERPROFILE%\.orquestrador\PERSISTENCE.md` (ou `$HOME/.orquestrador/PERSISTENCE.md`). O histórico da conversa e memórias específicas de uma ferramenta são apenas auxiliares: ao encerrar uma sessão, trocar de software ou entregar o trabalho, a IA deve registrar o estado em `DEV/WORKLOG.md`, `DEV/VERIFY.md` e `DEV/HANDOFF.md`.
+
 Para criar a estrutura `DEV/` em um projeto:
 
 ```bash
@@ -229,7 +232,7 @@ O instalador também grava pontos globais de entrada para ferramentas que suport
 - OpenCode: `%USERPROFILE%\.config\opencode\AGENTS.md` e `%USERPROFILE%\.config\opencode\opencode.json`.
 - Claude Code: `%USERPROFILE%\.claude\CLAUDE.md`.
 - Gemini CLI: `%USERPROFILE%\.gemini\GEMINI.md`.
-- Cursor: `%USERPROFILE%\.cursor\rules\orquestrador-maestro.mdc` e `%USERPROFILE%\.cursor\AGENTS.md`.
+- Cursor: `%USERPROFILE%\.cursor\rules\orquestrador-maestro.mdc`, `%USERPROFILE%\.cursor\AGENTS.md` e `%USERPROFILE%\.cursor\commands\maestro.md` (`/maestro`).
 - Windsurf/Cascade: `%USERPROFILE%\.codeium\windsurf\memories\global_rules.md`.
 - Antigravity: `%USERPROFILE%\antigravity-rules.json`, `%USERPROFILE%\.antigravity\antigravity.json`, `%USERPROFILE%\.antigravity\settings.json` e `%USERPROFILE%\.ai-standards`.
 

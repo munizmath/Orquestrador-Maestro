@@ -1,0 +1,44 @@
+# Excludes globais — PUE-UH 1B.9
+#
+# Aqui entra apenas lixo de MAQUINA, que nao pertence a projeto nenhum e nunca deveria
+# ser commitado em lugar algum. Ignorar isto globalmente evita repetir a mesma regra em
+# 14 .gitignore diferentes.
+#
+# Lixo de PROJETO (dist/, _site/, build/) continua no .gitignore de cada repositorio.
+
+# Metadados do Windows ao copiar arquivo da internet
+*:Zone.Identifier
+*Zone.Identifier
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Arquivos compactados avulsos: se e artefato, nao se versiona; se e fonte, nao e .zip
+*.zip
+*.tgz
+*.tar.gz
+*.rar
+*.7z
+
+# Logs de CI baixados para inspecao
+.github/logs_action/
+.github/logs_deploy/
+
+# Dependencias
+node_modules/
+.venv/
+__pycache__/
+
+# Chaves de API de provedores alternativos (Kimi/Moonshot etc.)
+.kimi-key
+*.kimi-key
+
+**/.claude/settings.local.json

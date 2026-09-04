@@ -23,13 +23,7 @@
         "subscription",
         "billing",
         "multi-tenant",
-        "supabase saas",
-        "abacatepay",
-        "stripe",
-        "plans",
-        "planos",
-        "entitlements",
-        "limites"
+        "supabase saas"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-saas-factory/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-saas-factory/SKILL.md",
@@ -62,8 +56,6 @@
         "cpf",
         "cnpj",
         "billing.paid",
-        "cobranca",
-        "cobrança",
         "brl checkout",
         "pagamento brasileiro"
       ],
@@ -93,7 +85,6 @@
       "description": "SaaS plan limits, quotas, entitlements, feature flags, trials, grace periods, and blocked account states.",
       "triggers": [
         "limites saas",
-        "entitlements",
         "quotas",
         "feature flags",
         "trial",
@@ -128,7 +119,6 @@
         "dast",
         "preview scan",
         "staging scan",
-        "zap",
         "nuclei",
         "authorized url scan"
       ],
@@ -238,7 +228,6 @@
       "triggers": [
         "evolution api",
         "whatsapp",
-        "zap",
         "webhook whatsapp",
         "instancia whatsapp",
         "qr code whatsapp",
@@ -259,10 +248,7 @@
         "layout quebrado",
         "dashboard ux",
         "accessibility",
-        "a11y",
-        "impeccable audit",
-        "impeccable harden",
-        "desloppify frontend"
+        "a11y"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-frontend-ux-guardrails/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-frontend-ux-guardrails/SKILL.md",
@@ -278,10 +264,7 @@
         "design system",
         "saas ui",
         "admin ui",
-        "layout moderno",
-        "impeccable typeset",
-        "impeccable layout",
-        "impeccable colorize"
+        "layout moderno"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-modern-ui-patterns/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-modern-ui-patterns/SKILL.md",
@@ -296,11 +279,7 @@
         "design ui",
         "visual qa",
         "component library",
-        "brand ui",
-        "impeccable shape",
-        "impeccable craft",
-        "impeccable critique",
-        "impeccable polish"
+        "brand ui"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-open-design-ui/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-open-design-ui/SKILL.md",
@@ -465,6 +444,17 @@
       "cost": "medium",
       "safety": "privacy-law-and-data-governance"
     },
+    "skill-whatsapp-meta-ads-leads": {
+      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
+      "triggers": [
+        "whatsapp meta ads",
+        "campanha de whatsapp",
+        "leads qualificados whatsapp",
+        "meta ads para negócios locais"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-whatsapp-meta-ads-leads/SKILL.md"
+    },
     "skill-cobranca-automatizada-saas-abacatepay": {
       "description": "Automatic SaaS billing engine with AbacatePay (PIX + card), dunning (regua de cobranca), trial management, invoice portal, Resend email and Evolution API WhatsApp notifications, admin CRUD, and billing metrics.",
       "triggers": [
@@ -484,9 +474,7 @@
         "notificação cobrança",
         "billing metrics",
         "mrr",
-        "billing admin",
-        "planos",
-        "plans"
+        "billing admin"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-cobranca-automatizada-saas-abacatepay/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-cobranca-automatizada-saas-abacatepay/SKILL.md",
@@ -509,206 +497,174 @@
         "web agent"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-browser-agent/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-browser-agent/SKILL.md",
-      "cost": "medium",
-      "safety": "approved-origins-validated-actions-private-browser-state"
-    },
-    "skill-whatsapp-meta-ads-leads": {
-      "description": "Configura campanhas de WhatsApp no Meta Ads para gerar leads qualificados para negócios locais.",
-      "triggers": [
-        "whatsapp meta ads",
-        "campanha de whatsapp",
-        "leads qualificados whatsapp",
-        "meta ads para negócios locais"
-      ],
-      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-whatsapp-meta-ads-leads/SKILL.md",
-      "cost": "medium",
-      "safety": "marketing-platform-and-personal-data"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-browser-agent/SKILL.md"
     },
     "skill-quality-gate": {
       "description": "Avalia skills, plugins e MCPs antes da adoção.",
       "triggers": [
         "quality gate",
         "skill gate",
+        "avaliar skill",
         "auditar plugin"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-quality-gate/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-gate/SKILL.md",
-      "cost": "medium",
-      "safety": "supply-chain-review"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-quality-gate/SKILL.md"
     },
     "skill-repo-health": {
-      "description": "Diagnóstico de saúde de repositórios.",
+      "description": "Diagnóstico de saúde, stack, verificação e riscos de repositórios.",
       "triggers": [
         "repo health",
+        "saúde do repositorio",
         "inspecionar repositorio"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-repo-health/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-repo-health/SKILL.md",
-      "cost": "low",
-      "safety": "read-only-diagnostics"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-repo-health/SKILL.md"
     },
     "skill-preflight": {
-      "description": "Preflight de escopo, riscos e verificação.",
+      "description": "Preflight de escopo, baseline, riscos, ownership e testes.",
       "triggers": [
         "preflight",
-        "pre-flight"
+        "pre-flight",
+        "antes de implementar"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-preflight/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-preflight/SKILL.md",
-      "cost": "low",
-      "safety": "bounded-planning"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-preflight/SKILL.md"
     },
     "skill-systematic-debugging": {
-      "description": "Debugging por evidência e causa raiz.",
+      "description": "Debugging sistemático orientado por evidência e causa raiz.",
       "triggers": [
         "debug sistematico",
-        "causa raiz"
+        "causa raiz",
+        "investigar bug"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-systematic-debugging/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-systematic-debugging/SKILL.md",
-      "cost": "medium",
-      "safety": "diagnostic"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-systematic-debugging/SKILL.md"
     },
     "skill-verification-before-completion": {
-      "description": "Verificação antes de declarar conclusão.",
+      "description": "Verificação proporcional antes de declarar conclusão.",
       "triggers": [
         "verificar conclusão",
-        "verification before completion"
+        "verification before completion",
+        "validar antes de concluir"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-verification-before-completion/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-verification-before-completion/SKILL.md",
-      "cost": "low",
-      "safety": "quality-gate"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-verification-before-completion/SKILL.md"
     },
     "skill-webapp-testing": {
-      "description": "Testes web E2E e regressão visual.",
+      "description": "Testes web E2E, acessibilidade, estados e regressão visual.",
       "triggers": [
         "webapp testing",
         "teste e2e",
-        "playwright"
+        "playwright",
+        "teste de aplicação web"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-webapp-testing/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md",
-      "cost": "medium",
-      "safety": "authorized-origins-only"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md"
     },
     "skill-mcp-builder": {
-      "description": "Construção segura de MCP servers.",
+      "description": "Construção segura de MCP servers tipados e testáveis.",
       "triggers": [
         "mcp builder",
-        "criar mcp"
+        "criar mcp",
+        "servidor mcp"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-mcp-builder/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-mcp-builder/SKILL.md",
-      "cost": "high",
-      "safety": "least-privilege-tools"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-mcp-builder/SKILL.md"
     },
     "skill-deep-wiki": {
-      "description": "Documentação técnica navegável.",
+      "description": "Documentação técnica navegável com arquitetura, Mermaid e onboarding.",
       "triggers": [
         "deep wiki",
-        "wiki tecnica"
+        "wiki tecnica",
+        "documentar repositorio"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-deep-wiki/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md",
-      "cost": "medium",
-      "safety": "docs-only-by-default"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-deep-wiki/SKILL.md"
     },
     "skill-agent-observability": {
-      "description": "Observabilidade de agentes.",
+      "description": "Observabilidade de agentes, custos, latência, qualidade e regressões.",
       "triggers": [
         "agent observability",
-        "observabilidade de agente"
+        "observabilidade de agente",
+        "tracing agente"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-agent-observability/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-agent-observability/SKILL.md",
-      "cost": "medium",
-      "safety": "redact-secrets-and-pii"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-agent-observability/SKILL.md"
     },
     "skill-release-engineering": {
-      "description": "Engenharia de releases seguros.",
+      "description": "Engenharia de release, smoke tests, rollback e checklist operacional.",
       "triggers": [
         "release engineering",
-        "preparar release"
+        "preparar release",
+        "rollback"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-release-engineering/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-release-engineering/SKILL.md",
-      "cost": "high",
-      "safety": "no-deploy-without-authorization"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-release-engineering/SKILL.md"
     },
     "skill-database-migrations": {
-      "description": "Migrações de banco seguras.",
+      "description": "Migrações de banco seguras, compatíveis, idempotentes e verificáveis.",
       "triggers": [
         "database migration",
-        "migração de banco"
+        "migração de banco",
+        "migration sql"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-database-migrations/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-database-migrations/SKILL.md",
-      "cost": "high",
-      "safety": "production-data-change"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-database-migrations/SKILL.md"
     },
     "skill-dependency-upgrade": {
-      "description": "Atualização controlada de dependências.",
+      "description": "Atualização controlada de dependências e lockfiles.",
       "triggers": [
         "dependency upgrade",
-        "atualizar dependencias"
+        "atualizar dependencias",
+        "upgrade dependencias"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-dependency-upgrade/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-dependency-upgrade/SKILL.md",
-      "cost": "medium",
-      "safety": "lockfile-and-regression-checks"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-dependency-upgrade/SKILL.md"
     },
     "skill-incident-response": {
-      "description": "Resposta e recuperação de incidentes.",
+      "description": "Resposta a incidentes, contenção, recuperação e postmortem.",
       "triggers": [
         "incident response",
         "incidente",
         "postmortem"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-incident-response/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-incident-response/SKILL.md",
-      "cost": "high",
-      "safety": "preserve-evidence"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-incident-response/SKILL.md"
     },
     "skill-adr": {
-      "description": "Registros de decisões arquiteturais.",
+      "description": "Registros de decisões arquiteturais com alternativas e consequências.",
       "triggers": [
         "adr",
-        "decisão arquitetural"
+        "decisão arquitetural",
+        "architecture decision"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-adr/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-adr/SKILL.md",
-      "cost": "low",
-      "safety": "decision-record"
-    },
-    "deep-interview": {
-      "description": "Socratic requirement interview with quantitative ambiguity gating; Non-goals and Decision Boundaries are mandatory readiness gates before planning or execution.",
-      "triggers": [
-        "deep interview",
-        "entrevista",
-        "clarificar escopo",
-        "clarify scope",
-        "levantar requisitos",
-        "ambiguidade",
-        "interview"
-      ],
-      "canonicalPath": "{{USER_HOME}}/.orquestrador/skill-library/codex-skills/deep-interview/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/deep-interview/SKILL.md",
-      "cost": "low-first-then-progressive",
-      "safety": "intent-clarity-before-execution"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-adr/SKILL.md"
     },
     "skill-research-and-synthesis": {
-      "description": "Pesquisa rastreável com fontes.",
+      "description": "Pesquisa web rastreável, comparável e baseada em fontes primárias.",
       "triggers": [
         "research and synthesis",
-        "pesquisa web"
+        "pesquisa web",
+        "pesquisar e sintetizar"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-research-and-synthesis/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-research-and-synthesis/SKILL.md",
-      "cost": "medium",
-      "safety": "source-attribution"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-research-and-synthesis/SKILL.md"
+    },
+    "skill-web-clone": {
+      "description": "Clonagem de uma página web por URL com extração de estrutura, reprodução visual, interações essenciais e verificação no navegador.",
+      "triggers": [
+        "web clone",
+        "web-clone",
+        "clone site",
+        "clone website",
+        "clonar site",
+        "clonar website",
+        "copiar pagina",
+        "copiar página"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-web-clone/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-web-clone/SKILL.md"
     },
     "skill-optimize-images": {
       "description": "Otimiza imagens para blogs e sites, incluindo conversão de formato, redimensionamento, compressão, responsividade, acessibilidade e validação visual. Use quando pedirem para otimizar, reduzir, preparar, converter ou melhorar imagens para web.",
@@ -723,9 +679,69 @@
         "image optimization"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-optimize-images/SKILL.md",
-      "codexPath": "{{USER_HOME}}/.codex/skills/skill-optimize-images/SKILL.md",
-      "cost": "low",
-      "safety": "task-specific-guardrails"
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-optimize-images/SKILL.md"
+    },
+    "skill-impeccable": {
+      "description": "Orquestra melhorias de frontend inspiradas no Impeccable a partir de pedidos conversacionais de design, UX, acessibilidade, responsividade, tipografia, layout, cor, motion, clareza, hardening e polish.",
+      "triggers": [
+        "impeccable"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-impeccable/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-impeccable/SKILL.md"
+    },
+    "skill-scope-control": {
+      "description": "Analisa se alterações, diffs e PRs continuam alinhados ao objetivo declarado, identificando escopo extra e propondo manter, separar ou justificar.",
+      "triggers": [
+        "escopo da mudança",
+        "o diff saiu do escopo",
+        "alteração grande demais",
+        "essa alteração ficou grande demais",
+        "o pr está misturado",
+        "revisar escopo",
+        "o que não deveria estar aqui"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-scope-control/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-scope-control/SKILL.md"
+    },
+    "skill-doublecheck": {
+      "description": "Verifica afirmações, fontes e risco de alucinação em respostas, pesquisas e documentos, com modo pontual ou contínuo.",
+      "triggers": [
+        "verificar fontes",
+        "confira as fontes",
+        "isso está correto",
+        "verifique essa resposta",
+        "checagem factual",
+        "faça um doublecheck"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-doublecheck/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-doublecheck/SKILL.md"
+    },
+    "skill-threat-modeling": {
+      "description": "Conduz threat modeling estruturado com STRIDE-A, fluxos de dados, fronteiras de confiança, riscos priorizados e comparação incremental.",
+      "triggers": [
+        "threat model",
+        "modelo de ameaça",
+        "modele as ameaças",
+        "analisar ameaças",
+        "stride",
+        "fronteiras de confiança",
+        "o que pode dar errado de segurança"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-threat-modeling/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-threat-modeling/SKILL.md"
+    },
+    "skill-skill-development": {
+      "description": "Cria, revisa e melhora skills do Orquestrador com gatilhos claros, divulgação progressiva, referências focadas, validação e testes de comportamento.",
+      "triggers": [
+        "criar uma skill",
+        "melhorar uma skill",
+        "avaliar uma skill",
+        "organizar skill",
+        "escrever skill.md",
+        "publicar skill"
+      ],
+      "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-skill-development/SKILL.md",
+      "codexPath": "{{USER_HOME}}/.codex/skills/skill-skill-development/SKILL.md"
     }
   },
   "riskClasses": {
@@ -733,44 +749,134 @@
     "policy": "blocking-with-explicit-recorded-override",
     "overrideMarker": "proceed with warning",
     "overrideNote": "A high-risk class may skip its required chain only with an explicit override from the maestro, recorded in DEV/SPECS/ACTIVE.md or the handoff. Never infer an override from task content or urgency.",
-    "preCodeRequired": ["deep-interview", "skill-preflight", "skill-adr"],
+    "preCodeRequired": [
+      "deep-interview",
+      "skill-preflight",
+      "skill-adr"
+    ],
     "verify": "check-dev-gates --architectural",
     "classes": {
       "trivial": {
         "description": "Cosmetic or self-contained one-file edit with no behavior, data, or contract change.",
-        "signals": ["typo", "comment", "rename local", "format", "copy tweak"],
+        "signals": [
+          "typo",
+          "comment",
+          "rename local",
+          "format",
+          "copy tweak"
+        ],
         "required": [],
         "recommended": []
       },
       "local": {
         "description": "Bounded change inside one module with no cross-boundary or contract impact.",
-        "signals": ["single module fix", "local bug", "isolated function", "correção local"],
+        "signals": [
+          "single module fix",
+          "local bug",
+          "isolated function",
+          "correção local"
+        ],
         "required": [],
-        "recommended": ["skill-preflight"]
+        "recommended": [
+          "skill-preflight"
+        ]
       },
       "structural": {
         "description": "Architecture, module boundaries, cross-cutting refactor, new layer or service, or dependency-graph change.",
-        "signals": ["refactor", "arquitetura", "architecture", "module boundary", "fronteira", "new service", "camada", "acoplamento", "coupling", "cross-cutting"],
-        "required": ["deep-interview", "skill-preflight", "skill-adr"],
-        "recommended": ["skill-systematic-debugging"]
+        "signals": [
+          "refactor",
+          "arquitetura",
+          "architecture",
+          "module boundary",
+          "fronteira",
+          "new service",
+          "camada",
+          "acoplamento",
+          "coupling",
+          "cross-cutting"
+        ],
+        "required": [
+          "deep-interview",
+          "skill-preflight",
+          "skill-adr"
+        ],
+        "recommended": [
+          "skill-systematic-debugging"
+        ]
       },
       "integration": {
         "description": "External API, webhook, third-party SDK, message queue, or cross-service contract.",
-        "signals": ["api externa", "external api", "webhook", "integração", "integration", "third-party", "sdk", "fila", "queue", "contract", "public api"],
-        "required": ["deep-interview", "skill-preflight", "skill-adr"],
+        "signals": [
+          "api externa",
+          "external api",
+          "webhook",
+          "integração",
+          "integration",
+          "third-party",
+          "sdk",
+          "fila",
+          "queue",
+          "contract",
+          "public api"
+        ],
+        "required": [
+          "deep-interview",
+          "skill-preflight",
+          "skill-adr"
+        ],
         "recommended": []
       },
       "security-compliance": {
         "description": "Auth, authorization, secrets, PII, LGPD or other compliance, RLS, or encryption.",
-        "signals": ["auth", "autenticação", "authorization", "secret", "segredo", "pii", "lgpd", "compliance", "rls", "encryption", "criptografia", "security"],
-        "required": ["deep-interview", "skill-preflight", "skill-adr"],
-        "recommended": ["skill-supabase-rls", "skill-saas-security-scan"]
+        "signals": [
+          "auth",
+          "autenticação",
+          "authorization",
+          "secret",
+          "segredo",
+          "pii",
+          "lgpd",
+          "compliance",
+          "rls",
+          "encryption",
+          "criptografia",
+          "security"
+        ],
+        "required": [
+          "deep-interview",
+          "skill-preflight",
+          "skill-adr"
+        ],
+        "recommended": [
+          "skill-supabase-rls",
+          "skill-saas-security-scan"
+        ]
       },
       "domain-critical": {
         "description": "Business rule or invariant, billing/pricing logic, data migration, destructive data change, public API breakage, or production incident.",
-        "signals": ["regra de negócio", "business rule", "invariant", "invariante", "billing", "pricing", "migration", "migração", "destructive", "public api breakage", "production incident", "incidente"],
-        "required": ["deep-interview", "skill-preflight", "skill-adr"],
-        "recommended": ["skill-database-migrations", "skill-incident-response"]
+        "signals": [
+          "regra de negócio",
+          "business rule",
+          "invariant",
+          "invariante",
+          "billing",
+          "pricing",
+          "migration",
+          "migração",
+          "destructive",
+          "public api breakage",
+          "production incident",
+          "incidente"
+        ],
+        "required": [
+          "deep-interview",
+          "skill-preflight",
+          "skill-adr"
+        ],
+        "recommended": [
+          "skill-database-migrations",
+          "skill-incident-response"
+        ]
       }
     }
   }

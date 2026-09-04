@@ -1,6 +1,6 @@
 {
   "name": "@iapro/orquestrador-maestro-cli",
-  "version": "0.1.11",
+  "version": "0.2.3",
   "description": "CLI npm para instalar, atualizar, verificar e remover o Orquestrador Maestro no usuário atual, com skills nativas enxutas e biblioteca externa para reduzir tokens.",
   "bin": {
     "orquestrador-maestro": "bin/orquestrador-maestro.js"
@@ -32,6 +32,7 @@
     "codex/skills/security-review/",
     "codex/skills/skill-abacatepay-integration/",
     "codex/skills/skill-ai-orchestration/",
+    "codex/skills/skill-doublecheck/",
     "codex/skills/skill-aionui-cowork-orchestration/",
     "codex/skills/skill-elevenlabs-voice-cloning/",
     "codex/skills/skill-evolution-api/",
@@ -48,10 +49,13 @@
     "codex/skills/skill-saas-dast-recon/",
     "codex/skills/skill-saas-factory/",
     "codex/skills/skill-saas-security-scan/",
+    "codex/skills/skill-scope-control/",
     "codex/skills/skill-security-hooks/",
+    "codex/skills/skill-skill-development/",
     "codex/skills/skill-smart-clip-detection/",
     "codex/skills/skill-stripe-integration/",
     "codex/skills/skill-supabase-rls/",
+    "codex/skills/skill-threat-modeling/",
     "codex/skills/skill-unified-analytics/",
     "codex/skills/skill/",
     "codex/skills/team/",
@@ -65,13 +69,20 @@
     "install.ps1",
     "install.sh",
     "orquestrador/*.json",
+    "orquestrador/schemas/",
     "orquestrador/*.md",
     "orquestrador/*.ps1",
     "orquestrador/*.sh",
     "orquestrador/bin/",
+    "orquestrador/lib/",
+    "orquestrador/adapters/",
     "orquestrador/blueprints/",
     "orquestrador/personas/",
     "orquestrador/skills/",
+    "runtime/",
+    "benchmarks/*.js",
+    "benchmarks/scenarios/",
+    "benchmarks/runner.js",
     "scripts/*.js",
     "scripts/*.py",
     "scripts/*.ps1",
@@ -90,7 +101,9 @@
     "context-budget": "node scripts/context-budget.js",
     "registry:build": "node scripts/skill-catalog.js build-registry",
     "registry:check": "node scripts/skill-catalog.js build-registry --check",
-    "test": "node scripts/test-scripts.js && node scripts/test-public-validator.js && node scripts/context-budget.js && node scripts/skill-catalog.js build-registry --check && node scripts/test-architecture.js && npm run validate -- --check-sync && npm run package:check",
+    "test": "node --test tests/*.test.js && node scripts/test-scripts.js && node scripts/test-public-validator.js && node scripts/context-budget.js && node scripts/skill-catalog.js build-registry --check && node scripts/test-architecture.js && npm run validate -- --check-sync && npm run package:check",
+    "test:smoke": "node scripts/test-smoke.js",
+    "test:xkiro": "node scripts/test-xkiro.js",
     "validate": "node scripts/run-validate.js"
   },
   "config": {
@@ -98,7 +111,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FernandoBolzan/Orquestrador-Maestro.git"
+    "url": "git+https://github.com/IAPro-Community/Orquestrador-Maestro.git"
   },
   "keywords": [
     "iapro",
@@ -112,17 +125,33 @@
     "cursor",
     "gemini-cli",
     "grok-cli",
+    "mimo-code",
+    "kimi-code",
     "windsurf",
     "antigravity",
     "skills",
     "hooks"
   ],
   "author": "Grupo IAPro",
-  "homepage": "https://github.com/FernandoBolzan/Orquestrador-Maestro#readme",
+  "homepage": "https://github.com/IAPro-Community/Orquestrador-Maestro#readme",
   "bugs": {
-    "url": "https://github.com/FernandoBolzan/Orquestrador-Maestro/issues"
+    "url": "https://github.com/IAPro-Community/Orquestrador-Maestro/issues"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "optionalDependencies": {
+    "@opentui/core": "^0.5.1"
+  },
+  "dependencies": {
+    "@clack/prompts": "0.11.0",
+    "@xterm/headless": "^5.5.0",
+    "node-notifier": "10.0.1",
+    "node-pty": "^1.1.0"
+  },
+  "overrides": {
+    "node-notifier": {
+      "uuid": "11.1.1"
+    }
   }
 }

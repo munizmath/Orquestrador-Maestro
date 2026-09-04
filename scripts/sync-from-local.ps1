@@ -399,6 +399,8 @@ Append-GeneratedBlockIfMissing -Path (Join-Path $orchestratorDest "maestro.md") 
 ## Project DEV Context
 
 When a project has `DEV/`, use it as local project memory after reading the nearest project `AGENTS.md` and before selecting global skills. Create durable project documentation under `DEV/` by default. After substantive work, update `DEV/WORKLOG.md`.
+
+Follow `{{USER_HOME}}/.orquestrador/PERSISTENCE.md` as the mandatory cross-tool persistence contract.
 '@
 
 $codexSkillFiles = 0
@@ -470,6 +472,49 @@ if (-not $SkipToolProfiles) {
     $script:toolProfileFiles++
   }
 
+  Write-ToolProfileTemplateIfMissing -Destination "mimo\AGENTS.md" -Content @'
+# MiMo Code Global Orquestrador
+
+Use the shared Orquestrador Maestro contract for substantive work:
+
+1. Read `{{USER_HOME}}/AGENTS.md`.
+2. Read `{{USER_HOME}}/.orquestrador/rules.md`.
+3. Read `{{USER_HOME}}/.orquestrador/maestro.md`.
+4. Read `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`.
+5. In projects with `DEV/`, read the compact project documentation before task skills.
+6. Use `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json` before loading skills.
+7. Keep durable project notes in `DEV/` and update `DEV/WORKLOG.md` after substantive work.
+
+MiMo Code is responsible for its own login, model selection, sessions, and local runtime data.
+'@
+
+  Write-ToolProfileTemplateIfMissing -Destination "kimi\AGENTS.md" -Content @'
+# Kimi Code Global Orquestrador
+
+Use the shared Orquestrador Maestro contract for substantive work:
+
+1. Read `{{USER_HOME}}/AGENTS.md`.
+2. Read `{{USER_HOME}}/.orquestrador/rules.md`.
+3. Read `{{USER_HOME}}/.orquestrador/maestro.md`.
+4. Read `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`.
+5. In projects with `DEV/`, read the compact project documentation before task skills.
+6. Use `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json` before loading skills.
+7. Keep durable project notes in `DEV/` and update `DEV/WORKLOG.md` after substantive work.
+
+Kimi Code is responsible for its own login, model selection, sessions, and local runtime data.
+'@
+
+  Write-ToolProfileTemplateIfMissing -Destination "kimi\config.toml" -Content @'
+# Kimi Code user configuration. Authentication and sessions remain local to Kimi.
+extra_skill_dirs = ["{{USER_HOME}}/.orquestrador/skill-library/community-skills", "{{USER_HOME}}/.agents/skills"]
+'@
+
+  Write-ToolProfileTemplateIfMissing -Destination "grok\config.toml" -Content @'
+# Grok Build user configuration. Authentication and sessions remain local to Grok.
+[skills]
+paths = ["{{USER_HOME}}/.orquestrador/skill-library/community-skills", "{{USER_HOME}}/.agents/skills"]
+'@
+
   Write-ToolProfileTemplateIfMissing -Destination "opencode-global\AGENTS.md" -Content @'
 # OpenCode Global Orquestrador
 
@@ -480,13 +525,14 @@ Always apply the Orquestrador Maestro contract:
 1. Read `{{USER_HOME}}/AGENTS.md`.
 2. Read `{{USER_HOME}}/.orquestrador/rules.md`.
 3. Read `{{USER_HOME}}/.orquestrador/maestro.md`.
-4. In projects with `DEV/`, read the project DEV overview after the nearest project `AGENTS.md`.
-5. Use `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json` before loading task skills.
-6. Load only the task-relevant `SKILL.md` files and task-relevant `DEV/` docs.
-7. Keep durable project docs in `DEV/` by default and update `DEV/WORKLOG.md` after substantive work.
-8. Treat the IA as `orquestrador` and the user as `maestro`.
-9. Verify before claiming completion.
-10. Do not commit or push unless the user explicitly asks.
+4. Read `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`.
+5. In projects with `DEV/`, read the project DEV overview after the nearest project `AGENTS.md`.
+6. Use `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json` before loading task skills.
+7. Load only the task-relevant `SKILL.md` files and task-relevant `DEV/` docs.
+8. Keep durable project docs in `DEV/` by default and update `DEV/WORKLOG.md` after substantive work.
+9. Treat the IA as `orquestrador` and the user as `maestro`.
+10. Verify before claiming completion.
+11. Do not commit or push unless the user explicitly asks.
 
 Default skill: `orquestrador-maestro`.
 '@
@@ -517,6 +563,7 @@ Primary files:
 - `{{USER_HOME}}/AGENTS.md`
 - `{{USER_HOME}}/.orquestrador/rules.md`
 - `{{USER_HOME}}/.orquestrador/maestro.md`
+- `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
 - `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
 - `{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md`
 
@@ -524,6 +571,7 @@ Operating rules:
 
 - The assistant acts as the `orquestrador`; the user is the `maestro`.
 - Before broad work, read the global contract, rules, and maestro files.
+- Rehydrate and persist project context according to `PERSISTENCE.md`; never rely on chat history alone.
 - In projects with `DEV/`, read the project DEV overview after the nearest project `AGENTS.md` and before task skills.
 - Keep durable project docs in `DEV/` by default and update `DEV/WORKLOG.md` after substantive work.
 - Before inventing a workflow, inspect the skills index and router.
@@ -544,6 +592,7 @@ Read and follow:
 - `{{USER_HOME}}/AGENTS.md`
 - `{{USER_HOME}}/.orquestrador/rules.md`
 - `{{USER_HOME}}/.orquestrador/maestro.md`
+- `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
 - `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
 
 The assistant acts as `orquestrador`; the user is the `maestro`.
@@ -568,6 +617,7 @@ Read and follow:
 - `{{USER_HOME}}/AGENTS.md`
 - `{{USER_HOME}}/.orquestrador/rules.md`
 - `{{USER_HOME}}/.orquestrador/maestro.md`
+- `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
 - `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
 
 Rules:
@@ -581,6 +631,34 @@ Rules:
 - Do not commit or push unless the user explicitly asks.
 '@
 
+  Write-ToolProfileTemplateIfMissing -Destination "cursor\commands\maestro.md" -Content @'
+# Reidratar o Orquestrador Maestro
+
+Reidrata o contexto operacional antes de continuar a tarefa atual.
+
+Leia nesta ordem, sem abrir catálogos inteiros:
+
+1. `{{USER_HOME}}/AGENTS.md`
+2. `{{USER_HOME}}/.orquestrador/rules.md`
+3. `{{USER_HOME}}/.orquestrador/maestro.md`
+4. `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
+5. O `AGENTS.md` mais próximo do projeto atual
+6. Se existir `DEV/`, leia `DEV/README.md` ou `DEV/INDEX.md`, `DEV/HANDOFF.md`, `DEV/CONTEXT.md` e `DEV/SPECS/ACTIVE.md`
+7. Consulte `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json` somente para escolher a skill necessária
+
+Depois de ler:
+
+- confirme internamente que o usuário é o Maestro e você é o Orquestrador;
+- retome a tarefa atual a partir do handoff e da spec ativa;
+- não reinicie uma solução já concluída nem invente contexto ausente;
+- se não houver handoff, diga exatamente qual contexto está faltando e peça apenas a informação mínima necessária;
+- continue a execução com verificação proporcional e registre mudanças substantivas no `DEV/`.
+
+Pedido atual do Maestro:
+
+{{input}}
+'@
+
   Write-ToolProfileTemplateIfMissing -Destination "gemini\GEMINI.md" -Content @'
 # Gemini Global Orquestrador
 
@@ -591,6 +669,7 @@ Read and follow:
 - `{{USER_HOME}}/AGENTS.md`
 - `{{USER_HOME}}/.orquestrador/rules.md`
 - `{{USER_HOME}}/.orquestrador/maestro.md`
+- `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
 - `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
 - `{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md`
 
@@ -612,6 +691,7 @@ Read and follow these files when starting substantive work:
 - `{{USER_HOME}}/AGENTS.md`
 - `{{USER_HOME}}/.orquestrador/rules.md`
 - `{{USER_HOME}}/.orquestrador/maestro.md`
+- `{{USER_HOME}}/.orquestrador/PERSISTENCE.md`
 - `{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json`
 - `{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md`
 

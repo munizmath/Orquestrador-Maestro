@@ -1,11 +1,356 @@
 # Changelog
 
+## Unreleased
+
+As próximas mudanças serão registradas aqui.
+
+## 0.2.3 - 2026-09-04
+
+- Ajustada a matriz de testes nativos do Ubuntu para Node 20 e 22, que são as versões suportadas pelo backend OpenTUI no runner.
+- A CLI comum continua declarando compatibilidade com Node 18; os testes completos de TUI/PTY ficam concentrados nas versões com suporte nativo comprovado.
+
+## 0.2.2 - 2026-09-04
+
+- Corrigida a compatibilidade do planejador CommonJS com `@clack/prompts` usando a versão CJS suportada `0.11.0`.
+- O workflow de testes Ubuntu agora instala Bun para executar os testes de ciclo de vida da TUI OpenTUI.
+
+## 0.2.1 - 2026-09-04
+
+- Corrigido o instalador PowerShell para ignorar o estado local em `orquestrador/runtime` e diretórios reparse, evitando cópias gigantes ou travamentos ao instalar a partir de um clone de desenvolvimento.
+- Backup e desinstalação passaram a usar a mesma enumeração segura do instalador.
+- Bootstraps PowerShell e Bash alinhados ao pacote publicado `0.2.0`.
+- Adicionadas regressões para o contrato de versão e exclusão do runtime local.
+- Mantido `node-notifier` 10.0.1 e fixado `uuid` 11.1.1 via `overrides`, removendo as vulnerabilidades reportadas pelo `npm audit` sem retirar as notificações da CLI.
+- Adicionado teste de compatibilidade da API de notificação e da versão segura de `uuid`.
+
+## 0.2.0 - 2026-09-04
+
+Esta é uma atualização maior, que incorpora a maior parte da evolução proposta nos PRs #5, #6 e #7. O PR #7 é o eixo principal da entrega, especialmente pela memória episódica, pelo benchmark e pela ampliação da CLI.
+
+### O que mudou para quem usa o Maestro
+
+- O Maestro agora consegue guardar decisões, descobertas, problemas e resultados importantes do projeto para reutilizá-los em sessões futuras.
+- O contexto passa a ser filtrado por projeto, workspace, branch e tarefa, reduzindo a chance de misturar informações de trabalhos diferentes.
+- A CLI ganhou comandos para registrar, pesquisar, consultar linha do tempo, promover, deduplicar, consolidar, limpar e verificar a memória.
+- A CLI ganhou comandos de benchmark para listar cenários, executar medições e validar fixtures.
+- Tarefas complexas podem ser refinadas e divididas em etapas antes da execução, com planos persistidos e revisão explícita.
+- O runtime central organiza projetos, workspaces, terminais, providers, missões, execuções, eventos e recuperação após falhas.
+- Providers como Codex, Claude, OpenCode e AGY passam a seguir uma interface comum, facilitando a troca e a comparação de agentes.
+- O Maestro acompanha o ciclo da execução e oferece verificação posterior para confirmar se o resultado atende ao objetivo.
+- Foi adicionada uma interface de cockpit/TUI para acompanhar projetos, tarefas, skills, atenção, gates e terminais quando o ambiente suportar esse modo.
+- Mudanças arquiteturais ou de maior risco podem passar por um gate específico antes de serem executadas, sem alterar o fluxo legado por padrão.
+- Workflows, tarefas, eventos, gates humanos, retries, artefatos e workspaces ganharam contratos declarativos e compatíveis com os formatos anteriores.
+
+### Benchmark e evidência
+
+- O benchmark inclui cenários reproduzíveis, condições comparáveis e validação de evidência para evitar conclusões baseadas em execuções inválidas.
+- A CLI oferece `benchmark list`, `benchmark run` e `benchmark validate`.
+- O benchmark sintético usa fixtures locais e não exige chaves de API.
+- O smoke test de providers reais é opcional e exige credenciais configuradas pelo mantenedor; seus resultados ficam locais e não são publicados.
+- Os resultados devem ser interpretados como evidência para cenários específicos, não como promessa geral de qualidade, economia ou produtividade.
+
+### Compatibilidade, segurança e qualidade
+
+- Os comandos e fluxos legados continuam disponíveis; as capacidades novas são aditivas e opt-in quando envolvem planejamento, gates ou integrações externas.
+- A memória local não publica prompts, conteúdo de projeto, tokens, logs ou caminhos privados.
+- O lock de memória ganhou verificação de processo, liveness, identidade e expiração configurável para operações concorrentes.
+- Foram corrigidos casos de retenção, poda, deduplicação, escopo de branch, validação HTTPS, URLs base e detecção de injeção em prompts.
+- A integração contínua passou a cobrir Linux, Windows e macOS, com testes completos no Linux e smoke tests nos demais sistemas.
+- Verificação local desta entrega: 635 testes aprovados, 0 falhas e 10 testes ignorados por dependências/limitações específicas de ambiente; validações pública, de skills, empacotamento e ciclo instalado aprovadas.
+
+### Migração
+
+- Usuários da versão anterior podem atualizar com `npm update -g @iapro/orquestrador-maestro-cli`.
+- Depois da atualização, execute `orquestrador-maestro changelog`, `orquestrador-maestro update`, `orquestrador-maestro verify` e `orquestrador-maestro doctor`.
+- Para usar a memória e o contexto por projeto, inicialize ou mantenha a estrutura `DEV/` do projeto conforme a documentação.
+- Nenhuma chave de API é necessária para usar a memória local, o planejamento determinístico, a CLI ou o benchmark sintético.
+
+### Detalhes técnicos e correções incluídas
+
+- **Unified Git Context Resolver**: consolidates repository, workspace, branch, detached, and head commit into a single `getGitContext()` call across all entry points.
+- **Branch-Based Scoping**: observations automatically inherit branch, workspace, and task context for visibility and search filtering.
+- **Visibility Policy**: scope-aware ranking that filters observations by repository, workspace, and branch; promotes verified and marked-as-done observations.
+- **Task Classifier**: classifies intent into `trivial`, `bounded`, `complex`, `resumed`, `investigation` with NFD accent normalization for cross-platform consistency.
+- **Concurrency Lock**: PID-based lock with identity verification, liveness checks, and configurable max-age (default 5 minutes) for safe parallel operations.
+- **Memory CLI Commands**: `record`, `search`, `show`, `timeline`, `stats`, `list-projects`, `status`, `promote`, `dedupe`, `retention`, `prune`, `consolidate`, `cleanup`.
+- **Benchmark CLI Commands**: `list`, `run`, `validate` for scenario execution and fixture validation.
+- **Adapter Scope Awareness**: adapters now receive `projectRoot`, `gitContext`, and `taskId` for scope-aware behavior; `DEFAULT_OBSERVATION_TYPE_MAP` centralized in adapters/index.js.
+- **Benchmark Engine Hardening**: `isClaimEligibleRun()` per-run eligibility check, benchmark schema `evidence` field for reproducibility tracking.
+- **Merge-Blocker Cleanup**: prompt injection regex (removed `g` flag), retention negative slice protection (`Math.max(0, ...)`), prune `keepVerified` partition logic, stale lock identity verification, xKiro HTTPS validation, `validateBaseUrl()`.
+- **CI Multiplatform**: Ubuntu (Node 18/20/22) full tests, Windows (Node 20/22) smoke, macOS (Node 20/22) smoke.
+- **Test Suite**: 193 tests passing, 0 failures, 1 skipped; regression test suite covering all hardenings.
+- **Runtime e CLI**: integração aditiva das camadas de runtime, providers, planejamento, verificação, workspaces, terminais e cockpit.
+- **Documentation fixes**: corrected benchmark file paths, CLI examples using `orquestrador-maestro memory` CLI, added missing memory commands to CLI reference, fixed `head` → `headCommit` in memory-scopes.md, updated ai-memory-integration.md to mention built-in episodic memory.
+
+## 0.1.27 - 2026-08-30
+
+### Novos CLIs de programação assistida
+
+- Adicionado suporte de perfil e instalação para MiMo Code (`mimo`), Kimi Code (`kimi`) e Grok Build (`grok`).
+- Incluídos os componentes `mimo`, `kimi` e `grok` no `--only` dos instaladores Windows, Linux e macOS.
+- Adicionados pontos de entrada globais seguros em `.mimo`, `.kimi-code` e `.grok`, sem copiar autenticação, sessões, caches ou histórico.
+- Atualizados README, documentação de perfis, palavras-chave do pacote e matriz de ferramentas suportadas.
+
+## 0.1.26 - 2026-08-28
+
+### Autopilot mais robusta e recuperável
+
+- Reestruturada a skill `autopilot` nos dois espelhos públicos: `codex/skills/autopilot/` e `orquestrador/skill-library/codex-skills/autopilot/`.
+- Adicionado preflight obrigatório com leitura de `AGENTS.md`, memória compacta `DEV/`, baseline de branch/status/diff, stack, comandos disponíveis e limites de dados/produção.
+- Adicionados limites explícitos contra commit, push, merge, publicação, deploy, exclusão, reset e efeitos externos sem autorização específica.
+- Fortalecido o modelo de execução com ledger persistente, checkpoints de recuperação, ownership por tarefa, dependências e regras seguras para paralelismo.
+- Cada critério de aceitação agora precisa de evidência observável ou de uma dependência de validação humana explicitamente registrada.
+- QA reorganizado em camadas: existência, relevância, comportamento focado, regressão/integração e verificação de fronteiras de segurança.
+- Revisão independente agora exige severidade, caminho/símbolo, evidência e ação; achados importantes exigem correção e re-review delimitado.
+- Quando reviewers ou MCPs não estão disponíveis, a skill executa uma revisão adversarial local e registra a limitação, sem presumir aprovação.
+- Handoff final ampliado com resultado, comandos executados, evidências, limitações, decisões, riscos residuais e próxima ação.
+
+### Referências incorporadas
+
+- Padrões de ledger, revisão por tarefa e recuperação inspirados em `obra/superpowers`.
+- Práticas de contexto de repositório e lint/test inspiradas em `Aider-AI/aider`.
+- Configuração declarativa e execução autônoma observadas em `SWE-agent/SWE-agent`.
+- Isolamento e avisos de acesso ao filesystem observados em `OpenHands/OpenHands`.
+
+### Verificação da release
+
+- `quick_validate.py`: aprovado nos dois espelhos da skill.
+- `scripts/validate-skills.ps1`: aprovado; 48 skills.
+- `scripts/validate-public.ps1`: aprovado.
+- `git diff --check`: aprovado.
+- Os dois espelhos da `autopilot` têm hashes SHA-256 idênticos.
+- Nenhum artefato não rastreado existente (`orquestrador/runtime/` e `skill-showcase.html`) foi incluído nesta release.
+- GitHub: commit `bf87856` e tag `v0.1.26` publicados em `main`.
+- npm: publicação tentada pelo workflow `33209366051`, mas bloqueada com `E404` no registry porque o token do ambiente `npm-release` não tem permissão efetiva para publicar no escopo `@iapro`.
+- Estado npm confirmado: `latest` permanece em `0.1.25`; nenhuma versão `0.1.26` foi publicada.
+- Ação necessária para concluir: conceder ao token do ambiente `npm-release` acesso de publicação ao escopo `@iapro` e reexecutar o workflow da tag `v0.1.26`.
+
+## 0.1.25 - 2026-08-20
+
+### Skills conversacionais selecionadas
+
+- Adicionada `skill-impeccable`, uma adaptação conversacional para pedidos de melhoria visual, UX, acessibilidade, responsividade e polish de frontend.
+- Adicionada `skill-scope-control` para identificar expansão de escopo em diffs, PRs e alterações misturadas, sempre em modo somente leitura por padrão.
+- Adicionada `skill-doublecheck` para checagem de afirmações, fontes, atualidade e risco de alucinação, com modo pontual por padrão e modo contínuo somente sob pedido explícito.
+- Adicionada `skill-threat-modeling` para threat modeling defensivo com STRIDE-A, ativos, fluxos de dados, fronteiras de confiança e priorização de riscos.
+- Adicionada `skill-skill-development` para criar, revisar e manter skills com gatilhos naturais, divulgação progressiva, metadados, aliases e validação.
+- Adicionados gatilhos em linguagem natural, aliases em português e cadeias controladas para uso sem comandos técnicos.
+- Mantidos os artefatos externos como referências/adaptações opt-in; nenhum hook, CLI, modo persistente ou instalação externa é ativado silenciosamente.
+
+### Catálogo, sincronização e segurança
+
+- O catálogo canônico passou a validar 48 skills, com manifests, router, aliases, chains, índice e espelhos sincronizados.
+- A validação pública passou a excluir corretamente worktrees temporários de `orquestrador/runtime/worktrees` das varreduras públicas, sem apagar nem publicar estado local.
+- Atualizados `DEV/WORKLOG.md`, `DEV/VERIFY.md` e `DEV/HANDOFF.md` com o resultado, limites e evidências da entrega.
+
+### Verificação da release
+
+- `scripts/validate-public.ps1`: aprovado.
+- `scripts/validate-skills.ps1`: aprovado; 48 skills.
+- `scripts/check-dev-gates.ps1 -Strict`: aprovado.
+- `npm test -- --runInBand`: 26 testes aprovados.
+- Roteamento conversacional testado para escopo, fontes, threat modeling, criação de skills e melhoria de interface.
+- Workflow de release tornado idempotente para não tentar republicar uma versão já existente no npm; actions de checkout/setup-node atualizadas e requisito de autenticação 2FA documentado.
+
+## 0.1.24 - 2026-08-17
+
+### Workflows retomáveis e seguros
+
+- Adicionados `workflow-lock generate|validate` para gerar locks determinísticos e versionáveis em `DEV/WORKFLOWS/`.
+- Adicionados `workflow-state init|get|validate|approve|advance` para manter cursor local-only em `.local/orquestrador/workflow-state/`.
+- Adicionados `WORKFLOW_LOCK_SCHEMA.json` e `WORKFLOW_STATE_SCHEMA.json`, com digest SHA-256, referências de proveniência e separação entre pacote instalado e projeto consumidor.
+- Escritas de lock/state são atômicas; sobrescrita exige `--force`, paths inseguros são rejeitados e drift bloqueia a operação.
+- Gates humanos exigem aprovação explícita e os comandos permanecem descritivos, sem executar adapters, providers ou efeitos externos.
+
+### Compatibilidade e verificação
+
+- Mantidos os schemas legados e os comandos existentes sem alteração de semântica.
+- Adicionados testes de round-trip, drift, gates, isolamento de `.local/` e proteção contra overwrite.
+- Atualizados README, documentação de workflows e contratos de tarefa/workspace.
+- 24 testes automatizados aprovados; validação pública, skills e empacotamento aprovados.
+
+## 0.1.23 - 2026-08-14
+
+### Sincronização de skills entre clientes
+
+- Corrigida a disponibilidade de `code-review` no OpenCode/DANTE, sincronizando a skill compatível para `.opencode/skills`.
+- O sincronizador agora aceita diretórios nativos de compatibilidade por cliente, sem espalhar workflows específicos do Codex para outras ferramentas.
+- Corrigida a prioridade das fontes nativas do Codex para preservar skills oficiais atualizadas do runtime, incluindo `.system`.
+- Alinhados os sincronizadores PowerShell e Bash e documentada a auditoria completa de sincronização.
+
+### Verificação
+
+- 361 entradas de sincronização verificadas, sem divergências.
+- 42 skills canônicas validadas, doctor sem problemas de roteamento e 22 testes automatizados aprovados.
+- Validação pública, empacotamento e `git diff --check` aprovados.
+
+## 0.1.22 - 2026-08-12
+
+### Adaptadores de ferramentas AI-native
+
+- Adicionado o catálogo `orquestrador/TOOL_ADAPTERS.json` para Junie CLI, Goose, OpenHands, Continue, Cline, GitHub Copilot CLI, Ollama e LM Studio.
+- Adicionado `orquestrador-maestro adapters` com comandos de listagem, inspeção de caminhos, validação e renderização segura.
+- Adicionado renderizador de projeto para Junie, Goose e OpenHands, com `dry-run` por padrão, `--apply` explícito e preservação de arquivos existentes.
+- Mantido fora do escopo o gerenciamento de autenticação, modelos, provedores, MCP, extensões, sessões, cache, logs, histórico e bancos de dados.
+- Adicionados testes de contrato e fixtures temporárias para os adaptadores P0.
+
+### Verificação
+
+- 22 testes automatizados aprovados.
+- Validação pública, validação de skills, gates DEV estritos, empacotamento e `git diff --check` aprovados.
+- Corrigida a resolução de `--project-path` relativo nos helpers `init-dev`, `compact-worklog` e `check-dev-gates`, inclusive na CLI instalada globalmente.
+
+## 0.1.21 - 2026-08-12
+
+### Evolução de workflow e coordenação
+
+- Adicionado o Workflow Schema v2, preservando os campos legados e acrescentando etapas, eventos, gates humanos, retry manual e referências de workspace.
+- Adicionado `orquestrador/TASK_SCHEMA.json` para padronizar tarefas, status, dependências, subtarefas, artefatos, aprovações e sessões de execução.
+- Adicionado `orquestrador/WORKSPACE_SCHEMA.json` para descrever branches, worktrees, isolamento por repositório e executores sem publicar caminhos locais.
+- Adicionada documentação da relação entre workflow, tarefa e workspace em `docs/task-and-workspace-contracts.md`.
+- Adicionada cobertura de contrato em `tests/orchestration-contracts.test.js`.
+
+### Compatibilidade e segurança
+
+- Os novos contratos permanecem descritivos e opt-in; não executam agentes, não criam integrações obrigatórias e não autorizam efeitos externos.
+- Paralelismo exige isolamento explícito, e commit, push, publicação e compartilhamento continuam sendo gates separados.
+
+### Verificação
+
+- 16 testes automatizados aprovados.
+- Validação pública e validação de skills aprovadas.
+- `git diff --check` aprovado.
+
+## 0.1.20 - 2026-08-11
+
+### Correção de funcionamento
+
+- Publicado o fix que preserva o diretório de invocação ao executar os helpers DEV, fazendo `--project-path .` funcionar também na CLI instalada globalmente.
+- Incluída regressão para a chamada da CLI a partir de um projeto externo.
+
+## 0.1.19 - 2026-08-08
+
+### Correções de funcionamento
+
+- Corrigida a validação do `doctor` para aceitar skills nativas do Codex/OMX usadas como ponto de entrada de perfis, incluindo `phase-loop` com `plan`.
+- Corrigidos os wrappers PowerShell de `check-dev-gates`, que falhavam ao receber `-Strict` e, em um dos caminhos, repassavam indevidamente o nome do comando ao parser.
+- Adicionado teste de regressão dos dois wrappers PowerShell no Windows.
+- Documentados os avisos de subagente, autenticação MCP e sandbox do Codex/DANTE.
+
+### Verificação
+
+- 12 testes automatizados aprovados.
+- Validação pública, skills, gates DEV estritos, smoke test de instalação e auditoria de dependências aprovados.
+- `npm audit --omit=dev --audit-level=high`: 0 vulnerabilidades.
+
+## 0.1.18 - 2026-08-06
+
+### Evolução do workflow
+
+- Adicionado o perfil opt-in `phase-loop`, inspirado em fluxos por fases como GSD, para organizar `discuss`, `plan`, `execute`, `verify` e `ship` sem alterar o caminho padrão.
+- Adicionado o contrato declarativo `orquestrador/WORKFLOW_SCHEMAS.json` com workflows para construção, segurança, pesquisa e onboarding.
+- Adicionada documentação de adoção gradual em `docs/workflows.md`, mantendo provedores e integrações opcionais.
+
+### Contexto e verificação
+
+- O briefing de contexto agora resume o estado de `DEV/`, incluindo fase, próxima ação, riscos e artefatos relevantes, respeitando o orçamento de caracteres.
+- Adicionado um gate dedicado para validar hierarquia de `DEV/`, estado de fase, artefatos e documentação, com wrappers PowerShell e Bash.
+- Adicionada cobertura de regressão para briefing, gates, workflows, catálogo de skills e execução em modo dry-run.
+
+### Governança de skills
+
+- O catálogo passou a aceitar metadados opcionais de proveniência e workflow, preservando fallback compatível para skills legadas.
+- Adicionados schemas públicos para validar manifestos e registros de uso das skills.
+- Os bootstraps PowerShell e Bash foram alinhados com a versão publicada `0.1.18`.
+
+### Verificação
+
+- `npm test`
+- `npm run validate`
+- `scripts/check-dev-gates.ps1`
+- `git diff --check`
+- `npm pack --dry-run`
+
+## 0.1.17 - 2026-08-06
+
+### Corrigido
+
+- Corrigida a descoberta de skills no OpenCode: `orquestrador-maestro` agora possui metadados válidos, é sincronizada para todos os clientes roteados e não é mais marcada como diretório extra. Correção identificada a partir da dica de Felinto e Hector Noya (Mentorados).
+
+## 0.1.16 - 2026-08-06
+
+### Corrigido
+
+- Corrigida a descoberta de skills no OpenCode: `orquestrador-maestro` agora possui metadados válidos, é sincronizada para todos os clientes roteados e não é mais marcada como diretório extra. Correção identificada a partir da dica de Felinto e Hector Noya (Mentorados).
+
+- O bootstrap do Windows agora usa um prefixo npm estável no perfil do usuário, evitando que `fnm` direcione os binários para um diretório temporário de sessão durante atualizações.
+- O fluxo de instalação e atualização preserva os launchers globais dos clientes, incluindo o OpenCode, após a troca de versão do Node.js.
+- Os bootstraps Windows e Unix agora apontam para a mesma versão publicada da CLI (`0.1.16`).
+
+## 0.1.15 - 2026-08-06
+
+### APIs e skills
+
+- Atualizadas oito skills de integração com APIs: AbacatePay, Stripe, Google Workspace, Evolution API, ElevenLabs, provedores de IA, Resend e Meta Ads/WhatsApp.
+- AbacatePay v2 passou a ser a orientação padrão para novos projetos; rotas v1 e eventos `billing.*` ficaram explicitamente delimitados como legado.
+- Adicionados limites de versionamento, endpoints atuais, eventos, requisitos de segurança, idempotência, licenciamento e links para documentação oficial.
+- A skill de Meta Ads deixou de tratar um objetivo de campanha como universalmente superior e passou a exigir validação do fluxo atual da conta.
+- Corrigido o detector de mojibake do catálogo para aceitar UTF-8 legítimo em português sem perder a detecção de texto quebrado.
+
+### Verificação
+
+- `scripts/validate-public.ps1`
+- `scripts/validate-skills.ps1`
+- `scripts/check-dev-gates.ps1`
+- `git diff --check`
+
+## 0.1.14 - 2026-08-05
+
+- Adicionado briefing de contexto econômico para carregar apenas o contrato e a memória operacional necessários à intenção do Maestro.
+- Mantida a experiência conversacional; o briefing é uma capacidade interna e os comandos existentes continuam compatíveis.
+- Adicionados testes automatizados para orçamento, priorização e exclusão de histórico sensível.
+
 Todas as mudanças relevantes do Orquestrador Maestro estão documentadas aqui.
 
-## Unreleased - 2026-07-20
+## Correção pós-release - 2026-08-05
+
+- Os bootstraps públicos agora instalam a CLI `0.1.13`, alinhada à versão atual do pacote, em vez de fixarem a versão antiga `0.1.11`.
+
+## 0.1.13 - 2026-08-03
+
+### Segurança
+
+- Adicionada esteira defensiva com Gitleaks, Semgrep, OSV-Scanner, Trivy e Strix opt-in.
+- Adicionados scripts PowerShell/Bash, documentação e workflow de verificação em Pull Request.
+- Mantidos testes dinâmicos e pentest agentivo fora da execução automática, exigindo alvo e autorização explícitos.
+
+## Unreleased - 2026-07-28
+
+### RFCs e memória opcional
+
+- Adicionada a convenção pública de RFCs em `docs/rfcs/`, separando proposta, decisão, implementação e verificação.
+- Adicionadas RFCs iniciais para contrato de memória entre agentes, provider opcional e captura com privacidade.
+- Adicionado o guia de integração opt-in com `ai-memory`, mantendo `DEV/` como fonte de verdade e sem dependência obrigatória no pacote.
 
 ### Contribuição comunitária
 - Adicionada a skill `improve-codebase-architecture`, de Eduardo Queiroz, para análises arquiteturais com relatório HTML decisório, diagramas, comparação de impactos técnicos e de produto e referências em português.
+- Kiver Teixeira (`kivervinicius`) relatou a perda de contexto entre sessões no Cursor e ajudou a direcionar a criação do comando `/maestro` para reidratação do contexto do Orquestrador.
+
+### Persistência
+- Criado o contrato canônico `orquestrador/PERSISTENCE.md`, aplicado aos entrypoints do Codex, OpenCode, Claude, Cursor, Gemini, Windsurf e Antigravity.
+- Os verificadores agora exigem o contrato de persistência e confirmam que os perfis globais apontam para ele.
+- Fernando Bolzan conduziu esta atualização para tornar a persistência do Orquestrador Maestro explícita e compartilhada entre os softwares.
+
+## 0.1.12 - 2026-07-22
+
+### Corrigido
+
+- O Cursor agora instala o comando `/maestro` em `.cursor/commands/maestro.md` para reidratar o contrato global e o contexto ativo de `DEV/` quando uma sessão perde continuidade.
+- A instalação e os verificadores PowerShell/Bash agora validam a presença do comando de recuperação de contexto.
+
+### Contribuição comunitária
+
+- Kiver Teixeira (`kivervinicius`) foi reconhecido pelo relato que direcionou essa correção de continuidade entre sessões.
 ## 0.1.11 - 2026-07-20
 
 ### Corrigido

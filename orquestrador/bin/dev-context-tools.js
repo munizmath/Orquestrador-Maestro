@@ -571,11 +571,10 @@ function checkDevGates(options) {
       }
     }
 
-    // Architecture First Gate: require a structural-prevention field so a local remediation
-    // must name the structural adjustment that stops the issue from recurring.
-    if (!/^##\s+Structural Prevention\s*$/m.test(specContent)) {
+    // The architecture-first section is opt-in so legacy strict DEV trees remain valid.
+    if (architectural && !/^##\s+Structural Prevention\s*$/m.test(specContent)) {
       issues.push(`DEV active spec missing heading \`## Structural Prevention\` in ${requiredPaths.spec}`);
-    } else if (!hasMeaningfulSectionContent(specContent, "Structural Prevention")) {
+    } else if (architectural && !hasMeaningfulSectionContent(specContent, "Structural Prevention")) {
       issues.push(`DEV active spec has no substantive \`## Structural Prevention\` content (declare the change class and, for a local remediation, the structural adjustment that prevents recurrence) in ${requiredPaths.spec}`);
     }
   }

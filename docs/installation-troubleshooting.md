@@ -1,5 +1,18 @@
 # Solução de problemas de instalação
 
+## Skill ausente no OpenCode/DANTE
+
+O Codex e o OpenCode mantêm raízes nativas diferentes. Por isso, uma skill disponível em `%USERPROFILE%\.codex\skills` pode não aparecer automaticamente no DANTE/OpenCode.
+
+Para conferir e corrigir a sincronização no Windows:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File $HOME\.orquestrador\sync-skills.ps1 -Check
+powershell -NoProfile -ExecutionPolicy Bypass -File $HOME\.orquestrador\sync-skills.ps1 -Apply
+```
+
+O `-Check` deve terminar sem ações diferentes de `ok`. A política mantém apenas compatibilidades explicitamente autorizadas por cliente; workflows que dependem de ferramentas internas do Codex/OMX não são copiados para o OpenCode. Depois de aplicar uma alteração, reinicie a ferramenta para que ela releia a raiz de skills.
+
 ## Instalação recomendada
 
 Use uma sessão normal do usuário. Não use `sudo`, `su`, root nem PowerShell como Administrador.
@@ -33,7 +46,7 @@ rm -rf -- "$HOME/.orquestrador-public-backups"
 df -h "$HOME"
 
 # 3. Instale a CLI corrigida, use o desinstalador seguro e remova a CLI.
-npm install -g @iapro/orquestrador-maestro-cli@0.1.11 --force --prefer-online
+npm install -g @iapro/orquestrador-maestro-cli@latest --force --prefer-online
 orquestrador-maestro uninstall
 npm uninstall -g @iapro/orquestrador-maestro-cli
 
@@ -122,3 +135,28 @@ orquestrador-maestro doctor
 ```
 
 No macOS e Linux, `doctor` requer `pwsh` ou `powershell`; `verify` não possui essa dependência.
+
+## `check-dev-gates --project-path .` procura `DEV/` no lugar errado
+
+Em versões anteriores, a CLI podia resolver `.` contra o diretório onde o pacote npm estava instalado, em vez do diretório atual do projeto. A correção mantém o diretório de invocação ao executar os helpers DEV. Atualize a CLI e rode novamente:
+
+```text
+npm update -g @iapro/orquestrador-maestro-cli
+orquestrador-maestro check-dev-gates --project-path . --strict
+```
+
+O caminho explícito e absoluto continua sendo uma alternativa válida quando necessário.
+
+## Avisos do Codex sobre subagentes, MCP e sandbox no Windows
+
+Se o Codex mostrar `agent role 'subagent' must define a description`, o perfil local de subagente está sem o campo obrigatório `description`. No Windows, abra `%USERPROFILE%\\.codex\\config.toml` e mantenha o bloco com uma descrição, por exemplo:
+
+```toml
+[agents.subagent]
+description = "Subagente Codex para tarefas independentes e delimitadas."
+model = "cheap-fast"
+```
+
+Avisos como `MCP server is not logged in` pertencem à autenticação do servidor remoto, não ao Orquestrador. Faça login apenas no MCP que você pretende usar; não coloque tokens no repositório nem em arquivos de configuração publicados.
+
+Já `windows sandbox: helper_unknown_error` é uma falha do runtime/sandbox do Codex ou do terminal que o está hospedando. Ela não é corrigida por skills, agentes ou prompts do Orquestrador. Reinicie o terminal e o Codex; se persistir, execute `orquestrador-maestro doctor` e reporte o erro completo ao mantenedor do runtime.

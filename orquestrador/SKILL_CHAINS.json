@@ -36,8 +36,7 @@
         "skill-security-hooks",
         "skill-unified-analytics",
         "skill-ai-orchestration",
-        "skill-multiagent-orchestration",
-        "skill-aionui-cowork-orchestration"
+        "skill-multiagent-orchestration"
       ],
       "rules": [
         "Use frontend/UI skills when landing, login, signup, onboarding, app dashboard, responsive behavior, or visual polish are present.",
@@ -98,16 +97,17 @@
     "skill-security-hooks": {
       "mayInvoke": [
         "skill-saas-security-scan",
-        "skill-github-mcp-automation"
+        "skill-github-mcp-automation",
+        "skill-verification-before-completion"
       ],
       "reasons": {
         "skill-saas-security-scan": "Use for authorized local SaaS repository SAST, secrets, dependency, or IaC review.",
-        "skill-github-mcp-automation": "Use when GitHub MCP, PRs, issues, Actions, releases, or repository maintenance are in scope."
+        "skill-github-mcp-automation": "Use when GitHub MCP, PRs, issues, Actions, releases, or repository maintenance are in scope.",
+        "skill-verification-before-completion": "Use to verify hook/gate installation before declaring the task complete."
       }
     },
     "skill-supabase-rls": {
       "mayInvoke": [
-        "skill-saas-security-scan",
         "skill-saas-core-limits"
       ],
       "reasons": {
@@ -118,7 +118,6 @@
     "skill-ai-orchestration": {
       "mayInvoke": [
         "skill-multiagent-orchestration",
-        "skill-aionui-cowork-orchestration",
         "skill-unified-analytics",
         "skill-google-workspace-sync",
         "skill-elevenlabs-voice-cloning",
@@ -135,7 +134,6 @@
     },
     "skill-multiagent-orchestration": {
       "mayInvoke": [
-        "skill-saas-factory",
         "skill-saas-security-scan",
         "skill-security-hooks",
         "skill-frontend-ux-guardrails",
@@ -231,7 +229,6 @@
     },
     "skill-google-workspace-sync": {
       "mayInvoke": [
-        "skill-ai-orchestration",
         "skill-unified-analytics"
       ],
       "reasons": {
@@ -313,6 +310,68 @@
         "skill-github-mcp-automation": "Use when skill changes are reviewed through GitHub issues, PRs, Actions, or repository automation.",
         "skill-quality-review": "Use when changes add or modify canonical skill guidance, routing metadata, or registry validation."
       }
+    },
+    "skill-impeccable": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-frontend-ux-guardrails",
+        "skill-modern-ui-patterns",
+        "skill-open-design-ui",
+        "skill-webapp-testing"
+      ],
+      "rules": [
+        "Interpret natural-language design requests before selecting a focused intervention.",
+        "Load at most two downstream frontend skills for a standard task unless the user requests a deep audit.",
+        "Use the external Impeccable CLI only when it is already available or the user explicitly authorizes installation."
+      ]
+    },
+    "skill-scope-control": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-preflight",
+        "skill-release-engineering"
+      ],
+      "rules": [
+        "Capture one-line intent before classifying scope.",
+        "Keep the default analysis read-only: do not edit, revert, stage, commit or push.",
+        "Recommend keep, split or justify with evidence from the diff."
+      ]
+    },
+    "skill-doublecheck": {
+      "mayInvoke": [
+        "skill-research-and-synthesis",
+        "skill-verification-before-completion"
+      ],
+      "rules": [
+        "Use one-shot verification by default; persistent mode requires an explicit request.",
+        "Use web research for unstable or current claims and cite the supporting sources.",
+        "Never invent citations or claim verification without evidence."
+      ]
+    },
+    "skill-threat-modeling": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-saas-security-scan",
+        "skill-supabase-rls",
+        "skill-incident-response"
+      ],
+      "rules": [
+        "Keep the work defensive, authorized and read-only by default.",
+        "Do not perform active exploitation or broaden the target scope.",
+        "Use incremental mode only when a baseline is available."
+      ]
+    },
+    "skill-skill-development": {
+      "loadFirst": true,
+      "mayInvoke": [
+        "skill-quality-gate",
+        "skill-verification-before-completion"
+      ],
+      "rules": [
+        "Inspect the existing router, aliases, manifest and chains before creating a new pattern.",
+        "Keep the skill focused and validate natural-language routing with examples.",
+        "Do not install an external artifact without a quality and permission review."
+      ]
     },
     "skill-whatsapp-meta-ads-leads": {
       "mayInvoke": [

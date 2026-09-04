@@ -51,6 +51,9 @@ $AllowedComponents = @(
   "gemini",
   "windsurf",
   "antigravity",
+  "mimo",
+  "kimi",
+  "grok",
   "tool-profiles",
   "codex-skills",
   "codex-agents",
@@ -147,9 +150,34 @@ function Copy-WithPlaceholders {
   }
 }
 
+function Get-TreeFiles {
+  param([string]$SourceDir)
+  $pending = New-Object System.Collections.Generic.Stack[string]
+  $pending.Push((Get-FullPath -Path $SourceDir))
+
+  while ($pending.Count -gt 0) {
+    $currentDir = $pending.Pop()
+
+    foreach ($file in Get-ChildItem -LiteralPath $currentDir -File -Force) {
+      Write-Output $file
+    }
+
+    foreach ($directory in Get-ChildItem -LiteralPath $currentDir -Directory -Force) {
+      $relativeDirectory = Get-RelativePath -BasePath $SourceDir -Path $directory.FullName
+      $isLocalRuntime = $relativeDirectory.Equals("runtime", [StringComparison]::OrdinalIgnoreCase) -or
+        $relativeDirectory.StartsWith("runtime\", [StringComparison]::OrdinalIgnoreCase)
+      $isReparsePoint = ($directory.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0
+      if ($isLocalRuntime -or $isReparsePoint) {
+        continue
+      }
+      $pending.Push($directory.FullName)
+    }
+  }
+}
+
 function Copy-TreeWithPlaceholders {
   param([string]$SourceDir, [string]$DestinationDir)
-  foreach ($file in Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Force) {
+  foreach ($file in Get-TreeFiles -SourceDir $SourceDir) {
     $relative = Get-RelativePath -BasePath $SourceDir -Path $file.FullName
     $dest = Join-Path $DestinationDir $relative
     Copy-WithPlaceholders -SourceFile $file.FullName -DestinationFile $dest
@@ -169,7 +197,7 @@ function Backup-MappedDirectory {
   if (-not (Test-Path -LiteralPath $DestinationDir)) { return }
   New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
   $backupTarget = Join-Path $BackupDir $Label
-  foreach ($sourceFile in Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Force) {
+  foreach ($sourceFile in Get-TreeFiles -SourceDir $SourceDir) {
     $relative = Get-RelativePath -BasePath $SourceDir -Path $sourceFile.FullName
     $existingFile = Join-Path $DestinationDir $relative
     if (Test-Path -LiteralPath $existingFile) {
@@ -285,7 +313,7 @@ function Uninstall-MappedDirectory {
   if (-not (Test-PathUnderRoot -Path $DestinationDir -Root $HomePath)) {
     throw "Refusing to uninstall target outside home: $DestinationDir"
   }
-  foreach ($sourceFile in Get-ChildItem -LiteralPath $SourceDir -Recurse -File -Force) {
+  foreach ($sourceFile in Get-TreeFiles -SourceDir $SourceDir) {
     $relative = Get-RelativePath -BasePath $SourceDir -Path $sourceFile.FullName
     $dest = Join-Path $DestinationDir $relative
     if (Test-Path -LiteralPath $dest) {
@@ -335,7 +363,7 @@ $extraTargets = New-Object System.Collections.Generic.List[object]
 $extraFileTargets = New-Object System.Collections.Generic.List[object]
 if (-not $SkipExtraSkills) {
   if (-not $SkipCommunitySkills) {
-    if (Test-SelectedComponent -Names @("skills", "community-skills", "codex", "agents", "claude", "opencode", "cursor", "gemini", "windsurf", "antigravity")) {
+    if (Test-SelectedComponent -Names @("skills", "community-skills", "codex", "agents", "claude", "opencode", "cursor", "gemini", "windsurf", "antigravity", "mimo", "kimi", "grok")) {
       Add-InstallTarget `
         -Targets $extraTargets `
         -Source $SourceCommunitySkills `
@@ -371,7 +399,10 @@ if ($InstallToolProfiles) {
     @{ Source = "windsurf"; Destination = ".windsurf"; Label = ".windsurf"; Component = "windsurf" },
     @{ Source = "windsurf-global"; Destination = ".codeium\windsurf\memories"; Label = ".codeium__windsurf__memories"; Component = "windsurf" },
     @{ Source = "antigravity"; Destination = ".antigravity"; Label = ".antigravity"; Component = "antigravity" },
-    @{ Source = "ai-standards"; Destination = ".ai-standards"; Label = ".ai-standards"; Component = "antigravity" }
+    @{ Source = "ai-standards"; Destination = ".ai-standards"; Label = ".ai-standards"; Component = "antigravity" },
+    @{ Source = "mimo"; Destination = ".mimo"; Label = ".mimo"; Component = "mimo" },
+    @{ Source = "kimi"; Destination = ".kimi-code"; Label = ".kimi-code"; Component = "kimi" },
+    @{ Source = "grok"; Destination = ".grok"; Label = ".grok"; Component = "grok" }
   )
   foreach ($target in $toolProfileTargets) {
     if (Test-SelectedComponent -Names @("tool-profiles", $target.Component)) {

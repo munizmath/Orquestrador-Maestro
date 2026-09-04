@@ -12,6 +12,7 @@
   "canonical": {
     "rules": "{{USER_HOME}}/.orquestrador/rules.md",
     "maestro": "{{USER_HOME}}/.orquestrador/maestro.md",
+    "persistence": "{{USER_HOME}}/.orquestrador/PERSISTENCE.md",
     "hooks": "{{USER_HOME}}/.orquestrador/hooks.md",
     "skillsIndex": "{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md",
     "skillsRouter": "{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json",
@@ -99,7 +100,7 @@
         "commandRewrite": "not installed by default; future compact command wrappers must be opt-in",
         "statusline": false,
         "settingsMerge": "file copy with backup",
-        "verify": "Claude global memory includes DEV/WORKLOG.md guidance"
+        "verify": "Claude global memory includes PERSISTENCE.md and DEV/WORKLOG.md guidance"
       },
       "primary": [
         "{{USER_HOME}}/.claude/CLAUDE.md",
@@ -113,19 +114,20 @@
       "component": "cursor",
       "capabilities": {
         "autoActivates": true,
-        "hookSupport": "AGENTS.md, MDC rule, hooks.md, skills",
+        "hookSupport": "AGENTS.md, MDC rule, hooks.md, skills, slash command",
         "commandRewrite": false,
         "statusline": false,
         "settingsMerge": "file copy with backup",
-        "verify": "Cursor AGENTS/rule files include DEV/WORKLOG.md guidance"
+        "verify": "Cursor AGENTS/rule files include PERSISTENCE.md and DEV/WORKLOG.md guidance"
       },
       "primary": [
         "{{USER_HOME}}/.cursor/AGENTS.md",
         "{{USER_HOME}}/.cursor/rules/orquestrador-maestro.mdc",
-        "{{USER_HOME}}/.cursor/hooks.md"
+        "{{USER_HOME}}/.cursor/hooks.md",
+        "{{USER_HOME}}/.cursor/commands/maestro.md"
       ],
       "skillsRoot": "{{USER_HOME}}/.cursor/skills",
-      "notes": "Cursor supports AGENTS.md and rule files; the installer writes both as portable local entrypoints."
+      "notes": "Cursor supports AGENTS.md, rule files and commands; /maestro rehydrates the active handoff before continuing."
     },
     "gemini": {
       "component": "gemini",
@@ -135,7 +137,7 @@
         "commandRewrite": false,
         "statusline": false,
         "settingsMerge": "file copy with backup",
-        "verify": "Gemini global context includes DEV/WORKLOG.md guidance"
+        "verify": "Gemini global context includes PERSISTENCE.md and DEV/WORKLOG.md guidance"
       },
       "primary": [
         "{{USER_HOME}}/.gemini/GEMINI.md",
@@ -152,7 +154,7 @@
         "commandRewrite": false,
         "statusline": false,
         "settingsMerge": "file copy with backup",
-        "verify": "Windsurf global rules include DEV/WORKLOG.md guidance"
+        "verify": "Windsurf global rules include PERSISTENCE.md and DEV/WORKLOG.md guidance"
       },
       "primary": [
         "{{USER_HOME}}/.codeium/windsurf/memories/global_rules.md",
@@ -160,6 +162,48 @@
       ],
       "skillsRoot": "{{USER_HOME}}/.windsurf/skills",
       "notes": "Windsurf Cascade loads global rules from .codeium/windsurf/memories/global_rules.md."
+    },
+    "mimo": {
+      "component": "mimo",
+      "capabilities": {
+        "autoActivates": true,
+        "hookSupport": "AGENTS.md and shared skill discovery",
+        "commandRewrite": false,
+        "statusline": false,
+        "settingsMerge": "file copy with backup",
+        "verify": "MiMo global AGENTS profile exists"
+      },
+      "primary": ["{{USER_HOME}}/.mimo/AGENTS.md"],
+      "skillsRoot": "{{USER_HOME}}/.agents/skills",
+      "notes": "MiMo Code is installed separately and keeps authentication and runtime state outside the public snapshot."
+    },
+    "kimi": {
+      "component": "kimi",
+      "capabilities": {
+        "autoActivates": true,
+        "hookSupport": "AGENTS.md, config.toml and shared skill discovery",
+        "commandRewrite": false,
+        "statusline": false,
+        "settingsMerge": "file copy with backup",
+        "verify": "Kimi Code AGENTS profile and extra skill directories exist"
+      },
+      "primary": ["{{USER_HOME}}/.kimi-code/AGENTS.md", "{{USER_HOME}}/.kimi-code/config.toml"],
+      "skillsRoot": "{{USER_HOME}}/.agents/skills",
+      "notes": "Kimi Code is installed separately; credentials, sessions, logs and caches remain Kimi-owned."
+    },
+    "grok": {
+      "component": "grok",
+      "capabilities": {
+        "autoActivates": true,
+        "hookSupport": "config.toml, AGENTS.md and shared skill discovery",
+        "commandRewrite": false,
+        "statusline": false,
+        "settingsMerge": "file copy with backup",
+        "verify": "Grok config points to shared skill directories"
+      },
+      "primary": ["{{USER_HOME}}/.grok/config.toml"],
+      "skillsRoot": "{{USER_HOME}}/.agents/skills",
+      "notes": "Grok Build is installed separately and keeps authentication, sessions and runtime state outside the public snapshot."
     }
   }
 }

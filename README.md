@@ -1,465 +1,312 @@
 # Orquestrador Maestro
 
-Kit público e sanitizado para instalar uma hierarquia de orquestração de IAs no Windows, Linux e macOS, com regras globais, Codex skills, hooks, roteamento de skills, perfis de ferramentas e memória operacional de projetos em `DEV/`.
+Camada pública e sanitizada para padronizar o trabalho de pessoas e agentes de IA em projetos reais.
 
-Repositório: [github.com/FernandoBolzan/Orquestrador-Maestro](https://github.com/FernandoBolzan/Orquestrador-Maestro)
+O Orquestrador Maestro organiza regras, contexto, skills, hooks, perfis de ferramentas e memória operacional para que diferentes IAs sigam o mesmo processo: entender o objetivo, ler apenas o contexto necessário, executar com limites claros, verificar o resultado e deixar o trabalho recuperável para a próxima sessão.
 
-## Funcionamento Em 60 Segundos
+> O Orquestrador não é um modelo de IA, não hospeda agentes e não substitui Codex, Claude, OpenCode, Cursor, Gemini, Grok, MiMo Code, Kimi Code, Windsurf, Antigravity ou outras ferramentas. Ele prepara o ambiente para que essas ferramentas trabalhem com um contrato comum.
 
-O ponto central do Orquestrador Maestro é simples: ele não cria uma IA nova. Ele instala uma camada portátil de regras, skills, hooks, perfis e entrypoints para que as ferramentas de IA do usuário leiam o mesmo contrato operacional antes de agir.
+[GitHub](https://github.com/IAPro-Community/Orquestrador-Maestro) · [Pacote npm](https://www.npmjs.com/package/@iapro/orquestrador-maestro-cli) · [Changelog](CHANGELOG.md)
 
-Na prática, o usuário instala uma vez, e Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Grok CLI, Windsurf e Antigravity passam a encontrar o Orquestrador por padrão nas pastas corretas do próprio usuário. Para VS Code, GitHub Copilot, Continue, JetBrains AI Assistant, Aider, Cline e Windsurf em nível de projeto, o `init-dev` cria o bootstrap de workspace no projeto aberto.
+## Para quem este projeto é
 
-### 1. Instalação Portátil
+- Para quem usa mais de uma ferramenta de IA e quer preservar o mesmo padrão de trabalho.
+- Para equipes que precisam de instruções globais, segurança, verificação e continuidade entre sessões.
+- Para pessoas técnicas que querem uma instalação reproduzível, revisável e compatível com Windows, Linux e macOS.
+- Para autores de skills, hooks, perfis e automações que precisam de um ponto central de roteamento.
+- Para agentes de IA que precisam descobrir rapidamente quais regras, arquivos e skills devem ler.
 
-![Fluxo de instalação portátil do Orquestrador Maestro](docs/assets/install-flow.gif)
+## A ideia em uma frase
 
-Este fluxo mostra o caminho de instalação recomendado: baixar a CLI via npm, aplicar o snapshot sanitizado no home do usuário, criar os entrypoints das ferramentas de IA, verificar a instalação e começar a usar em projetos reais.
+O Maestro define o objetivo; o Orquestrador garante que a IA leia as regras certas, use o menor contexto suficiente, execute com segurança, verifique o trabalho e registre o estado do projeto.
 
-### 2. Funcionamento Da Orquestração
+~~~mermaid
+flowchart LR
+    A[Pedido do Maestro] --> B[Contrato global]
+    B --> C[Regras do projeto]
+    C --> D[Memória DEV]
+    D --> E[Roteador de skills]
+    E --> F[Execução na ferramenta]
+    F --> G[Verificação proporcional]
+    G --> H[Handoff e worklog]
+    H -. próxima sessão .-> C
+~~~
 
-![Fluxo de funcionamento da orquestração com hierarquia, skills, hooks e DEV](docs/assets/runtime-flow.gif)
+## Capacidades atuais
 
-Durante o uso, a IA deve ler primeiro os contratos compactos, respeitar a hierarquia, escolher a menor skill útil, executar com hooks e registrar o que importa em `DEV/HANDOFF.md`, `DEV/VERIFY.md` e `DEV/WORKLOG.md` quando houver trabalho substancial.
+Além do fluxo padrão de instalação e execução, o snapshot atual oferece:
 
-### 3. Atualização Segura
+- contratos declarativos e opt-in para workflows, tarefas e workspaces, com etapas, eventos, gates humanos, retry manual, dependências, artefatos e isolamento por repositório;
+- locks determinísticos versionáveis e state local-only para retomar workflows com digest, gates humanos e proteção contra drift;
+- o perfil `phase-loop`, que organiza trabalhos maiores em `discuss`, `plan`, `execute`, `verify` e `ship` sem alterar o caminho padrão;
+- briefing econômico de contexto, roteamento por índices compactos e gates dedicados para validar a hierarquia e os artefatos de `DEV/`;
+- instalação, atualização, diagnóstico, dry-run, sincronização de skills e verificação multiplataforma;
+- integração global com Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Grok CLI, MiMo Code, Kimi Code, Windsurf e Antigravity;
+- telemetria desabilitada por padrão, memória opcional e controles para manter efeitos externos sujeitos à autorização humana.
 
-![Fluxo de atualização segura do Orquestrador Maestro](docs/assets/update-flow.gif)
+Os contratos de workflow são descritivos: não executam agentes, não criam integrações obrigatórias e não autorizam commit, push, publicação ou compartilhamento. Consulte os [workflows declarativos](docs/workflows.md), os [contratos de tarefa e workspace](docs/task-and-workspace-contracts.md) e o [histórico completo](CHANGELOG.md) para detalhes e migrações.
 
-O projeto público funciona como snapshot sanitizado. O mantenedor evolui a fonte local, exporta, valida, documenta no changelog, publica no GitHub/npm e o usuário atualiza com os comandos da CLI.
+### Lock e state de workflow
 
-## Instalação Recomendada
+Para um projeto consumidor, gere um lock revisável em `DEV/WORKFLOWS/` e inicialize o cursor privado em `.local/`:
 
-Última revisão pública deste README: 2026-07-19.
+~~~bash
+orquestrador-maestro workflow-lock generate --project-path . --task-id task/minha-tarefa --workflow plan-build-verify --out DEV/WORKFLOWS/minha-tarefa.lock.json
+orquestrador-maestro workflow-state init --project-path . --lockfile DEV/WORKFLOWS/minha-tarefa.lock.json
+orquestrador-maestro workflow-state validate --project-path . --task-id task/minha-tarefa
+orquestrador-maestro workflow-state get --project-path . --task-id task/minha-tarefa
+~~~
 
-Para instalar automaticamente no macOS ou Linux:
+O lock é versionável e não contém paths absolutos ou dados locais. O state fica em `.local/orquestrador/workflow-state/`, exige que `.local/` já esteja ignorado no Git e nunca é lido pelo briefing de contexto. Avanços atravessando gates humanos exigem aprovação explícita:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/FernandoBolzan/Orquestrador-Maestro/main/scripts/bootstrap-install.sh | bash
-```
+~~~bash
+orquestrador-maestro workflow-state approve --project-path . --task-id task/minha-tarefa --kind plan --by "nome-do-responsavel"
+orquestrador-maestro workflow-state advance --project-path . --task-id task/minha-tarefa --to-step plan
+~~~
 
-Para instalar automaticamente no Windows PowerShell:
+## Benchmark: medição de contexto
 
-```powershell
-irm https://raw.githubusercontent.com/FernandoBolzan/Orquestrador-Maestro/main/scripts/bootstrap-install.ps1 | iex
-```
+### Como rodar na sua máquina
 
-Os bootstraps detectam automaticamente problemas de permissão do npm, configuram um diretório do usuário, ajustam o `PATH`, instalam a CLI e executam `install` e `verify`. Não use `sudo` nem abra o PowerShell como Administrador para a instalação normal.
-
-Para atualizar depois:
-
-```bash
-npm update -g @iapro/orquestrador-maestro-cli
-orquestrador-maestro changelog
-orquestrador-maestro update
-orquestrador-maestro verify
-orquestrador-maestro doctor
-```
-
-No Linux e no macOS, `orquestrador-maestro doctor` exige `pwsh` ou `powershell` no `PATH`.
-
-### Grok CLI
-
-Depois de instalar o Grok CLI oficial, conecte-o ao Orquestrador:
-
-```bash
-# Linux/macOS
-bash scripts/install-grok-orquestrador.sh
-
-# Windows PowerShell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-grok-orquestrador.ps1
-```
-
-O instalador configura `~/.grok/config.toml`, aponta o Grok para as skills globais e mantém a mesma skill `skill-optimize-images` disponível. Valide com `grok inspect`.
-
-Se preferir Git/ZIP, use as seções de instalação completa abaixo. O npm é o caminho mais simples para quem só quer instalar e manter atualizado.
-
-## Modelo Mental
-
-- **Maestro**: o usuário define objetivo, limite, prioridade e autorizações.
-- **Orquestrador**: a IA executa seguindo regras, hierarquia, roteamento de skills, hooks e verificação.
-- **Skills**: playbooks especializados que entram só quando ajudam a tarefa.
-- **Hooks**: lembretes operacionais para segurança, documentação, economia de contexto e validação.
-- **DEV/**: memória operacional local do projeto, usada para reduzir repetição e economizar tokens.
-- **Snapshot público**: este repositório publica apenas a parte instalável e sanitizada, sem dados privados.
-
-## Sumário
-
-- [Iniciativa Grupo IAPro](#iniciativa-grupo-iapro)
-- [Requisitos e Compatibilidade](#requisitos-e-compatibilidade)
-- [Contribuição Da Comunidade](#contribuição-da-comunidade)
-- [Capacidades Atuais](#capacidades-atuais)
-- [Visão Geral](#visão-geral)
-- [Instalação Via npm](#instalação-via-npm)
-- [Como Funciona](#como-funciona)
-- [Hierarquia DEV Nos Projetos](#hierarquia-dev-nos-projetos)
-- [Atualizar Uma Instalação](#atualizar-uma-instalação)
-- [Segurança E Privacidade](#segurança-e-privacidade)
-- [Changelog](#changelog)
-
-## Iniciativa Grupo IAPro
-
-O Orquestrador Maestro é uma iniciativa do Grupo IAPro, uma comunidade de WhatsApp e Discord para quem está construindo, estudando e aplicando IA no trabalho real: automações, agentes, desenvolvimento, produto, operações e novos fluxos com ferramentas de IA.
-
-Participe da comunidade pelo link:
-
-[fernandobolzan.com/bio](https://www.fernandobolzan.com/bio)
-
-A proposta do projeto é compartilhar uma base prática e instalável para que mais pessoas consigam configurar suas IAs com hierarquia, skills, hooks, documentação local e boas práticas de segurança, sem depender de uma configuração privada de uma máquina específica.
-
-## Requisitos e Compatibilidade
-
-Para garantir que o Orquestrador Maestro funcione corretamente em seu ambiente, verifique os requisitos mínimos:
-
-- **Windows**: PowerShell 4.0 ou superior em Windows 10/11.
-- **Linux/macOS**: Bash 3.2 ou superior (padrão no macOS e na maioria das distribuições Linux).
-- **Sistemas Operacionais**: Windows 10/11, Linux (Ubuntu, Debian, CentOS, etc.) e macOS 10.15+.
-- **Node.js**: versão 18 ou superior para instalação via npm e uso da CLI. Quem instalar por Git/ZIP pode aplicar apenas os arquivos básicos sem Node.js, mas os comandos de gerenciamento exigem Node.js 18+.
-
-Caso você esteja utilizando uma versão muito antiga de algum SO que não suporte esses requisitos, os scripts de instalação podem apresentar erros de sintaxe ou comandos não encontrados.
-
-## Contribuição Da Comunidade
-
-O projeto evolui com contribuições da comunidade Grupo IAPro e de colaboradores externos. Os créditos, PRs, forks, referências e impactos técnicos estão organizados no [CHANGELOG.md](CHANGELOG.md).
-
-Para contribuir, consulte o [CONTRIBUTING.md](CONTRIBUTING.md). Ao concluir uma contribuição, registre também o crédito e a mudança correspondente no CHANGELOG.
-
-## Capacidades Atuais
-
-O Orquestrador Maestro atualmente oferece instalação e atualização multiplataforma, integração com Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Grok CLI, Windsurf e Antigravity, além de bootstrap para VS Code, GitHub Copilot, Continue, JetBrains AI Assistant, Aider e Cline.
-
-Também oferece roteamento de skills, hooks compactos, perfis de execução, subagentes opcionais, validação pública e de instalação, diagnóstico, telemetria desativada por padrão, sincronização de skills, catálogo canônico, documentação de privacidade e memória operacional `DEV/` com especificações, handoff, verificação e worklog compacto.
-
-O histórico detalhado das melhorias, pesquisas, decisões, contribuições e migrações está no [CHANGELOG.md](CHANGELOG.md). As pesquisas completas ficam em [docs/research/](docs/research/), enquanto as regras de atualização estão em [docs/update-flow.md](docs/update-flow.md).
-
-Para conferir novidades antes de atualizar, consulte o [CHANGELOG.md](CHANGELOG.md). Para propor melhorias, use o [CONTRIBUTING.md](CONTRIBUTING.md); contribuições da comunidade e seus impactos devem ser registradas no changelog.
-
-Esta evolução também incorpora uma dica do Eduardo Queiroz, do Grupo IAPro, sobre o fluxo de desenvolvimento assistido por IA de Matt Pocock, recomendado por uma desenvolvedora da Microsoft.
-
-## Visão Geral
-
-O Orquestrador Maestro é uma camada portátil de instruções para fazer várias IAs trabalharem com o mesmo contrato operacional no computador do usuário. Ele não é uma IA nova, nem substitui Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Windsurf, Continue, JetBrains AI Assistant, Aider ou Cline. Ele instala arquivos que essas ferramentas conseguem ler para padronizar:
-
-- onde a IA busca regras;
-- como ela identifica o papel do usuário como Maestro;
-- como escolhe skills sem carregar contexto demais;
-- quando deve usar hooks, verificação, docs locais e agentes auxiliares;
-- onde registra memória curta do projeto para economizar tokens;
-- quais arquivos nunca devem ser publicados.
-
-A ideia prática é simples: a pessoa baixa este repositório, executa o instalador e recebe a mesma estrutura base no próprio home: `%USERPROFILE%` no Windows ou `$HOME` no Linux/macOS. Os placeholders são trocados para o usuário que está instalando. O pacote foi preparado para publicação, então não deve conter tokens, logs, caches, memórias locais, backups ou caminhos reais da máquina fonte.
-
-## Para Quem Serve
-
-Este repositório é útil para quem quer:
-
-- configurar um ambiente de IA local com regras consistentes;
-- compartilhar uma base de skills e hooks sem expor dados pessoais;
-- usar Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Windsurf, VS Code, GitHub Copilot, Continue, JetBrains AI Assistant, Aider e Cline com a mesma hierarquia;
-- fazer agentes lerem a pasta `DEV/` dos projetos antes de gastar tokens em exploração longa;
-- manter um padrão repetível de instalação em qualquer usuário Windows, Linux ou macOS;
-- evoluir skills localmente e depois publicar um snapshot sanitizado.
-
-## Download
-
-Clone com Git:
-
-```bash
-git clone https://github.com/FernandoBolzan/Orquestrador-Maestro.git
+~~~bash
+# Clonar o repositório
+git clone https://github.com/IAPro-Community/Orquestrador-Maestro.git
 cd Orquestrador-Maestro
-```
 
-Download em ZIP:
+# Rodar todos os testes
+npm test
 
-[Baixar ZIP da branch main](https://github.com/FernandoBolzan/Orquestrador-Maestro/archive/refs/heads/main.zip)
+# Rodar o benchmark real (requer API keys)
+node benchmarks/real-ai-benchmark.js
 
-Se baixar como ZIP, extraia a pasta antes de executar os comandos abaixo.
+# Ver resultados
+cat benchmarks/results/real/real-ai-benchmark-report.json
+~~~
 
-## Instalação Via npm
+### O que esta medição demonstra
 
-Também é possível distribuir o Orquestrador Maestro como pacote npm:
+Existem dois tipos de benchmark:
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/FernandoBolzan/Orquestrador-Maestro/main/scripts/bootstrap-install.sh | bash
-```
+- **Sintético/infraestrutura** (`npm test`): valida cenários com fixtures locais. Não executa modelo de IA nem coleta tokens de provider.
+- **Provider API smoke** (`node benchmarks/real-ai-benchmark.js`): chama APIs reais (Anthropic/OpenAI) usando `ANTHROPIC_API_KEY` e `OPENAI_API_KEY`. Coleta tokens reportados pelo provider. Não é elegível para afirmações de performance do Maestro (`publicClaimEligible: false`).
 
-Depois instale no home do usuário:
+Ambos os tipos não medem qualidade de código, produtividade, custo ou redução de bugs. Os resultados variam com o commit, ambiente e cenários; portanto não devem ser usados como promessa geral de desempenho.
 
-```bash
+Os cenários e o código estão em [`benchmarks/scenarios/`](benchmarks/scenarios/) e [`benchmarks/real-ai-benchmark.js`](benchmarks/real-ai-benchmark.js). Os resultados do provider smoke são gerados localmente em `benchmarks/results/ai-real/` e não fazem parte do pacote público.
+
+### Smoke test opcional com xKiro
+
+Para validar uma integração OpenAI-compatible sem incluir credenciais no código, configure `XKIRO_API_KEY` no ambiente ou em um `.env` local e execute:
+
+~~~bash
+XKIRO_MODEL=qwen/qwen3-vl-plus:free npm run test:xkiro
+~~~
+
+O script usa `qwen/qwen3-vl-plus:free` por padrão, aceita `XKIRO_MODEL` para outro modelo e exibe somente status, modelo, resposta e uso. Ele não mede qualidade de agentes, produtividade ou economia. Consulte a [documentação de Chat Completions do xKiro](https://docs.xkiro.com/api/chat-completions/) para o contrato da API.
+
+## Comece em dois minutos
+
+### Instalação recomendada por npm
+
+Requer Node.js 18 ou superior.
+
+~~~bash
+npm install -g @iapro/orquestrador-maestro-cli@latest
 orquestrador-maestro install
 orquestrador-maestro verify
-```
+~~~
 
-Para atualizar:
+O pacote npm instala a CLI. Os arquivos do usuário só são alterados quando install ou update é executado.
 
-```bash
-npm update -g @iapro/orquestrador-maestro-cli
-orquestrador-maestro changelog
-orquestrador-maestro update
-orquestrador-maestro verify
-orquestrador-maestro doctor
-```
+### Instalação direta pelo bootstrap
 
-O pacote instala o comando `orquestrador-maestro`, mas não altera o home automaticamente durante o `npm install`. A alteração acontece quando o usuário roda `orquestrador-maestro install` ou `orquestrador-maestro update`, o que deixa o fluxo mais auditável e seguro.
+Windows PowerShell:
 
-Na versão atual, `orquestrador-maestro update` também migra instalações antigas: remove skills excedentes das raízes nativas, restaura o conjunto mínimo gerenciado e preserva o excedente em `.orquestrador/skill-library/disabled-native`.
+~~~powershell
+irm https://raw.githubusercontent.com/IAPro-Community/Orquestrador-Maestro/main/scripts/bootstrap-install.ps1 | iex
+~~~
 
-O CLI tem suporte a telemetria anônima para medir comandos como `install`, `update`, `verify`, `doctor`, `changelog`, `dry-run` e `uninstall`. Ela fica desabilitada por padrão e só envia eventos depois de o usuário configurar um endpoint e habilitar explicitamente. Configurações antigas sem consentimento versionado são tratadas como desabilitadas até o usuário rodar `orquestrador-maestro telemetry enable` novamente. Ela não envia telefone, nome de usuário, caminho local, prompts, logs, tokens ou conteúdo de projeto.
+Linux ou macOS:
 
-Para habilitar:
+~~~bash
+curl -fsSL https://raw.githubusercontent.com/IAPro-Community/Orquestrador-Maestro/main/scripts/bootstrap-install.sh | bash
+~~~
 
-```bash
-orquestrador-maestro telemetry endpoint https://seu-dominio.example/api/orquestrador-telemetry
-orquestrador-maestro telemetry enable
-orquestrador-maestro telemetry test
-```
+Para uma instalação normal, não use sudo nem abra o PowerShell como Administrador. Os bootstraps configuram a instalação no perfil do usuário, ajustam o PATH, instalam a CLI e executam a verificação.
 
-Atalho equivalente:
-
-```bash
-orquestrador-maestro telemetry enable --endpoint https://seu-dominio.example/api/orquestrador-telemetry
-```
-
-Para desabilitar:
-
-```bash
-orquestrador-maestro telemetry disable
-```
-
-Guia completo: [docs/npm-package.md](docs/npm-package.md).
-
-## Instalação Rápida
-
-Prévia sem alterar arquivos:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -DryRun
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh --dry-run
-```
-
-### Windows
-
-Abra o PowerShell dentro da pasta do repositório e rode:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-Depois verifique:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-install.ps1
-```
-
-### Linux/macOS
-
-Abra o terminal dentro da pasta do repositório e rode:
-
-```bash
-bash install.sh
-```
-
-Depois verifique:
-
-```bash
-bash scripts/verify-install.sh
-```
-
-Se a verificação passar, as ferramentas instaladas já passam a ter pontos de entrada globais apontando para o Orquestrador Maestro.
-
-## Instalação Guiada Por IA
-
-Você também pode pedir para uma IA instalar o pacote. Use um pedido assim:
+### Instalação a partir do clone
 
 Windows:
 
-```text
-Baixe ou clone https://github.com/FernandoBolzan/Orquestrador-Maestro,
-execute install.ps1 no PowerShell, rode scripts/verify-install.ps1
-e confirme que o Orquestrador Maestro foi instalado no meu %USERPROFILE%.
-Não exponha tokens, logs, caches, arquivos privados ou caminhos de outra máquina.
-```
+~~~powershell
+git clone https://github.com/IAPro-Community/Orquestrador-Maestro.git
+Set-Location Orquestrador-Maestro
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-install.ps1
+~~~
 
-Linux/macOS:
+Linux ou macOS:
 
-```text
-Baixe ou clone https://github.com/FernandoBolzan/Orquestrador-Maestro,
-execute install.sh com Bash, rode scripts/verify-install.sh
-e confirme que o Orquestrador Maestro foi instalado no meu $HOME.
-Não exponha tokens, logs, caches, arquivos privados ou caminhos de outra máquina.
-```
+~~~bash
+git clone https://github.com/IAPro-Community/Orquestrador-Maestro.git
+cd Orquestrador-Maestro
+bash install.sh
+bash scripts/verify-install.sh
+~~~
 
-A IA deve usar o usuário atual da máquina dela. Ela não deve copiar caminhos absolutos de outra pessoa.
+Antes de gravar qualquer arquivo, use uma prévia:
 
-## O Que A Instalação Cria
+~~~powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -DryRun
+~~~
 
-Observação de arquitetura: as bibliotecas grandes ficam em `.orquestrador/skill-library/`, enquanto as raízes nativas de `.codex`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf`, `.agents` e `.antigravity-skills` ficam enxutas para reduzir o custo fixo de contexto por sessão.
+~~~bash
+bash install.sh --dry-run
+~~~
 
-Por padrão, o instalador copia o núcleo, skills, agentes, prompts e perfis de ferramentas para o home do usuário atual.
+## Como o Orquestrador funciona
 
-| Destino Windows | Destino Linux/macOS | Função |
-|---|---|---|
-| `%USERPROFILE%\.orquestrador` | `$HOME/.orquestrador` | Núcleo canônico com regras, Maestro, hooks, roteadores, índices, scripts, skills canônicas e bibliotecas offload. |
-| `%USERPROFILE%\AGENTS.md` | `$HOME/AGENTS.md` | Contrato global que Codex e outros agentes devem ler como regra de usuário. |
-| `%USERPROFILE%\.codex\skills` | `$HOME/.codex/skills` | Conjunto nativo enxuto: skills canônicas, workflows OMX essenciais e `.system`. |
-| `%USERPROFILE%\.codex\agents` | `$HOME/.codex/agents` | Perfis de subagentes Codex. |
-| `%USERPROFILE%\.codex\prompts` | `$HOME/.codex/prompts` | Prompts de papéis usados por agentes. |
-| `%USERPROFILE%\.agents\skills` | `$HOME/.agents/skills` | Raiz legada com apenas as skills canônicas espelhadas. |
-| `%USERPROFILE%\.claude\skills` | `$HOME/.claude/skills` | Raiz nativa mínima para Claude Code, sincronizada a partir do manifesto canônico. |
-| `%USERPROFILE%\.opencode\skills` | `$HOME/.opencode/skills` | Raiz nativa mínima para OpenCode. |
-| `%USERPROFILE%\.cursor\skills` | `$HOME/.cursor/skills` | Raiz nativa mínima para Cursor. |
-| `%USERPROFILE%\.gemini\skills` | `$HOME/.gemini/skills` | Raiz nativa mínima para Gemini CLI. |
-| `%USERPROFILE%\.windsurf\skills` | `$HOME/.windsurf/skills` | Raiz nativa mínima para Windsurf. |
-| `%USERPROFILE%\.antigravity-skills\skills` | `$HOME/.antigravity-skills/skills` | Raiz nativa mínima para ambientes compatíveis. |
-| `%USERPROFILE%\.orquestrador\skill-library\community-skills` | `$HOME/.orquestrador/skill-library/community-skills` | Biblioteca comunitária completa, fora das raízes que as IAs escaneiam automaticamente. |
-| `%USERPROFILE%\.orquestrador\skill-library\codex-skills` | `$HOME/.orquestrador/skill-library/codex-skills` | Catálogo completo de skills OMX/Codex para consulta e migração sem inflar o contexto nativo. |
-| `%USERPROFILE%\.orquestrador\skill-library\disabled-native` | `$HOME/.orquestrador/skill-library/disabled-native` | Skills antigas retiradas das raízes nativas para reduzir tokens sem apagar trabalho do usuário. |
-| `%USERPROFILE%\.ai-standards` | `$HOME/.ai-standards` | Standards portáteis usados pelo Antigravity. |
-| `%USERPROFILE%\.orquestrador-public-backups` | `$HOME/.orquestrador-public-backups` | Backups somente dos arquivos gerenciados que o instalador substitui; sessões, autenticação e caches das ferramentas não são copiados. |
+O sistema tem cinco camadas:
 
-O instalador também cria perfis textuais e entrypoints para ferramentas. Eles são os arquivos que fazem o Orquestrador ser chamado por padrão.
+| Camada | Responsabilidade | Fonte principal |
+| --- | --- | --- |
+| Contrato global | Define hierarquia, segurança, qualidade e persistência | .orquestrador/rules.md, maestro.md, PERSISTENCE.md |
+| Entrada da ferramenta | Faz a IA encontrar o contrato no formato que ela entende | AGENTS.md, CLAUDE.md, GEMINI.md e equivalentes |
+| Contexto do projeto | Guarda arquitetura, decisões, estado, verificações e próximo passo | AGENTS.md do projeto e DEV/ |
+| Roteamento | Escolhe perfil, skill principal e combinações permitidas | SKILLS_INDEX.md, SKILLS_ROUTER.json, aliases e chains |
+| Execução e manutenção | Instala, sincroniza, verifica, diagnostica e compacta memória | CLI, scripts, hooks e perfis |
 
-| Ferramenta | Entry points instalados |
-|---|---|
-| Codex | `.codex\AGENTS.md`, `.codex\skills`, `.codex\agents`, `.codex\prompts`, e o `AGENTS.md` global do usuário. |
-| OpenCode | `.config\opencode\AGENTS.md`, `.config\opencode\opencode.json`, `.opencode\SYSTEM.md`, `.opencode\rules.md`, `.opencode\maestro.md`, `.opencode\hooks.md`, `.opencode\SKILLS_INDEX.md`, `.opencode\default-skill.json`. |
-| Claude Code | `.claude\CLAUDE.md`, `.claude\SYSTEM_PROMPT.md`, `.claude\hooks.md`, `.claude\skills`. |
-| Cursor | `.cursor\AGENTS.md`, `.cursor\rules\orquestrador-maestro.mdc`, `.cursor\hooks.md`, `.cursor\skills`. |
-| Gemini CLI | `.gemini\GEMINI.md`, `.gemini\hooks.md`, `.gemini\skills`. |
-| Windsurf | `.codeium\windsurf\memories\global_rules.md`, `.windsurf\hooks.md`, `.windsurf\skills`. |
-| Antigravity | `antigravity-rules.json`, `.antigravity\antigravity.json`, `.antigravity\settings.json`, `.ai-standards`, `.antigravity-skills\skills`. |
+O fluxo de leitura recomendado é:
 
-Arquitetura nova de contexto:
+~~~text
+rules.md → maestro.md → PERSISTENCE.md → AGENTS.md do usuário
+→ AGENTS.md do projeto → DEV/ → skill específica
+~~~
 
-- bibliotecas grandes ficam em `.orquestrador/skill-library/`;
-- as pastas nativas de cada software ficam pequenas por padrão;
-- `sync-skills` instala o mínimo necessário e offloada o excesso das raízes nativas;
-- isso reduz o custo fixo por sessão em ferramentas que listam todas as skills no prompt do sistema.
+O AGENTS.md mais próximo pode acrescentar regras do projeto. Se houver conflito, a instrução local do projeto prevalece sobre a global, respeitando o contrato de segurança e as regras de edição do repositório.
 
-No Linux/macOS, os mesmos entrypoints são instalados com `/` sob `$HOME`, por exemplo `$HOME/.codex/AGENTS.md`, `$HOME/.config/opencode/opencode.json` e `$HOME/.ai-standards`.
+### O que acontece durante uma tarefa
 
-Quando algum arquivo de destino já existe, o instalador faz backup antes de substituir, exceto se você usar flags que mudam esse comportamento.
+1. A IA observa o pedido, o projeto atual e as autorizações disponíveis.
+2. Lê o contrato global e as instruções do projeto.
+3. Consulta o índice e o roteador de skills, sem carregar o catálogo inteiro.
+4. Escolhe o menor perfil e a menor combinação de skills capazes de resolver a tarefa.
+5. Executa as alterações dentro do escopo autorizado.
+6. Verifica com teste, lint, build, validação, inspeção ou outra evidência adequada.
+7. Relata mudanças, verificações e riscos restantes.
+8. Em trabalho substancial, atualiza DEV/WORKLOG.md, DEV/VERIFY.md e DEV/HANDOFF.md.
 
-## Como Funciona
+Para trabalhos maiores, o perfil opt-in `phase-loop` explicita as fases `discuss`, `plan`, `execute`, `verify` e `ship`. A versão 2 dos schemas preserva os campos legados e acrescenta eventos, gates humanos, retry manual e referências de workspace. Paralelismo exige isolamento explícito; commit, push, publicação e compartilhamento permanecem gates separados.
 
-O Orquestrador Maestro trabalha por hierarquia. A IA não deve sair abrindo tudo. Ela deve ler primeiro os contratos compactos, escolher o menor conjunto de contexto necessário e só então executar.
+## Economia de contexto
 
-Hoje o fluxo tem duas camadas:
+O projeto mantém as bibliotecas completas de skills instaladas, mas evita colocar todo esse conteúdo nas raízes que as ferramentas enumeram automaticamente.
 
-- **camada global**: `rules.md` -> `maestro.md` -> `AGENTS.md` -> router de skills;
-- **camada de projeto**: `DEV/INDEX.md` -> `DEV/HANDOFF.md` -> `DEV/CONTEXT.md` -> `DEV/SPECS/ACTIVE.md` -> detalhes da tarefa -> `DEV/WORKLOG.md` só se necessário.
+- ~/.orquestrador/skills: fonte canônica e catálogo operacional.
+- ~/.orquestrador/skill-library/community-skills: biblioteca comunitária completa.
+- ~/.orquestrador/skill-library/codex-skills: workflows e skills do Codex/OMX.
+- Raízes nativas como ~/.codex/skills, ~/.claude/skills, ~/.cursor/skills e equivalentes: conjunto enxuto sincronizado para descoberta rápida.
 
-```mermaid
-flowchart LR
-  A["Pedido do Maestro"] --> B["rules.md + maestro.md + AGENTS.md"]
-  B --> C["DEV/INDEX.md"]
-  C --> D["DEV/HANDOFF.md"]
-  D --> E["DEV/CONTEXT.md"]
-  E --> F["DEV/SPECS/ACTIVE.md"]
-  F --> G["Router de skills"]
-  G --> H["Execução"]
-  H --> I["DEV/VERIFY.md"]
-  I --> J["DEV/WORKLOG.md"]
-  J --> K["check-dev-gates"]
-  K --> L["compact-worklog"]
-  L --> D
-```
+O princípio é carregar primeiro índices e roteadores compactos e só abrir a SKILL.md da tarefa. Isso reduz custo de contexto, evita decisões conflitantes e mantém o comportamento previsível.
 
-### Hierarquia De Leitura
+## Memória de projeto com DEV/
 
-A ordem esperada é:
+DEV/ é uma convenção opcional para preservar contexto operacional no próprio projeto. Ela não é um banco de dados nem uma memória privada do Orquestrador; são arquivos versionáveis e legíveis por pessoas e ferramentas diferentes.
 
-1. `%USERPROFILE%\.orquestrador\rules.md` ou `$HOME/.orquestrador/rules.md`
-2. `%USERPROFILE%\.orquestrador\maestro.md` ou `$HOME/.orquestrador/maestro.md`
-3. `%USERPROFILE%\AGENTS.md` ou `$HOME/AGENTS.md`
-4. `AGENTS.md` mais próximo do projeto atual
-5. `DEV/README.md` ou `DEV/INDEX.md`
-6. `DEV/HANDOFF.md`
-7. `DEV/CONTEXT.md`
-8. `DEV/SPECS/ACTIVE.md`
-9. documentos específicos da tarefa
-10. `DEV/WORKLOG.md` apenas se handoff, contexto e spec não bastarem
-11. skill ou prompt específico da tarefa
+Crie a estrutura:
 
-Essa ordem separa três tipos de regra:
+~~~bash
+orquestrador-maestro init-dev --project-path .
+~~~
 
-- regras globais do usuário;
-- regras locais do projeto;
-- instruções técnicas da skill escolhida.
+Arquivos principais:
 
-Se houver conflito entre documentos, a regra mais específica e mais próxima da tarefa deve orientar a execução, sem ignorar restrições de segurança e privacidade.
+| Arquivo | Para que serve |
+| --- | --- |
+| DEV/README.md ou DEV/INDEX.md | Entrada e mapa da documentação |
+| DEV/HANDOFF.md | Estado atual, riscos e próxima ação |
+| DEV/CONTEXT.md | Contexto vivo, comandos e decisões |
+| DEV/SPECS/ACTIVE.md | Escopo, critérios e plano de verificação da tarefa ativa |
+| DEV/VERIFY.md | Evidências e resultados das verificações |
+| DEV/WORKLOG.md | Histórico curto do trabalho substancial |
+| DEV/ARCHITECTURE.md, API/, ADR/, RUNBOOKS/ | Detalhes por domínio, quando necessários |
 
-### Papel Orquestrador/Maestro
+Para manter a memória curta e útil:
 
-O modelo de trabalho é:
+~~~bash
+orquestrador-maestro check-dev-gates --project-path . --max-entries 12 --strict
+orquestrador-maestro compact-worklog --project-path . --keep 12
+~~~
 
-- a IA atua como Orquestrador;
-- o usuário atua como Maestro;
-- o Orquestrador executa, roteia, verifica e reporta;
-- o Maestro decide objetivos, autoriza escopos sensíveis e aprova publicação.
+A IA deve começar pelos arquivos compactos e abrir apenas os documentos relevantes para a tarefa. Ao trocar de ferramenta ou encerrar um trabalho importante, o estado deve ficar nos arquivos DEV/, e não apenas no histórico da conversa.
 
-Na prática, isso evita que a IA invente um processo novo a cada projeto. Ela passa a seguir um ciclo padronizado que reduz ambiguidade, trava looping e mantém o worklog leve.
+## Skills, perfis e hooks
 
-### Ciclo Determinístico De Projeto
+### Skills
 
-O combo operacional agora é: `spec + handoff + verify + worklog + scripts + gate`.
+Skills são playbooks especializados: por exemplo, revisão de código, debugging, segurança, SaaS, pagamentos, RLS, integrações, processamento de mídia e pesquisa. O roteador usa o pedido, aliases e evidências do projeto para escolher uma skill principal.
 
-1. **Criar a estrutura** com `orquestrador-maestro init-dev --project-path .` quando o projeto ainda não tiver `DEV/`.
-2. **Fixar a tarefa** em `DEV/SPECS/ACTIVE.md`: objetivo, escopo, aceite e plano de verificação.
-3. **Executar com contexto mínimo**: handoff, contexto, spec ativa e a skill mínima necessária.
-4. **Registrar evidência** em `DEV/VERIFY.md`: comandos, resultado e pendências.
-5. **Atualizar o snapshot** em `DEV/HANDOFF.md`: o que mudou, o que foi verificado e o próximo passo.
-6. **Adicionar só o resumo** em `DEV/WORKLOG.md`: entrada curta, não transcrição longa.
-7. **Rodar o gate** com `orquestrador-maestro check-dev-gates --project-path . --max-entries 12 --strict` quando a tarefa for longa ou estiver pronta para handoff.
-8. **Compactar o histórico** com `orquestrador-maestro compact-worklog --project-path . --keep 12` quando o worklog crescer demais.
-
-### Scripts E Gate
-
-Os scripts existem para transformar a convenção em comportamento verificável:
-
-- `init-dev` cria a hierarquia mínima já no formato certo.
-- `check-dev-gates` impede que o projeto siga sem `spec`, `handoff`, `verify` ou com `WORKLOG` inflado.
-- `compact-worklog` move contexto frio para `DEV/HANDOFFS/WORKLOG_ARCHIVE.md` e mantém só o caminho quente de leitura.
-
-### Por Que Isso Reduz Tokens
-
-- `HANDOFF.md` concentra o snapshot atual e evita reler uma conversa longa.
-- `SPECS/ACTIVE.md` reduz ambiguidade e para o projeto de rodar em círculos.
-- `VERIFY.md` evita rediscutir se algo foi realmente validado.
-- `WORKLOG.md` fica curto por design; o histórico velho sai do caminho padrão de leitura.
-- `check-dev-gates` transforma a convenção em verificação objetiva.
-- `compact-worklog` preserva histórico sem deixar ele ocupar o contexto base da sessão.
-
-## Roteamento De Skills
-
-O roteamento foi desenhado para economizar tokens. Em vez de carregar toda a biblioteca, a IA deve usar os arquivos compactos do Orquestrador:
+Arquivos de controle:
 
 | Arquivo | Função |
-|---|---|
-| `SKILLS_INDEX.md` | Índice humano curto para descobrir grupos de skills. |
-| `SKILL_ALIASES.json` | Mapeia termos do usuário para skills canônicas. |
-| `SKILLS_ROUTER.json` | Catálogo operacional com gatilhos, caminhos, custo e segurança. |
-| `SKILL_CHAINS.json` | Define combinações permitidas de skills quando uma tarefa cruza vários domínios. |
-| `SKILL_EXECUTION_PROFILES.json` | Define perfis de execução: `fast`, `standard`, `deep`, `multiagent`, `saas` e `security`. |
-| `SKILL_USAGE_SCHEMA.json` | Esquema opcional para registrar uso de skills em JSONL. |
+| --- | --- |
+| SKILLS_INDEX.md | Índice compacto para descobrir os próximos arquivos |
+| SKILLS_ROUTER.json | Gatilhos, caminhos, custo e perfil de segurança |
+| SKILL_ALIASES.json | Termos alternativos que apontam para skills |
+| SKILL_CHAINS.json | Skills que podem ser combinadas após a principal |
+| SKILL_EXECUTION_PROFILES.json | Perfis fast, standard, deep, multiagent, saas e security |
+| SKILL_USAGE_SCHEMA.json | Formato opcional para registrar o uso de skills |
 
-Exemplo:
+Perfis de execução:
+
+| Perfil | Uso | Característica |
+| --- | --- | --- |
+| fast | Ajustes pequenos e respostas diretas | Uma skill, sem delegação |
+| standard | Maioria das tarefas | Até três skills, contexto progressivo |
+| deep | Mudanças amplas ou de maior risco | Até cinco skills, pode delegar |
+| multiagent | Frentes independentes ou pedido explícito de agentes | Execução paralela com integração central |
+| saas | SaaS, tenancy, pagamentos e admin | Gates de projeto e segurança |
+| security | Auditoria defensiva autorizada | Requer escopo autorizado |
+
+### Hooks
+
+No Orquestrador, hooks são lembretes e verificações operacionais. Eles orientam preflight, roteamento, orçamento de contexto, sincronização, persistência e conclusão. Alguns perfis também instalam hooks de Git, mas isso é separado e deve ser autorizado no repositório correspondente.
+
+Um hook deve apontar para o contrato central; não deve duplicar um catálogo inteiro de skills. Assim, Codex, Claude, OpenCode, Cursor, Gemini, Grok, MiMo Code, Kimi Code, Windsurf e Antigravity seguem a mesma fonte de verdade.
+
+## O que é instalado
+
+O instalador usa o home do usuário atual: %USERPROFILE% no Windows e $HOME no Linux/macOS.
+
+| Destino | Conteúdo |
+| --- | --- |
+| .orquestrador/ | Núcleo canônico: regras, roteadores, hooks, scripts, skills e bibliotecas |
+| AGENTS.md | Contrato global que agentes compatíveis podem ler |
+| .codex/skills, .codex/agents, .codex/prompts | Skills, agentes e prompts nativos do Codex |
+| .claude, .opencode, .cursor, .gemini, .windsurf, .mimo, .kimi-code, .grok | Entrypoints, regras, hooks, configurações e skills mínimas |
+| .antigravity-skills e .ai-standards | Compatibilidade e padrões portáveis do Antigravity |
+| .orquestrador-public-backups/ | Backups dos arquivos gerenciados que foram substituídos |
+
+O instalador não instala modelos, logins, credenciais, chaves de API, sessões ou configurações privadas das ferramentas.
+
+## Ferramentas suportadas
+
+O pacote prepara integração global para Codex, Claude Code, OpenCode, Cursor, Gemini CLI, Grok CLI, MiMo Code, Kimi Code, Windsurf e Antigravity. Cada ferramenta continua responsável por seu próprio runtime, login, modelo, extensão e credenciais.
+
+Para VS Code/GitHub Copilot, Continue, JetBrains AI Assistant, Aider, Cline e outros fluxos baseados no projeto, o caminho suportado é inicializar DEV/ no repositório e usar os arquivos de instrução/entrypoint criados pelo bootstrap quando aplicável.
+
+### Adaptadores de ferramentas em alta
+
+O Maestro também possui um catálogo declarativo para ferramentas AI-native e renderização segura por projeto. A primeira fatia executável cobre Junie CLI, Goose e OpenHands; Continue, Cline, GitHub Copilot CLI, Ollama e LM Studio já aparecem no catálogo para inspeção e serão habilitados gradualmente.
 
 ```text
-Pedido: "Crie um SaaS com login, planos, Stripe, painel admin e limites por assinatura."
-
-Fluxo esperado:
-1. escolher perfil saas;
-2. selecionar skill-saas-factory como skill principal;
-3. chamar skill-stripe-integration, skill-saas-admin-dashboard e skill-saas-core-limits se a tarefa exigir;
-4. aplicar skill-supabase-rls ou skill-saas-security-scan quando houver banco, tenancy ou segurança;
-5. verificar build, tipos, testes e riscos do fluxo de pagamento.
+orquestrador-maestro adapters list
+orquestrador-maestro adapters paths junie
+orquestrador-maestro adapters render junie --project-path . --dry-run
+orquestrador-maestro adapters render junie --project-path . --apply
 ```
+
+O `render` usa simulação por padrão; `--apply` é obrigatório para gravar. Ele cria somente arquivos de instrução, skills e agentes do projeto, preservando arquivos existentes. Não instala a ferramenta, não escolhe modelo ou provedor e não gerencia login, credenciais, MCP, extensões, sessões, cache, logs ou histórico. OpenHands continua exigindo seu ambiente suportado, incluindo WSL no Windows.
 
 ## Perfis De Execução
 
@@ -639,349 +486,295 @@ Se estiver atualizando a instalação local do usuário, sincronize os espelhos:
 powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.orquestrador\sync-skills.ps1" -Apply
 ```
 
-Antes de publicar o snapshot, valide o pacote público:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-public.ps1
-git diff -- .
-```
-
-## Hooks
-
-Neste repositório, "hook" significa uma regra ou ponto de execução que muda o comportamento da IA ou de uma ferramenta. Alguns hooks são instruções em Markdown. Outros são scripts instaláveis.
-
-Os hooks das ferramentas devem continuar pequenos. O roteamento real de gatilhos e skills vive em `SKILL_ALIASES.json`, `SKILLS_ROUTER.json` e `SKILL_CHAINS.json`, não em catálogos longos dentro de cada `hooks.md`.
-
-| Hook | Onde fica | Lógica |
-|---|---|---|
-| Preflight | `orquestrador/hooks.md` | Antes de trabalho amplo, ler contratos, projeto, DEV e roteadores. |
-| Skill routing | `SKILL_ALIASES.json`, `SKILLS_ROUTER.json`, `SKILL_CHAINS.json` | Escolher a menor skill suficiente para a tarefa. |
-| Token budget | `orquestrador/hooks.md` | Evitar carregar catálogos grandes; abrir apenas arquivos necessários. |
-| Verification | `orquestrador/hooks.md` | Verificar antes de declarar conclusão. |
-| Project DEV | `PROJECT_DEV_HIERARCHY.md` | Ler memória local do projeto e atualizar `DEV/WORKLOG.md` após trabalho substancial. |
-| Tool entrypoints | `PROGRAM_ENTRYPOINTS.json`, `tool-profiles/` | Fazer cada ferramenta encontrar o Orquestrador no caminho nativo dela, com hooks compactos e roteamento centralizado. |
-| Skill sync | `sync-skills.ps1`, `sync-skills.sh` | Espelhar skills canônicas para `.codex`, `.agents`, `.claude`, `.opencode`, `.cursor`, `.gemini`, `.windsurf` e `.antigravity-skills`, além de manter essas raízes enxutas. |
-| Usage log | `SKILL_USAGE_SCHEMA.json` | Padrão opcional para registrar qual skill foi escolhida, aberta e verificada. |
-| Security Git hooks | `skill-security-hooks/scripts/install-security-hooks.cmd` | Instalar `pre-commit` e `pre-push` defensivos em repositórios autorizados. |
-
-## Hierarquia DEV Nos Projetos
-
-A pasta `DEV/` é a memória operacional local de cada projeto. Ela não é a pasta `DEV/` deste clone público. Neste repositório, `DEV/` local é ignorada pelo Git. A convenção publicada fica em [docs/project-dev-hierarchy.md](docs/project-dev-hierarchy.md) e nos scripts.
+## Arquitetura
 
-Estrutura recomendada:
-
-```text
-DEV/
-  README.md
-  INDEX.md
-  HANDOFF.md
-  CONTEXT.md
-  SPECS/
-    ACTIVE.md
-  WORKLOG.md
-  VERIFY.md
-  ARCHITECTURE.md
-  DECISIONS.md
-  ADR/
-  API/
-  DATABASE/
-  RUNBOOKS/
-  TASKS/
-  RESEARCH/
-  HANDOFFS/
-    WORKLOG_ARCHIVE.md
-```
-
-Ordem de leitura dentro de um projeto:
-
-1. `AGENTS.md` do projeto, se existir.
-2. `DEV/README.md` ou `DEV/INDEX.md`.
-3. `DEV/HANDOFF.md`.
-4. `DEV/CONTEXT.md`.
-5. `DEV/SPECS/ACTIVE.md`.
-6. documentos específicos da tarefa.
-7. `DEV/WORKLOG.md` só quando os arquivos curtos não bastarem.
-8. skills globais do Orquestrador.
+![Architecture Overview](docs/diagrams/architecture-overview.svg)
 
-A IA não deve carregar a pasta `DEV/` inteira por padrão. Ela deve usar os índices para economizar tokens.
+### Componentes Principais
 
-Depois de trabalho substancial, a IA deve atualizar `DEV/VERIFY.md`, `DEV/HANDOFF.md` e registrar uma entrada curta em `DEV/WORKLOG.md`:
+| Componente | Descrição |
+|------------|-----------|
+| **Git Context Resolver** | Resolve repository, workspace, branch, detached, head commit em uma única chamada |
+| **Task Classifier** | Classifica intent em trivial/bounded/complex/resumed/investigation com NFD normalization |
+| **Visibility Policy** | Filtra e rankeia observações por scope (repository → workspace → branch) |
+| **Concurrency Lock** | PID-based lock com identity verification e liveness check |
+| **Episodic Memory** | JSONL store com search, timeline, consolidation, retention, prune |
+| **Context Brief** | Monta briefing com DEV/ files, memory observations, e budget trimming |
+| **Adapter Layer** | Integração scope-aware com Codex, Claude, OpenCode, Goose, Junie, OpenHands, xKiro |
+| **Benchmark Engine** | 6 cenários × 3 condições × 5 repetições com evidence gate |
 
-```text
-## YYYY-MM-DD - Título curto
+### Memory Scopes
 
-- Spec: `DEV/SPECS/ACTIVE.md` ou documento equivalente
-- Changed: caminhos ou areas mexidas
-- Why: uma frase
-- Verified: comando ou checagem manual
-- Risks: so riscos ativos
-- Next context: so o que a proxima IA precisa saber
-```
+![Memory Scopes](docs/diagrams/memory-scopes.svg)
 
-Para criar `DEV/` em um projeto:
+As observações são automaticamente escopadas por Repository → Workspace → Branch. A política de visibilidade filtra e rankeia por scope mais específico, com boost para observações verificadas.
 
-```bash
-orquestrador-maestro init-dev --project-path /caminho/do/projeto
-```
+### Benchmark Flow
 
-Ou pelos scripts locais:
+![Benchmark Flow](docs/diagrams/benchmark-flow.svg)
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-project-dev.ps1 -ProjectPath "C:\caminho\do\projeto"
-```
+O benchmark compara 3 condições (Vanilla, Maestro Core, Maestro Memory) em 6 cenários sintéticos, com 5 repetições cada. A métrica principal é tokens por tarefa concluída com sucesso.
 
-Linux/macOS:
-
-```bash
-bash scripts/init-project-dev.sh --project-path /caminho/do/projeto
-```
-
-Depois da instalação, também existe o helper instalado no usuário:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.orquestrador\bin\init-project-dev.ps1" -ProjectPath "C:\caminho\do\projeto"
-```
-
-No Linux/macOS:
-
-```bash
-bash "$HOME/.orquestrador/bin/init-project-dev.sh" --project-path /caminho/do/projeto
-```
-
-O script cria a estrutura base sem sobrescrever arquivos existentes. Para manter o fluxo compacto depois:
-
-```bash
-orquestrador-maestro check-dev-gates --project-path /caminho/do/projeto --max-entries 12 --strict
-orquestrador-maestro compact-worklog --project-path /caminho/do/projeto --keep 12
-```
-
-## Como Pedir Para A IA Trabalhar Com O Orquestrador
-
-Pedido padrão:
-
-```text
-Leia meu AGENTS.md global, aplique o Orquestrador Maestro, leia o AGENTS.md deste projeto,
-use DEV/ como memória operacional se existir, escolha a skill mínima necessária,
-execute a tarefa e verifique antes de concluir.
-```
-
-Pedido para tarefa com docs:
-
-```text
-Atualize a documentação do projeto seguindo a hierarquia DEV/.
-Leia DEV/INDEX.md, DEV/HANDOFF.md, DEV/CONTEXT.md e DEV/SPECS/ACTIVE.md,
-edite os arquivos duráveis corretos, registre evidência em DEV/VERIFY.md
-e deixe um resumo curto em DEV/WORKLOG.md.
-```
-
-Pedido para SaaS:
-
-```text
-Use o Orquestrador Maestro com perfil saas.
-Roteie por skill-saas-factory e chame skills de Stripe, admin, limites,
-RLS ou segurança apenas se forem necessárias para esta tarefa.
-```
-
-Pedido para revisão:
-
-```text
-Use o Orquestrador Maestro com foco de code review.
-Priorize bugs, regressões, riscos de segurança, dados sensíveis e testes faltantes.
-Mostre achados com arquivo e linha antes do resumo.
-```
-
-## Opções De Instalação
-
-Guia completo das flags: [docs/installer-options.md](docs/installer-options.md).
-
-Instalação padrão:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh
-```
-
-Instalar sem forçar sobrescrita do núcleo se ele já existir:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -NoForce
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh --no-force
-```
-
-Instalar apenas o núcleo Orquestrador e o `AGENTS.md` global:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -CoreOnly
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh --core-only
-```
-
-Instalar sem hooks/perfis das ferramentas:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -NoToolProfiles
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh --no-tool-profiles
-```
-
-Instalar em outro home, útil para teste:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -HomePath "C:\Temp\TestHome"
-```
-
-Linux/macOS:
-
-```bash
-bash install.sh --home-path /tmp/orquestrador-test-home
-```
-
-Verificar uma instalação feita em outro home:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-install.ps1 -HomePath "C:\Temp\TestHome"
-```
-
-Linux/macOS:
-
-```bash
-bash scripts/verify-install.sh --home-path /tmp/orquestrador-test-home
-```
-
-## Atualizar Uma Instalação
-
-Para quem instalou via npm, este é o fluxo recomendado:
-
-```bash
+### Context Brief Flow
+
+![Context Brief Flow](docs/diagrams/context-brief-flow.svg)
+
+O context brief monta o briefing integrando git context, visibility policy, task classifier, DEV/ files e memory observations, com budget trimming para evitar overflow.
+
+Depois da instalação, uma solicitação útil para qualquer IA é:
+
+~~~text
+Use o Orquestrador Maestro instalado neste usuário.
+Leia primeiro o contrato global, depois o AGENTS.md do projeto e a pasta DEV/, se existirem.
+Consulte o roteador de skills, resolva a tarefa com o menor contexto suficiente,
+verifique o resultado e não faça commit nem push sem minha autorização.
+~~~
+
+## Memória Episódica
+
+### O que é
+
+A memória episódica permite registrar e buscar decisões, problemas, descobertas e implementações ao longo do tempo. Cada observação é salva em JSONL e pode ser buscada por tipo, tags ou texto. Observações são automaticamente escopadas por branch, workspace ou tarefa.
+
+### Como usar
+
+~~~bash
+# Registrar uma decisão
+orquestrador-maestro memory record \
+  --project meu-projeto \
+  --type decision \
+  --summary "Usei JWT para autenticação" \
+  --tags "auth,jwt" \
+  --verified
+
+# Registrar um problema
+orquestrador-maestro memory record \
+  --project meu-projeto \
+  --type problem \
+  --summary "Bug no refresh token" \
+  --details "TokenService permite múltiplos refreshes" \
+  --files "src/services/TokenService.ts" \
+  --tags "bug,security"
+
+# Buscar observações
+orquestrador-maestro memory search \
+  --project meu-projeto \
+  --search "auth"
+
+# Ver timeline
+orquestrador-maestro memory timeline \
+  --project meu-projeto
+
+# Ver estatísticas
+orquestrador-maestro memory stats \
+  --project meu-projeto
+~~~
+
+### Tipos de observação
+
+| Tipo | Uso |
+|------|-----|
+| `decision` | Decisões arquiteturais e de design |
+| `discovery` | Descobertas durante exploração |
+| `problem` | Bugs e problemas encontrados |
+| `implementation` | Implementações e mudanças de código |
+| `verification` | Resultados de testes e validações |
+| `risk` | Riscos identificados |
+| `dependency` | Dependências e integrações |
+| `attempt` | Tentativas de execução (comandos, testes) |
+| `failure` | Falhas e erros |
+| `environment` | Configurações de ambiente |
+| `workaround` | Soluções temporárias |
+
+### Exemplo prático
+
+~~~bash
+# 1. Registrar decisão
+$ orquestrador-maestro memory record --project auth --type decision --summary "JWT para APIs"
+→ obs_dbd7d7ee59754ab6
+
+# 2. Registrar problema
+$ orquestrador-maestro memory record --project auth --type problem --summary "Refresh token bug"
+→ obs_7809825090b6d182
+
+# 3. Buscar
+$ orquestrador-maestro memory search --project auth --search "token"
+→ [2 observações encontradas]
+
+# 4. Verificar
+$ orquestrador-maestro memory stats --project auth
+→ { total: 2, byType: { decision: 1, problem: 1 }, verified: 1 }
+~~~
+
+## Referência da CLI
+
+~~~text
+orquestrador-maestro install [opções]
+orquestrador-maestro update [opções]
+orquestrador-maestro verify [opções]
+orquestrador-maestro doctor
+orquestrador-maestro init-dev --project-path PATH
+orquestrador-maestro compact-worklog --project-path PATH --keep N
+orquestrador-maestro check-dev-gates --project-path PATH --max-entries N --strict
+orquestrador-maestro context brief --project-path PATH --task TEXT
+orquestrador-maestro workflow-lock <generate|validate> [opcoes]
+orquestrador-maestro workflow-state <init|get|validate|approve|advance> [opcoes]
+orquestrador-maestro adapters <list|paths|validate> [id]
+orquestrador-maestro adapters render <junie|goose|openhands> --project-path PATH [--dry-run|--apply]
+orquestrador-maestro memory record --project PATH --type TYPE --summary TEXT [opcoes]
+orquestrador-maestro memory search --project PATH [--search TEXT] [--type TYPE] [--branch BRANCH]
+orquestrador-maestro memory show --project PATH --id OBS_ID
+orquestrador-maestro memory timeline --project PATH [--limit N]
+orquestrador-maestro memory stats --project PATH
+orquestrador-maestro memory list-projects
+orquestrador-maestro memory promote --id OBS_ID --destination PATH [--apply]
+orquestrador-maestro memory status [--project PATH]
+orquestrador-maestro memory dedupe --project PATH
+orquestrador-maestro memory retention --project PATH [--max-age-days N] [--max-count N]
+orquestrador-maestro memory prune --project PATH [--keep-recent N] [--keep-verified]
+orquestrador-maestro memory consolidate --project PATH --ids OBS_ID,OBS_ID
+orquestrador-maestro memory cleanup --project PATH
+orquestrador-maestro benchmark list
+orquestrador-maestro benchmark run --scenario ID --condition CONDITION
+orquestrador-maestro changelog [--full]
+orquestrador-maestro list-targets
+orquestrador-maestro dry-run
+orquestrador-maestro uninstall
+orquestrador-maestro telemetry [status|enable|disable|endpoint|test]
+orquestrador-maestro version
+~~~
+
+Opções importantes de instalação e atualização:
+
+| Opção | Efeito |
+| --- | --- |
+| --dry-run | Mostra o plano sem gravar arquivos |
+| --home-path PATH | Usa outro home, útil para testes isolados |
+| --core-only | Instala apenas .orquestrador e AGENTS.md |
+| --only codex,cursor | Limita a instalação aos componentes escolhidos |
+| --no-tool-profiles | Não instala perfis globais das ferramentas |
+| --skip-community-skills | Não copia a biblioteca comunitária offload |
+| --skip-skill-sync | Não sincroniza skills nas raízes nativas |
+| --no-force | Evita forçar substituição de arquivos existentes |
+| --list-targets | Lista destinos reconhecidos pelo instalador |
+| --uninstall | Remove arquivos gerenciados de forma conservadora |
+| --verbose-paths | Mostra caminhos reais nos relatórios |
+
+Explore todas as opções com:
+
+~~~bash
+orquestrador-maestro --help
+~~~
+
+## Atualizar, testar e remover
+
+Atualização por npm:
+
+~~~bash
 npm update -g @iapro/orquestrador-maestro-cli
 orquestrador-maestro changelog
 orquestrador-maestro update
 orquestrador-maestro verify
 orquestrador-maestro doctor
-```
+~~~
 
-No Linux e no macOS, `doctor` exige `pwsh` ou `powershell` disponível no `PATH`.
+Atualização a partir do clone:
 
-Para quem instalou a partir deste clone Git/ZIP, atualize assim:
-
-```powershell
-git pull
-powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-install.ps1
-```
-
-Linux/macOS:
-
-```bash
+~~~bash
 git pull
 bash install.sh
 bash scripts/verify-install.sh
-```
+~~~
 
-O instalador cria backups antes de substituir arquivos conhecidos. Se você fez alterações locais nos arquivos instalados, revise os backups em `%USERPROFILE%\.orquestrador-public-backups` no Windows ou `$HOME/.orquestrador-public-backups` no Linux/macOS.
+No Windows, use git pull, install.ps1 e scripts/verify-install.ps1.
 
-## Atualizar Este Repositório Público
+O instalador cria backups antes de substituir arquivos gerenciados. O uninstall é conservador: remove o que pertence ao snapshot público e preserva conteúdo não mapeado. Faça dry-run antes de uma remoção que precise ser revisada.
 
-Este repositório é um snapshot público. Em uma máquina fonte, depois de alterar o Orquestrador local, o fluxo recomendado é:
+## Telemetria e privacidade
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\sync-from-local.ps1
+A telemetria é desabilitada por padrão. Nenhum evento é enviado sem endpoint configurado e habilitação explícita.
+
+~~~bash
+orquestrador-maestro telemetry status
+orquestrador-maestro telemetry endpoint https://seu-dominio.example/api/orquestrador-telemetry
+orquestrador-maestro telemetry enable
+orquestrador-maestro telemetry test
+orquestrador-maestro telemetry disable
+~~~
+
+Quando habilitada, a implementação envia apenas metadados operacionais mínimos, como comando, plataforma, arquitetura, versão major do Node.js, sucesso e identificador anônimo. Não envia prompts, conteúdo de projetos, caminhos locais, tokens, logs ou nome do usuário. Consulte [`docs/npm-package.md`](docs/npm-package.md) e [`docs/privacy-model.md`](docs/privacy-model.md) para os limites atuais.
+
+O repositório público é sanitizado. Não devem entrar no snapshot:
+
+- tokens, senhas, chaves de API, cookies ou arquivos .env;
+- sessões, logs, caches, backups ou memórias locais;
+- configurações privadas de IDE ou ferramentas;
+- caminhos concretos de usuário, nomes pessoais ou dados de outra máquina.
+
+## Requisitos e compatibilidade
+
+- Windows 10/11 com PowerShell 4 ou superior.
+- Linux ou macOS com Bash 3.2 ou superior.
+- Node.js 18 ou superior para a CLI npm.
+- Git apenas quando a instalação for feita por clone.
+- A ferramenta de IA desejada, instalada e autenticada separadamente.
+- Em Linux/macOS, doctor requer pwsh ou powershell disponível no PATH; verify não possui essa dependência.
+
+## Mapa do repositório
+
+~~~text
+README.md                 Guia principal para pessoas, IAs e manutenção
+install.ps1 / install.sh  Wrappers de instalação multiplataforma
+bin/                      CLI npm orquestrador-maestro
+scripts/                  Instaladores, validadores, testes e manutenção
+orquestrador/              Núcleo canônico instalado no home do usuário
+codex/                    Agentes, prompts e skills distribuídos com o Codex
+tool-profiles/            Entrypoints e perfis das ferramentas compatíveis
+skill-library/            Biblioteca pública deduplicada de skills
+docs/                     Guias detalhados, referência técnica e RFCs
+tests/                    Testes automatizados do repositório
+home/                     Contrato global sanitizado para instalação
+~~~
+
+Arquivos que controlam o comportamento do núcleo:
+
+- [`orquestrador/rules.md`](orquestrador/rules.md): contrato global de qualidade, segurança e hierarquia.
+- [`orquestrador/maestro.md`](orquestrador/maestro.md): ciclo observar → rotear → selecionar → agir → verificar → reportar.
+- [`orquestrador/PERSISTENCE.md`](orquestrador/PERSISTENCE.md): contrato de continuidade entre sessões e ferramentas.
+- [`orquestrador/hooks.md`](orquestrador/hooks.md): roteamento compacto dos hooks operacionais.
+- [`orquestrador/PROGRAM_ENTRYPOINTS.json`](orquestrador/PROGRAM_ENTRYPOINTS.json): mapa de entrada por ferramenta.
+- [`orquestrador/SKILL_INSTALL_POLICY.json`](orquestrador/SKILL_INSTALL_POLICY.json): política de bibliotecas e raízes nativas.
+
+## Desenvolvimento e contribuição
+
+Antes de alterar o snapshot público:
+
+~~~powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-public.ps1
-git diff -- .
-```
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-skills.ps1
+node --test tests/*.test.js
+git diff --check
+~~~
 
-Só faça commit e push depois de revisar o diff e confirmar que não há dados privados.
+No Linux/macOS, use os equivalentes .sh quando existirem. O package.json também expõe:
 
-## Segurança E Privacidade
+~~~bash
+npm test
+npm run validate
+npm run pack:dry-run
+npm run audit
+~~~
 
-Este pacote deve ser publicável. As regras são:
+O fluxo de contribuição é:
 
-- não publicar tokens, chaves, credenciais, `.env`, `auth.json`, `config.toml` privado ou cookies;
-- não publicar logs, sessões, memória local, cache, backups ou histórico de execução;
-- não publicar caminhos reais de usuário;
-- não publicar a pasta `DEV/` local deste clone;
-- usar placeholders como `{{USER_HOME}}`, `{{USER_NAME}}`, `{{USER_FULL_NAME}}` e `%USERPROFILE%`;
-- revisar `git diff -- .` antes de subir;
-- rodar `scripts/validate-public.ps1` antes de publicar.
+1. Leia [`CONTRIBUTING.md`](CONTRIBUTING.md) e as regras do repositório.
+2. Preserve a separação entre fonte local, snapshot público e perfis instaláveis.
+3. Não publique dados privados ou caminhos reais.
+4. Se mudar uma skill compartilhada, sincronize e valide o catálogo.
+5. Registre mudanças relevantes no CHANGELOG.md.
+6. Revise git diff -- . e deixe commit e push para o mantenedor.
 
-O validador público verifica:
-
-- JSON inválido;
-- caminhos concretos de home do Windows;
-- literais privados configurados;
-- padrões comuns de tokens;
-- arquivos de log e backup;
-- diretórios locais proibidos;
-- marcadores comuns de mojibake.
-
-## Estrutura Do Repositório
-
-```text
-.
-  AGENTS.md
-  CONTRIBUTING.md
-  README.md
-  install.ps1
-  install.sh
-  codex/
-    agents/
-    prompts/
-    skills/
-  docs/
-    assets/
-    research/
-  home/
-    AGENTS.md
-  orquestrador/
-    rules.md
-    maestro.md
-    hooks.md
-    PROJECT_DEV_HIERARCHY.md
-    PROGRAM_ENTRYPOINTS.json
-    SKILL_ALIASES.json
-    SKILL_CHAINS.json
-    SKILL_EXECUTION_PROFILES.json
-    SKILL_USAGE_SCHEMA.json
-    SKILLS_INDEX.md
-    SKILLS_ROUTER.json
-    bin/
-    blueprints/
-    skills/
-  scripts/
-    install.ps1
-    install.sh
-    verify-install.ps1
-    verify-install.sh
-    validate-public.ps1
-    audit-dependencies.js
-    generate-readme-gifs.py
-    sync-from-local.ps1
-    init-project-dev.ps1
-    init-project-dev.sh
-  skill-library/
-    community-skills/
-  tool-profiles/
-```
-
-## Documentação Principal
+## Documentação complementar
 
 - [docs/installation.md](docs/installation.md): instalação completa, destinos criados e resolução de problemas.
 - [docs/installation-troubleshooting.md](docs/installation-troubleshooting.md): solução para `EACCES`, instalação como root, `ONLY[@]` e `PATH`.
@@ -1003,151 +796,29 @@ O validador público verifica:
 - [docs/tool-profiles.md](docs/tool-profiles.md): hooks e perfis de ferramentas.
 - [docs/privacy-model.md](docs/privacy-model.md): modelo de privacidade e sanitização.
 - [docs/update-flow.md](docs/update-flow.md): como atualizar este repo a partir da máquina fonte.
+- [docs/ai-memory-integration.md](docs/ai-memory-integration.md): integração opcional de memória.
+- [docs/security-testing.md](docs/security-testing.md): testes de segurança.
+- [docs/rfcs/README.md](docs/rfcs/README.md): RFCs.
 - [docs/assets/](docs/assets/): GIFs usados neste README para explicar instalação, funcionamento e atualização.
 - [CONTRIBUTING.md](CONTRIBUTING.md): checklist de contribuição, privacidade, validação e padrão de changelog.
 
-## Resolução de Problemas
+## Solução de problemas
 
-Se a ferramenta não chamar o Orquestrador:
+Se uma ferramenta não encontrar o Orquestrador:
 
-1. rode `scripts\verify-install.ps1`;
-2. confirme se o arquivo global da ferramenta existe;
-3. confirme se o arquivo aponta para `%USERPROFILE%\AGENTS.md` ou `%USERPROFILE%\.orquestrador`;
-4. reinicie a ferramenta;
-5. se a ferramenta tiver regras globais em UI ou nuvem, copie o contrato do `AGENTS.md` global para esse local.
+1. Rode `orquestrador-maestro verify` ou o [verificador do repositório](scripts/verify-install.sh).
+2. Confirme que .orquestrador e AGENTS.md existem no home correto.
+3. Reinicie a ferramenta para que ela releia as regras globais.
+4. Confira o entrypoint específico em [`docs/installation.md`](docs/installation.md).
 
-Se a IA não encontrar as skills:
+Se a instalação estiver incompleta, use `doctor` e depois `verify`. Se houver erro de permissão no npm, evite misturar uma instalação antiga feita como Administrador/root com uma instalação normal; reinstale no perfil do usuário conforme [`docs/installation-troubleshooting.md`](docs/installation-troubleshooting.md).
 
-1. verifique `%USERPROFILE%\.orquestrador\skills`;
-2. verifique `%USERPROFILE%\.codex\skills`;
-3. verifique `%USERPROFILE%\.orquestrador\skill-library\community-skills` e `%USERPROFILE%\.orquestrador\skill-library\codex-skills`;
-4. rode `%USERPROFILE%\.orquestrador\sync-skills.ps1 -Apply`;
-5. rode novamente `scripts\verify-install.ps1`.
+Se aparecer texto quebrado, confirme que os arquivos estão em UTF-8 e rode validate-public.ps1 antes de publicar.
 
-No Linux/macOS, use os equivalentes Bash:
+## Licença e responsabilidade
 
-```bash
-bash scripts/verify-install.sh
-bash "$HOME/.orquestrador/sync-skills.sh" --apply
-```
+Este snapshot não contém um arquivo `LICENSE`; os direitos de redistribuição e uso não devem ser presumidos. Revise [`CONTRIBUTING.md`](CONTRIBUTING.md), as instruções, permissões, skills e integrações antes de redistribuir ou aplicar em produção. O mantenedor e o usuário continuam responsáveis por autorizar alterações, proteger credenciais e validar o comportamento da ferramenta de IA escolhida.
 
-Se aparecer texto quebrado:
+---
 
-1. confirme que os arquivos estão em UTF-8;
-2. rode `scripts\validate-public.ps1`;
-3. corrija qualquer marcador de mojibake antes de publicar.
-
-## Descrição E Topics Para GitHub
-
-Descrição curta sugerida para o campo About:
-
-```text
-Grupo IAPro initiative: multiplatform AI agent orchestration kit for Windows, Linux and macOS with Codex skills, hooks, tool profiles, project DEV memory and portable setup for Claude Code, OpenCode, Cursor, Gemini CLI, Windsurf and Antigravity.
-```
-
-Topics sugeridos:
-
-```text
-ai-agents agent-orchestration codex-skills claude-code opencode cursor gemini-cli windsurf antigravity windows linux macos powershell bash developer-tools ai-workflows prompt-engineering multi-agent skills hooks ai-community iapro
-```
-
-Palavras-chave naturais do README:
-
-- Grupo IAPro;
-- comunidade de IA no WhatsApp e Discord;
-- AI agent orchestration;
-- Codex skills;
-- Claude Code skills;
-- OpenCode configuration;
-- Cursor AI rules;
-- Gemini CLI context;
-- Windsurf global rules;
-- Windows PowerShell installer;
-- Linux/macOS Bash installer;
-- npm package;
-- `@iapro/orquestrador-maestro-cli`;
-- project memory;
-- DEV documentation hierarchy;
-- multi-agent workflow;
-- secure public AI configuration.
-
-## Changelog e contribuições
-
-Última revisão pública deste resumo: 2026-07-19.
-
-Este README explica o que o sistema faz e como utilizá-lo. O histórico canônico de atualizações, pesquisas, correções, migrações e contribuições da comunidade fica em [CHANGELOG.md](CHANGELOG.md). Mudanças grandes também podem ter documentação dedicada em `docs/`.
-
-Padrão usado para releases publicadas:
-
-```text
-### x.y.z - YYYY-MM-DD
-
-- Added: novo recurso, arquivo ou fluxo.
-- Changed: alteração de comportamento, documentação ou compatibilidade.
-- Fixed: correção de bug, instalação, validação ou texto.
-- Security: melhoria de privacidade, sanitização, dependência ou validação.
-- Migration: ação necessária para quem já usa o Orquestrador.
-```
-
-Mudanças já mergeadas no GitHub, mas ainda não publicadas no npm, ficam temporariamente em `### Unreleased`. No publish seguinte, essa seção deve virar a próxima versão semver.
-
-### Unreleased
-
-- Added: radar de junho ampliado com Ponytail, React Doctor e Headroom como referências para implementação mínima, gate React e compressão opt-in de contexto.
-- Added: registro de Hector Noya e Felinto, integrantes do Grupo IAPro, como colaboradores comunitários da melhoria ligada a Ponytail, React Doctor e Headroom.
-- Added: reconhecimento a Eduardo Queiroz, do Grupo IAPro, pela indicação do fluxo de desenvolvimento assistido por IA de Matt Pocock, recomendado por uma desenvolvedora da Microsoft.
-- Changed: `docs/context-economy.md` agora explicita gates de otimização para reduzir código desnecessário, revisão subjetiva e contexto pesado.
-- Changed: `docs/research/repo-radar-2026-06.md` foi expandido com decisões práticas sem copiar código, prompts, assets ou conteúdo dos projetos externos.
-
-### 0.1.2 - 2026-06-29
-
-- Added: `CHANGELOG.md` como histórico canônico empacotado com a CLI e exposto para usuário final pelo comando `orquestrador-maestro changelog`.
-- Added: comando `orquestrador-maestro doctor` para executar o diagnóstico operacional empacotado depois de instalar ou atualizar.
-- Added: `docs/research/repo-radar-2026-06.md` com revisão de junho de 2026 sobre onboarding, UX/UI, changelog, release flow e bibliotecas externas.
-- Added: `docs/reference-packs.md` e `orquestrador/REFERENCE_PACKS.md` para formalizar o uso local de bibliotecas privadas e materiais grandes fora do snapshot público.
-- Added: `CONTRIBUTING.md` com checklist seguro para PRs, validação, privacidade, skills e changelog.
-- Added: `docs/research/repo-radar-2026-05.md` com radar de repositórios recentes, licenças, padrões úteis e decisões de aproveitamento.
-- Added: comandos `orquestrador-maestro init-dev`, `compact-worklog` e `check-dev-gates` para criar a hierarquia DEV, compactar worklog e validar o combo `spec + handoff + verify + worklog`.
-- Changed: fluxo recomendado de usuário instalado agora explicita `npm update -g`, `orquestrador-maestro changelog`, `orquestrador-maestro update`, `orquestrador-maestro verify` e `orquestrador-maestro doctor`.
-- Changed: CLI ajustado para telemetria desabilitada por padrão; endpoint configurado sem `telemetry enable` explícito não envia eventos, e configurações legadas sem consentimento versionado são migradas para desabilitadas.
-- Changed: README passa a apontar uma trilha mais objetiva de UX/UI para agentes, priorizando `skill-open-design-ui`, `skill-modern-ui-patterns` e `skill-frontend-ux-guardrails` quando houver trabalho de interface.
-- Changed: README, `docs/project-dev-hierarchy.md`, `docs/context-economy.md` e `docs/orquestrador-reference.md` agora documentam o fluxo determinístico com `HANDOFF`, `SPECS/ACTIVE`, `VERIFY`, gate e compactação de worklog.
-- Fixed: instalador Windows ajustado para fazer backup apenas dos arquivos mapeados no core e nos perfis de ferramenta, evitando falha com caches, plugins, marketplace staging, `.tmp` e logs ativos do Codex/Claude.
-- Fixed: CLI npm passa `--only cursor,claude` e `--only=cursor,claude` corretamente para o PowerShell e para o Bash.
-- Fixed: `orquestrador/doctor.ps1` deixa de marcar texto UTF-8 válido como `PADRÃO` como se fosse mojibake só por conter `Ã`.
-- Changed: README ampliado com radar de maio de 2026, explicando canais de atualização, telemetria, harness determinístico, subagentes, engenharia de contexto e SkillOps.
-- Changed: documentação de economia de contexto alinhada ao radar recente e aos próximos templates `DEV/`.
-- Security: reforço de que referências externas são usadas como padrões, não como cópia de código, e que telemetria, sessões e bibliotecas privadas devem permanecer opt-in, desativáveis e fora do repositório público.
-- Migration: quem já tinha telemetria habilitada em config antiga precisará habilitar novamente após atualizar o CLI; esta mudança chega ao npm a partir da versão `0.1.2`.
-
-- Changed: `orquestrador-maestro update` agora compacta as raízes nativas de skills em Claude, Codex, OpenCode, Cursor, Gemini, Windsurf, `.agents` e Antigravity, preservando o excedente em `.orquestrador/skill-library/disabled-native`.
-- Fixed: o conjunto nativo mínimo do Codex agora preserva `orquestrador-maestro`, `doctor` e `ralplan`, evitando divergência entre a política enxuta de skills e os perfis instalados.
-- Migration: projetos que quiserem o fluxo novo de contexto devem rodar `orquestrador-maestro init-dev --project-path .` e passar a manter `DEV/HANDOFF.md`, `DEV/SPECS/ACTIVE.md` e `DEV/VERIFY.md` junto do `DEV/WORKLOG.md`.
-
-### 0.1.1 - 2026-05-25
-
-- Added: GIFs explicativos no README para instalação, funcionamento da orquestração e atualização segura.
-- Added: script `scripts/generate-readme-gifs.py` para regenerar os assets visuais do README com layout consistente.
-- Added: scripts `npm run audit` e `npm run outdated:all` para auditar dependências do pacote raiz e exemplos com `package.json`.
-- Changed: README reorganizado para explicar primeiro o modelo mental, a hierarquia, o uso de `DEV/` e o fluxo de atualização.
-- Changed: dependências de exemplos e skills atualizadas dentro da faixa compatível com Node.js 18+.
-- Security: auditoria npm zerada nos pacotes com lockfile, mantendo fora upgrades incompatíveis como `better-sqlite3@12` e migrações maiores como `express@5`.
-- Migration: sem quebra esperada; usuários podem atualizar com `npm update -g @iapro/orquestrador-maestro-cli`, depois `orquestrador-maestro update` e `orquestrador-maestro verify`.
-
-### 0.1.0 - 2026-05-25
-
-- Added: primeira versão npm pública do `@iapro/orquestrador-maestro-cli`.
-- Added: comandos `install`, `update`, `verify`, `list-targets` e `uninstall`.
-- Added: snapshot público com Orquestrador, Codex skills, perfis de ferramentas, hooks e documentação de instalação.
-- Security: validação pública para bloquear tokens, logs, caches, backups, memórias locais, caminhos reais de usuário e arquivos privados.
-
-## Publicação
-
-Antes de subir alterações:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\validate-public.ps1
-git diff -- .
-```
-
-O repositório deve continuar instalável, revisável e seguro para publicação.
+Última revisão editorial: 2026-09-02.
