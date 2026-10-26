@@ -3,8 +3,9 @@
 const { extractAssistantText } = require("../providers/provider-output");
 
 class IntentReconciler {
-  constructor({ provider } = {}) {
+  constructor({ provider, workspacePath } = {}) {
     this._provider = provider || null;
+    this._workspacePath = workspacePath || process.cwd();
     this._aiCalls = 0;
   }
 
@@ -24,7 +25,7 @@ class IntentReconciler {
       const handle = await this._provider.execute({
         prompt,
         model: "default",
-        workspacePath: process.cwd()
+        workspacePath: this._workspacePath
       });
       const result = await handle.result;
       const proposal = this._parseResponse(result.stdout);

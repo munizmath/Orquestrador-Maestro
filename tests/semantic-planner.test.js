@@ -99,6 +99,17 @@ test("SemanticPlanner enforces localOnly policy rejecting remote provider", asyn
   );
 });
 
+test("SemanticPlanner rejects non-Codex read-only planning before provider execution", async () => {
+  const app = new MockApp("{}");
+  const planner = new SemanticPlanner({ application: app, plannerTarget: { providerId: "opencode", model: "default", local: true } });
+  await assert.rejects(planner.plan({
+    missionBrief: { id: "m-read-only", objective: "Inspect project" },
+    taskRelevantContext: { items: [] },
+    providerOptions: { sandbox: "read-only" }
+  }), { code: "READ_ONLY_PROVIDER_UNSUPPORTED" });
+  assert.equal(app.executeCalls.length, 0);
+});
+
 test("SemanticPlanner allows remote provider when localOnly is false", async () => {
   const validJson = JSON.stringify({
     tasks: [
@@ -258,6 +269,8 @@ test("SemanticPlanner succeeds on retry if subsequent attempt returns valid JSON
   });
 
   assert.equal(attempt, 2);
+  assert.match(app.executeCalls[1].prompt, /previous output did not match the required JSON schema/u);
+  assert.match(app.executeCalls[1].prompt, /requiredCapabilities/u);
   assert.equal(res.planningMode, "local-ai");
   assert.equal(res.taskGraph.tasks.length, 1);
 });

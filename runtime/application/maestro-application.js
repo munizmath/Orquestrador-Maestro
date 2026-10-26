@@ -7,7 +7,8 @@ const path = require("node:path");
 const core = require("../core");
 const { runtimeTaskId, semanticTaskIdOf, storedTaskSemanticId } = require("../core/task-identity");
 const { diff, snapshot } = require("../git/monitor");
-const { AgyAdapter, CodexAdapter, ClaudeAdapter, OpenCodeAdapter } = require("../providers");
+const { AgyAdapter, CodexAdapter, ClaudeAdapter, OpenCodeAdapter, DeepSeekGatewayAdapter, NexusAdapter } = require("../providers");
+const { assertCloudConsent } = require("../providers/cloud-consent");
 const { getPolicy, getProfile, deriveDelegationContract } = require("../profiles");
 const { SkillRegistry } = require("../skills/registry");
 const { JsonFileRunStore } = require("../store");
@@ -248,10 +249,16 @@ function filesForQualityReview(workspacePath) {
 }
 
 class ProviderRegistry {
-  constructor(adapters = [new CodexAdapter(), new ClaudeAdapter(), new AgyAdapter(), new OpenCodeAdapter()]) {
+  constructor(adapters = [new CodexAdapter(), new ClaudeAdapter(), new AgyAdapter(), new OpenCodeAdapter(), new DeepSeekGatewayAdapter(), new NexusAdapter()]) {
     this.adapters = new Map(adapters.map((adapter) => [adapter.id, adapter]));
   }
   get(id) { return this.adapters.get(id) || null; }
+  async observe(id, request = {}) {
+    const adapter = this.get(id);
+    if (!adapter) throw new Error(`provider unavailable: ${id}`);
+    if (typeof adapter.observe !== "function") return { id, state: "UNSUPPORTED", reason: "Provider does not expose safe observation." };
+    return adapter.observe(request);
+  }
   async list() {
     return Promise.all([...this.adapters.values()].map(async (adapter) => ({
       ...(await adapter.detect()), capabilities: await adapter.capabilities()
@@ -296,6 +303,7 @@ class MaestroApplication {
     return this.getGovernanceStatus();
   }
   async listProviders() { return this.providers.list(); }
+  async observeProvider(providerId, request = {}) { return this.providers.observe(providerId, request); }
   async listRuns(filters = {}) {
     const resolved = { ...filters };
     if (resolved.projectPath && !resolved.projectId) resolved.projectId = projectIdForPath(resolved.projectPath);
@@ -434,9 +442,15 @@ class MaestroApplication {
   async createRun(request) {
     await this.initialize();
     if (!request || typeof request.description !== "string" || request.description.trim() === "") throw new TypeError("description is required");
+    assertCloudConsent([{ providerId: request.providerId || "codex", model: request.model }], request.cloudContextApproved);
     const provider = this.providers.get(request.providerId || "codex");
     if (!provider) throw new Error(`provider unavailable: ${request.providerId || "codex"}`);
     const installation = await provider.detect();
+    if (installation.executionAvailable === false) {
+      const error = new Error(`provider cannot execute tasks: ${provider.id}`);
+      error.code = "PROVIDER_EXECUTION_UNSUPPORTED";
+      throw error;
+    }
     if (!installation.installed) throw new Error(`provider not installed: ${provider.id}`);
     const policy = getPolicy(request.policyId || "standard");
     const semanticChange = classifyChange({
@@ -455,6 +469,11 @@ class MaestroApplication {
     const delegation = deriveDelegationContract({ description: request.description, policyId: policy.id });
     const capabilities = await provider.capabilities();
     for (const capability of policy.requiredCapabilities) if (!capabilities[capability]) throw new Error(`provider ${provider.id} lacks ${capability}`);
+    if (request.sandbox === "read-only" && provider.id !== "codex") {
+      const error = new Error(`READ_ONLY_PROVIDER_UNSUPPORTED: provider ${provider.id} cannot guarantee read-only execution`);
+      error.code = "READ_ONLY_PROVIDER_UNSUPPORTED";
+      throw error;
+    }
 
     let workspacePath = path.resolve(request.workspacePath || this.projectRoot);
     let projectId = request.projectId || projectIdForPath(workspacePath);
@@ -783,7 +802,10 @@ class MaestroApplication {
     let handle;
     let result;
     try {
-      handle = await provider.execute({ prompt: promptEnvelope.prompt, workspacePath, model: request.model, sandbox: request.sandbox, permissionMode: request.permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, timeoutMs: policy.timeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
+      // Claude's noninteractive default refuses file writes. Execution runs
+      // need edit permission; planning calls do not pass through executeRun.
+      const permissionMode = request.permissionMode || (provider.id === "claude" ? "acceptEdits" : undefined);
+      handle = await provider.execute({ prompt: promptEnvelope.prompt, workspacePath, model: request.model, sandbox: request.sandbox, permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, cloudContextApproved: request.cloudContextApproved, timeoutMs: policy.timeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
       this.activeRuns.set(run.id, handle);
       result = await handle.result;
     } catch (error) {
@@ -907,10 +929,11 @@ class MaestroApplication {
     const changes = diff(workspacePath);
     const artifact = core.createArtifact({ id: id("artifact"), runId: run.id, stepId: step.id, type: "DIFF", name: "git-diff", createdAt: new Date().toISOString(), metadata: durableChangeArtifactMetadata(before, changes) });
     await this.store.saveArtifact(artifact); await this.record(run.id, "artifact.created", { artifactId: artifact.id, type: artifact.type });
-    const commands = request.verificationCommands || this.inferProjectVerification(workspacePath);
-    const verificationApplicability = request.verificationNotApplicable === true
+    const commands = request.sandbox === "read-only" ? [] : request.verificationCommands || this.inferProjectVerification(workspacePath);
+    const verificationApplicability = request.sandbox === "read-only" || request.verificationNotApplicable === true
       || request.semanticTask?.verification?.applicability === "not_applicable";
-    const verificationReason = request.verificationNotApplicableReason
+    const verificationReason = (request.sandbox === "read-only" ? "read-only-audit" : null)
+      || request.verificationNotApplicableReason
       || request.semanticTask?.verification?.reason
       || null;
     const verification = await this.verification.verify({

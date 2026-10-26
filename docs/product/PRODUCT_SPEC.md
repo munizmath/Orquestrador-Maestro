@@ -48,7 +48,7 @@ ORQUESTRADOR MAESTRO
 - **Protocol** é o contrato (instalação, regras, memória, skills). Funciona sem
   o Runtime.
 - **Runtime** é o executor local opcional (providers reais:
-  `codex`, `claude`, `opencode`, `agy`).
+  `codex`, `claude`, `opencode`, `agy` e `deepseek` quando o gateway local estiver configurado).
 
 ## 3. Entidades
 

@@ -73,6 +73,8 @@ O Maestro começa com instruções globais e locais, encontra a skill adequada e
 
 Ele integra fluxos para Codex, Claude Code, OpenCode, Freebuff, Cursor, Gemini CLI, Grok CLI, MiMo Code, Kimi Code, Windsurf e Antigravity. Cada ferramenta continua responsável pelo próprio runtime, login, modelo e credenciais.
 
+Para selecionar Llama local no Ollama, Claude Code ou DeepSeek com orçamento compartilhado em `go` e `run`, veja o [guia de modelos locais e remotos](docs/provider-local-cloud.md).
+
 O Freebuff usa o mesmo contrato de `AGENTS.md` e `.agents/skills` que o Maestro já sincroniza. Veja o [guia de integração do Freebuff](docs/freebuff-integration.md) para instalação persistente, MCP, agentes locais e publicação para outros usuários.
 
 ### Codex Desktop e ChatGPT Work

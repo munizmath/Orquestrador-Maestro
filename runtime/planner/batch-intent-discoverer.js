@@ -7,8 +7,9 @@ const { extractAssistantText } = require("./../providers/provider-output.js");
 const MAX_RETRIES = 3;
 
 class BatchIntentDiscoverer {
-  constructor({ provider } = {}) {
+  constructor({ provider, workspacePath } = {}) {
     this._provider = provider || null;
+    this._workspacePath = workspacePath || process.cwd();
     this._discoveryRound = 0;
   }
 
@@ -40,7 +41,7 @@ class BatchIntentDiscoverer {
         const handle = await this._provider.execute({
           prompt,
           model: "default",
-          workspacePath: process.cwd()
+          workspacePath: this._workspacePath
         });
         const result = await handle.result;
         const parsed = this._parseDiscoveryResponse(result.stdout);

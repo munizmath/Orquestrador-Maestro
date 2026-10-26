@@ -1,6 +1,7 @@
 "use strict";
 
 const defaultPrompts = require("@clack/prompts");
+const path = require("node:path");
 const { DynamicInterviewer } = require("./dynamic-interviewer");
 const { createIntentSpec } = require("./intent-spec");
 const { IntentRefiner } = require("./intent-refiner");
@@ -55,13 +56,18 @@ function createIntentUnknown(input) {
 }
 
 class AiInterviewer {
-  constructor({ resolvedSkills, preflightFacts, application, intent, aiProvider = "opencode", prompts = defaultPrompts, maxDiscoveryRounds, autoPolicy }) {
+  constructor({ resolvedSkills, preflightFacts, application, intent, aiProvider = "opencode", prompts = defaultPrompts, maxDiscoveryRounds, autoPolicy, sandbox, workspacePath }) {
+    if (sandbox === "read-only" && (!workspacePath || !path.isAbsolute(workspacePath))) {
+      throw new Error("READ_ONLY_WORKSPACE_REQUIRED: interview requires an absolute workspace path");
+    }
     this.p = prompts;
     this.resolvedSkills = resolvedSkills;
     this.facts = preflightFacts;
     this.app = application;
     this.intent = intent;
     this.aiProvider = aiProvider;
+    this.sandbox = sandbox;
+    this.workspacePath = workspacePath;
     this.maxDiscoveryRounds = maxDiscoveryRounds;
     this.autoPolicy = autoPolicy;
     this.conversationHistory = [];
@@ -69,12 +75,24 @@ class AiInterviewer {
     this.refiner = new IntentRefiner({
       aiProvider,
       application,
+      workspacePath,
+      provider: this.sandbox === "read-only" ? this._providerForExecution(application?.providers?.get?.(aiProvider)) : null,
       taskRelevantContext: { items: Object.entries(preflightFacts || {}).map(([k, v]) => ({ key: k, value: v, type: "FACT" })) }
     });
   }
 
+  _providerForExecution(provider) {
+    if (!provider || this.sandbox !== "read-only") return provider;
+    if (provider.id !== "codex") throw new Error("READ_ONLY_PROVIDER_UNSUPPORTED: interview requires Codex");
+    return {
+      id: provider.id,
+      detect: (...args) => provider.detect(...args),
+      execute: (request) => provider.execute({ ...request, workspacePath: this.workspacePath, sandbox: "read-only" })
+    };
+  }
+
   async runInteractive() {
-    const provider = this.app.providers.get(this.aiProvider);
+    const provider = this._providerForExecution(this.app.providers.get(this.aiProvider));
     let fallbackToLegacy = false;
 
     if (!provider) {
@@ -103,8 +121,8 @@ class AiInterviewer {
 
   async _runBatchRefinementDefault(provider) {
     const taskRelevantContext = { items: Object.entries(this.facts || {}).map(([k, v]) => ({ key: k, value: v, type: "FACT" })) };
-    const discoverer = new BatchIntentDiscoverer({ provider });
-    const reconciler = new IntentReconciler({ provider });
+    const discoverer = new BatchIntentDiscoverer({ provider, workspacePath: this.workspacePath });
+    const reconciler = new IntentReconciler({ provider, workspacePath: this.workspacePath });
     const adapter = new ClackBatchInteractionAdapter({ prompts: this.p });
 
     const coordinator = new BatchRefinementCoordinator({
@@ -217,15 +235,15 @@ class AiInterviewer {
   }
 
   async runBatch() {
-    const provider = this.app.providers.get(this.aiProvider);
+    const provider = this._providerForExecution(this.app.providers.get(this.aiProvider));
 
     if (provider) {
       try {
         const installation = await provider.detect();
         if (installation.installed) {
           const taskRelevantContext = { items: Object.entries(this.facts || {}).map(([k, v]) => ({ key: k, value: v, type: "FACT" })) };
-          const discoverer = new BatchIntentDiscoverer({ provider });
-          const reconciler = new IntentReconciler({ provider });
+          const discoverer = new BatchIntentDiscoverer({ provider, workspacePath: this.workspacePath });
+          const reconciler = new IntentReconciler({ provider, workspacePath: this.workspacePath });
           const adapter = { collectBatch: async () => ({ action: "cancel", answers: {} }) };
           const coordinator = new BatchRefinementCoordinator({ discoverer, reconciler, adapter });
           const result = await coordinator.run(this.intentSpec, taskRelevantContext, this.resolvedSkills, {
