@@ -445,9 +445,16 @@ class NexusAdapter extends ProviderAdapter {
       spawnProcess: this.spawnProcess
     });
     if (!result || !["READY", "BLOCKED_POLICY", "BLOCKED_DECISION"].includes(result.status)
-      || (result.status === "READY" && (result.executionId !== executionId || result.taskId !== taskId
+      || (result.status === "READY" && (result.changeId !== executionId
+        || result.executionId !== executionId || result.taskId !== taskId
         || result.unitState !== "READY" || result.envelopeState !== "AUTHORIZED"
-        || result.dispatch !== "UNSUPPORTED" || !/^sha256:[0-9a-f]{64}$/u.test(result.envelopeDigest)))) {
+        || result.dispatch !== "UNSUPPORTED"
+        || ![result.envelopeDigest, result.authorizationDigest, result.specDigest, result.policyDigest]
+          .every((digest) => typeof digest === "string" && /^sha256:[0-9a-f]{64}$/u.test(digest))
+        || ![result.authorizationId, result.trackId]
+          .every((identifier) => typeof identifier === "string" && identifier.trim())
+        || typeof result.baselineGitSha !== "string"
+        || !/^[0-9a-f]{40,64}$/u.test(result.baselineGitSha)))) {
       throw makeError("NEXUS_ADMISSION_INVALID", "PUE admission returned an invalid result.");
     }
     return result;

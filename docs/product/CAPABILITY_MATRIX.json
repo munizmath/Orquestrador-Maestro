@@ -597,7 +597,7 @@
         "runtime/providers/__tests__/nexus-adapter.test.js",
         "runtime/providers/__tests__/nexus-pue-admission.test.js"
       ],
-      "notes": "Opcional e desativado por padrão. Build local dev foi observado por comandos JSON de leitura; sondagem de dev exige opt-in e nunca habilita execução. Checagem de admissão PUE por unidade integrada em modo sem escrita; despacho permanece bloqueado por falta de comando Nexus estruturado com recibo correlacionado."
+      "notes": "Opcional e desativado por padrão. Build local dev foi observado por comandos JSON de leitura; sondagem de dev exige opt-in e nunca habilita execução. Checagem de admissão PUE por unidade valida identidade e autorização; a leitura canônica do Work Graph pode reconciliar sua projeção. Despacho permanece bloqueado por falta de comando Nexus estruturado com recibo correlacionado."
     },
     {
       "id": "freebuff",

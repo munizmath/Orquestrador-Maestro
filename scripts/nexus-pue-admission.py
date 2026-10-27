@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Consulta a admissão PUE canônica para uma unidade destinada ao Nexus.
 
-Este processo só chama os módulos existentes do PUE. Não emite uma aprovação,
-não grava Envelope e não transiciona o Work Graph. O despacho deve revalidar
-e materializar o Envelope pelo PUE imediatamente antes de executar.
+Não emite aprovação, não grava Envelope nem transiciona o Work Graph. A leitura
+canônica do grafo pode reconciliar sua projeção a partir do Journal. O despacho
+deve revalidar e materializar o Envelope pelo PUE imediatamente antes de executar.
 """
 
 import argparse
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 
@@ -21,12 +22,14 @@ def load_module(name: str, source: Path):
     return module
 
 
-def within_scope(candidate: str, allowed: list[str]) -> bool:
-    value = candidate.replace("\\", "/").rstrip("/")
-    if not value or value.startswith("/") or ".." in value.split("/"):
+def safe_scope_path(candidate: str) -> bool:
+    if not candidate or "\\" in candidate or candidate.startswith("/") or re.match(r"^[A-Za-z]:", candidate):
         return False
-    return any(value == base.rstrip("/") or value.startswith(base.rstrip("/") + "/")
-               for base in allowed if isinstance(base, str) and base)
+    return all(part not in ("", ".", "..") for part in candidate.split("/"))
+
+
+def valid_digest(value: object) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
 
 
 def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -> dict:
@@ -48,13 +51,46 @@ def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -
                 "reasonCode": "PUE_PREFLIGHT_REJECTED"}
 
     envelope = decision["envelope"]
-    if envelope.get("execution_id") != execution_id:
+    if decision.get("change_id") != execution_id or envelope.get("execution_id") != execution_id:
         return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_EXECUTION_MISMATCH"}
     if envelope.get("schema_version") != 4:
         return {"status": "BLOCKED_DECISION", "reasonCode": "PUE_TRACK_MANDATE_REQUIRED"}
     verified = preflight.eev.verify_envelope(envelope, root=project_root)
     if verified.get("effective_status") != "AUTHORIZED":
         return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_ENVELOPE_INVALID"}
+    authorization = envelope.get("authorization", {})
+    request = envelope.get("request", {})
+    spec = envelope.get("spec", {})
+    policy = envelope.get("policy", {})
+    baseline = envelope.get("baseline", {})
+    if (authorization.get("type") != "track"
+            or not isinstance(authorization.get("authorization_id"), str)
+            or not authorization["authorization_id"]
+            or not valid_digest(authorization.get("authorization_digest"))
+            or not isinstance(request.get("track_id"), str)
+            or not request["track_id"]
+            or not valid_digest(envelope.get("envelope_digest"))
+            or not valid_digest(spec.get("digest"))
+            or not valid_digest(policy.get("digest"))
+            or not isinstance(baseline.get("git_sha"), str)
+            or not re.fullmatch(r"[0-9a-f]{40,64}", baseline["git_sha"])):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_IDENTITY_INCOMPLETE"}
+    try:
+        artifact = preflight.eev.resolve_repo_artifact(project_root, authorization["artifact"])
+        mandate = preflight.tav.load_authorization(artifact)
+        if (mandate["authorization_id"] != authorization["authorization_id"]
+                or mandate["authorization_digest"] != authorization["authorization_digest"]
+                or mandate["track"]["id"] != request["track_id"]):
+            return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_MANDATE_MISMATCH"}
+        mandate_scope = mandate["mandate"]["scope"]
+        mandate_allowed = mandate_scope["allowed"]
+        mandate_forbidden = mandate_scope["forbidden"]
+        envelope_allowed = envelope["scope"]["allowed"]
+        if not all(isinstance(paths, list) for paths in
+                   (mandate_allowed, mandate_forbidden, envelope_allowed)):
+            return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_SCOPE_INVALID"}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_MANDATE_UNAVAILABLE"}
     try:
         graph = graph_module.read_graph(project_root, execution_id)
     except (OSError, ValueError, graph_module.WorkGraphError):
@@ -72,7 +108,10 @@ def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -
     if not isinstance(scope, list) or not scope or any(
         not isinstance(item, dict) or item.get("intent") not in ("read", "write")
         or not isinstance(item.get("path"), str)
-        or not within_scope(item["path"], envelope["scope"]["allowed"])
+        or not safe_scope_path(item["path"])
+        or not preflight.tav.path_is_covered(item["path"], envelope_allowed)
+        or not preflight.tav.path_is_covered(item["path"], mandate_allowed)
+        or preflight.tav.path_is_covered(item["path"], mandate_forbidden)
         for item in scope
     ):
         return {"status": "BLOCKED_DECISION", "reasonCode": "PUE_UNIT_OUTSIDE_SCOPE"}
@@ -80,15 +119,18 @@ def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -
     allowed_capabilities = envelope.get("request", {}).get("capabilities", [])
     if not isinstance(unit_capabilities, list) or not set(unit_capabilities).issubset(set(allowed_capabilities)):
         return {"status": "BLOCKED_DECISION", "reasonCode": "PUE_UNIT_OUTSIDE_CAPABILITIES"}
-    authorization = envelope.get("authorization", {})
     return {
         "status": "READY",
+        "changeId": decision["change_id"],
         "executionId": execution_id,
         "taskId": task_id,
         "envelopeDigest": envelope["envelope_digest"],
-        "authorizationId": authorization.get("authorization_id"),
-        "authorizationDigest": authorization.get("authorization_digest"),
-        "trackId": envelope.get("request", {}).get("track_id"),
+        "authorizationId": authorization["authorization_id"],
+        "authorizationDigest": authorization["authorization_digest"],
+        "trackId": request["track_id"],
+        "specDigest": spec["digest"],
+        "policyDigest": policy["digest"],
+        "baselineGitSha": baseline["git_sha"],
         "unitState": node["state"],
         "envelopeState": verified["effective_status"],
         "dispatch": "UNSUPPORTED",

@@ -25,7 +25,15 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
     "class EnvelopeVerifier:",
     "    def verify_envelope(self, envelope, root):",
     "        return {'effective_status': 'AUTHORIZED'}",
+    "    def resolve_repo_artifact(self, root, reference):",
+    "        return root / reference",
     "eev = EnvelopeVerifier()",
+    "class MandateVerifier:",
+    "    def load_authorization(self, path):",
+    "        return json.loads(path.read_text(encoding='utf-8'))",
+    "    def path_is_covered(self, path, patterns):",
+    "        return any(path == pattern.removesuffix('/**') or path.startswith(pattern.removesuffix('/**') + '/') for pattern in patterns)",
+    "tav = MandateVerifier()",
     "def decide(*, execution_id, created_by, root):",
     "    return json.loads((root / 'decision.json').read_text(encoding='utf-8'))"
   ].join("\n"));
@@ -37,15 +45,20 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
     "    return json.loads((root / 'graph.json').read_text(encoding='utf-8'))"
   ].join("\n"));
 
-  const envelope = { schema_version: 4, execution_id: "CHANGE-1", envelope_digest: "sha256:fixture",
-    scope: { allowed: ["src/"] }, request: { track_id: "TRACK-1", capabilities: ["read"] },
-    authorization: { authorization_id: "MANDATE-1", authorization_digest: "sha256:mandate" } };
-  const decision = { status: "AUTHORIZED", envelope };
+  const digest = (letter) => `sha256:${letter.repeat(64)}`;
+  const envelope = { schema_version: 4, execution_id: "CHANGE-1", envelope_digest: digest("a"),
+    scope: { allowed: ["src/**"] }, request: { track_id: "TRACK-1", capabilities: ["read"] },
+    authorization: { type: "track", artifact: "mandate.json", authorization_id: "MANDATE-1", authorization_digest: digest("b") },
+    spec: { digest: digest("c") }, policy: { digest: digest("d") }, baseline: { git_sha: "e".repeat(40) } };
+  const mandate = { authorization_id: "MANDATE-1", authorization_digest: digest("b"),
+    track: { id: "TRACK-1" }, mandate: { scope: { allowed: ["src/**"], forbidden: ["src/secrets/**"] } } };
+  const decision = { status: "AUTHORIZED", change_id: "CHANGE-1", envelope };
   const node = { task_id: "UNIT-1", state: "READY", scope: [{ path: "src/file.js", intent: "read" }], declared_capabilities: ["read"] };
   const graph = { execution_id: "CHANGE-1", nodes: { "UNIT-1": node } };
   const write = () => {
     fs.writeFileSync(path.join(project, "decision.json"), JSON.stringify(decision));
     fs.writeFileSync(path.join(project, "graph.json"), JSON.stringify(graph));
+    fs.writeFileSync(path.join(project, "mandate.json"), JSON.stringify(mandate));
   };
   const check = () => {
     write();
@@ -59,10 +72,26 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
 
   try {
     assert.deepEqual(check(), {
-      status: "READY", executionId: "CHANGE-1", taskId: "UNIT-1", envelopeDigest: "sha256:fixture",
-      authorizationId: "MANDATE-1", authorizationDigest: "sha256:mandate", trackId: "TRACK-1",
+      status: "READY", changeId: "CHANGE-1", executionId: "CHANGE-1", taskId: "UNIT-1",
+      envelopeDigest: digest("a"), authorizationId: "MANDATE-1", authorizationDigest: digest("b"),
+      trackId: "TRACK-1", specDigest: digest("c"), policyDigest: digest("d"), baselineGitSha: "e".repeat(40),
       unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "UNSUPPORTED"
     });
+    decision.change_id = "OTHER-CHANGE";
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_EXECUTION_MISMATCH" });
+    decision.change_id = "CHANGE-1";
+    envelope.spec.digest = "invalid";
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_IDENTITY_INCOMPLETE" });
+    envelope.spec.digest = digest("c");
+    mandate.authorization_digest = digest("f");
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_MANDATE_MISMATCH" });
+    mandate.authorization_digest = digest("b");
+    node.scope = [{ path: "src/secrets/private.js", intent: "read" }];
+    assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_UNIT_OUTSIDE_SCOPE" });
+    for (const pathValue of ["src//secrets/private.js", "src/./secrets/private.js", "src/../secrets/private.js", "C:/src/file.js"]) {
+      node.scope = [{ path: pathValue, intent: "read" }];
+      assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_UNIT_OUTSIDE_SCOPE" });
+    }
     node.scope = [{ path: "outside/file.js", intent: "write" }];
     assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_UNIT_OUTSIDE_SCOPE" });
     node.scope = [{ path: "src/file.js", intent: "read" }];

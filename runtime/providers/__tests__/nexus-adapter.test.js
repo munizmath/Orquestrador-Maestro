@@ -222,11 +222,18 @@ test("PUE preflight queries the canonical bridge without dispatching Nexus", asy
   const calls = [];
   const script = path.resolve(__dirname, "../../../scripts/nexus-pue-admission.py");
   const admissionArgs = [script, "--project-root", "/workspace/project", "--pue-root", "/pue", "--execution-id", "CHANGE-1", "--task-id", "UNIT-1"];
-  const fixture = { status: "READY", executionId: "CHANGE-1", taskId: "UNIT-1", envelopeDigest: `sha256:${"a".repeat(64)}`, unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "UNSUPPORTED" };
+  const fixture = { status: "READY", changeId: "CHANGE-1", executionId: "CHANGE-1", taskId: "UNIT-1",
+    envelopeDigest: `sha256:${"a".repeat(64)}`, authorizationId: "MANDATE-1",
+    authorizationDigest: `sha256:${"b".repeat(64)}`, trackId: "TRACK-1",
+    specDigest: `sha256:${"c".repeat(64)}`, policyDigest: `sha256:${"d".repeat(64)}`,
+    baselineGitSha: "e".repeat(40), unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "UNSUPPORTED" };
   const nexus = new NexusAdapter({ mode: "observe", spawnProcess: fakeSpawn({ [admissionArgs.join(" ")]: fixture }, calls) });
   assert.deepEqual(await nexus.checkAdmission({ workspacePath: "/workspace/project", pueRoot: "/pue", executionId: "CHANGE-1", taskId: "UNIT-1" }), fixture);
   assert.deepEqual(calls, [admissionArgs]);
   assert.equal(calls.some((args) => args.includes("run") || args.includes("start")), false);
+  fixture.policyDigest = "unknown";
+  await assert.rejects(nexus.checkAdmission({ workspacePath: "/workspace/project", pueRoot: "/pue", executionId: "CHANGE-1", taskId: "UNIT-1" }),
+    { code: "NEXUS_ADMISSION_INVALID" });
   await assert.rejects(nexus.execute({ prompt: "unit" }), { code: "NEXUS_MODE_BLOCKS_EXECUTION" });
 });
 
