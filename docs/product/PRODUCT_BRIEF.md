@@ -13,11 +13,11 @@ trocar de ferramenta perde padrão, memória e verificabilidade.
 
 **Como funciona?** Instala o contrato (`orquestrador-maestro install`), a
 ferramenta lê `AGENTS.md`/regras/skills, o Runtime opcional executa via um dos
-providers (`codex`, `claude`, `opencode`, `agy`), verifica e registra evidência.
+providers (`codex`, `claude`, `opencode`, `agy` e, se configurado, `deepseek` via gateway), verifica e registra evidência.
 
 **Diferenciais.** Local-first com privacidade por construção; 75 skills públicas
 deduplicadas no roteador, com 52 rotas canônicas por evidência; memória DEV + episódica; evidence gate no benchmark
-(sem marketing numérico sem prova); 4 providers reais com cancelamento/timeout;
+(sem marketing numérico sem prova); quatro providers diretos e um gateway opcional, com cancelamento/timeout;
 Cockpit TUI e cliente VS Code não fazem parte do contrato da V1; poderão voltar apenas como feature isolada e versionada.
 
 **Como começar?** `orquestrador-maestro install`, depois `verify` e `doctor`.

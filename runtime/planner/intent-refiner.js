@@ -6,10 +6,12 @@ const { validateProposal, applyProposal } = require("./proposal-validator");
 const { evaluateReadiness } = require("./readiness-evaluator");
 
 class IntentRefiner {
-  constructor({ aiProvider, application, taskRelevantContext }) {
+  constructor({ aiProvider, application, taskRelevantContext, provider = null, workspacePath }) {
     this.providerId = aiProvider;
     this.app = application;
     this.context = taskRelevantContext;
+    this.provider = provider;
+    this.workspacePath = workspacePath || process.cwd();
   }
 
   async refine(intentSpec, clarification = null) {
@@ -17,7 +19,7 @@ class IntentRefiner {
       // Just a safety check, we'll force it for now
     }
 
-    const provider = this.app.providers.get(this.providerId);
+    const provider = this.provider || this.app.providers.get(this.providerId);
     if (!provider) {
       return intentSpec; // fallback to unchanged if no provider
     }
@@ -83,7 +85,7 @@ Schema:
         const handle = await provider.execute({
           prompt: systemPrompt,
           model: "default",
-          workspacePath: process.cwd()
+          workspacePath: this.workspacePath
         });
         result = await handle.result;
       } catch (e) {

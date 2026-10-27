@@ -31,6 +31,46 @@ class ReviewAdapter extends FakeAdapter {
   }
 }
 
+test("read-only execution rejects providers without a verified read-only sandbox", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maestro-read-only-provider-"));
+  const provider = new FakeAdapter();
+  const app = new MaestroApplication({
+    projectRoot: root,
+    store: new JsonFileRunStore({ filePath: path.join(root, "runs.json") }),
+    providers: new ProviderRegistry([provider]),
+    skills: { get: () => null }
+  });
+
+  await assert.rejects(
+    app.executeRun({ providerId: "fake", description: "Inspect project", sandbox: "read-only" }),
+    { code: "READ_ONLY_PROVIDER_UNSUPPORTED" }
+  );
+  assert.deepEqual(provider.prompts, []);
+});
+
+test("read-only execution does not run project verification commands", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "maestro-read-only-verify-"));
+  const marker = path.join(root, "verification-wrote-file");
+  const provider = new FakeAdapter();
+  provider.id = "codex";
+  const app = new MaestroApplication({
+    projectRoot: root,
+    store: new JsonFileRunStore({ filePath: path.join(root, "runs.json") }),
+    providers: new ProviderRegistry([provider]),
+    skills: { get: () => null }
+  });
+
+  const outcome = await app.executeRun({
+    providerId: "codex",
+    description: "Inspect project",
+    sandbox: "read-only",
+    verificationCommands: [{ name: "write-marker", command: `${process.execPath} -e "require('fs').writeFileSync('${marker}','bad')"` }]
+  });
+  assert.equal(fs.existsSync(marker), false);
+  assert.equal(outcome.verification.status, "skipped");
+  assert.equal(outcome.run.status, "completed");
+});
+
 test("application turns a task into a persisted provider run with real verification", async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "maestro-application-"));
   fs.writeFileSync(path.join(root, "package.json"), JSON.stringify({ scripts: { test: `${process.execPath} -e \"process.exit(0)\"` } }), "utf8");

@@ -104,3 +104,19 @@ test("LaneExecutor preserves policy failures instead of relabeling them as provi
   assert.equal(result["task-1"].status, "failed");
   assert.equal(result["task-1"].failureClass, "policy-block");
 });
+
+test("LaneExecutor forwards read-only sandbox to every task and provider handoff", async () => {
+  const requests = [];
+  const app = {
+    async getMission() { return { projectId: "project-1" }; },
+    async executeTaskWithHandoff(request) {
+      requests.push(request);
+      return { run: { status: "completed", metadata: {} } };
+    }
+  };
+  const executor = new LaneExecutor({ application: app, sandbox: "read-only" });
+  const result = await executor.execute([task("task-1"), task("task-2", ["task-1"])], "mission-1");
+
+  assert.equal(result["task-2"].status, "completed");
+  assert.deepEqual(requests.map((request) => request.sandbox), ["read-only", "read-only"]);
+});

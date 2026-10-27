@@ -3,7 +3,7 @@
 const crypto = require("node:crypto");
 const { GraphValidator } = require("./graph-validator");
 const { DeterministicFallbackPlanner } = require("./deterministic-fallback-planner");
-const { createTaskGraphProposal, toCoreTaskGraph } = require("./task-graph-proposal");
+const { createTaskGraphProposal, toCoreTaskGraph, ENGINEERING_CAPABILITIES } = require("./task-graph-proposal");
 const { extractAssistantText } = require("../providers/provider-output");
 const { parseProviderUsage } = require("../telemetry/provider-usage");
 
@@ -149,13 +149,18 @@ class SemanticPlanner {
     }
 
     const providerId = this.plannerTarget?.providerId;
+    if (providerOptions.sandbox === "read-only" && providerId !== "codex") {
+      const error = new Error(`READ_ONLY_PROVIDER_UNSUPPORTED: planner provider ${providerId || "unknown"} cannot guarantee read-only execution`);
+      error.code = "READ_ONLY_PROVIDER_UNSUPPORTED";
+      throw error;
+    }
     const provider = this.app?.providers?.get ? this.app.providers.get(providerId) : null;
     let providerAvailable = false;
 
     if (provider) {
       try {
         const detected = await provider.detect();
-        providerAvailable = Boolean(detected && detected.installed);
+        providerAvailable = Boolean(detected && detected.installed && detected.executionAvailable !== false);
       } catch {
         providerAvailable = false;
       }
@@ -177,6 +182,7 @@ class SemanticPlanner {
     }
 
     const prompt = this._buildPrompt(missionBrief, taskRelevantContext, resolvedSkills);
+    let attemptPrompt = prompt;
     const attempts = [];
     let lastError = null;
     let lastFailureKind = "unknown";
@@ -186,7 +192,7 @@ class SemanticPlanner {
       let result;
       try {
         const handle = await provider.execute({
-          prompt,
+          prompt: attemptPrompt,
           model: this.plannerTarget.model,
           workspacePath,
           ...normalizedProviderOptions(providerOptions)
@@ -194,7 +200,7 @@ class SemanticPlanner {
         result = await handle.result;
       } catch (err) {
         attempts.push(buildPlanningAttempt({
-          attempt, prompt, providerId, model: this.plannerTarget.model, result: null,
+          attempt, prompt: attemptPrompt, providerId, model: this.plannerTarget.model, result: null,
           outcome: "provider-error", failureKind: "provider"
         }));
         throw planningError(`Provider execution failed: ${err.message}`, {
@@ -214,9 +220,10 @@ class SemanticPlanner {
         lastFailureKind = error instanceof SyntaxError ? "parse" : "structure";
         lastBlockerCodes = [];
         attempts.push(buildPlanningAttempt({
-          attempt, prompt, providerId, model: this.plannerTarget.model, result,
+          attempt, prompt: attemptPrompt, providerId, model: this.plannerTarget.model, result,
           outcome: "invalid-structure", failureKind: lastFailureKind
         }));
+        attemptPrompt = `${prompt}\n\nThe previous output did not match the required JSON schema. Use only the listed requiredCapabilities and return a corrected JSON object with no explanation.`;
         continue;
       }
 
@@ -226,14 +233,15 @@ class SemanticPlanner {
         lastFailureKind = "validation";
         lastError = new Error(`Validation blockers: ${validation.blockers.map((b) => b.message).join("; ")}`);
         attempts.push(buildPlanningAttempt({
-          attempt, prompt, providerId, model: this.plannerTarget.model, result,
+          attempt, prompt: attemptPrompt, providerId, model: this.plannerTarget.model, result,
           outcome: "validation-failed", failureKind: "validation", blockerCodes: lastBlockerCodes
         }));
+        attemptPrompt = `${prompt}\n\nThe previous task graph failed validation (${lastBlockerCodes.join(", ")}). Correct the graph and return only the JSON object.`;
         continue;
       }
 
       attempts.push(buildPlanningAttempt({
-        attempt, prompt, providerId, model: this.plannerTarget.model, result,
+        attempt, prompt: attemptPrompt, providerId, model: this.plannerTarget.model, result,
         outcome: "validated"
       }));
       const taskGraph = toCoreTaskGraph({
@@ -280,6 +288,8 @@ Requirements: ${JSON.stringify(missionBrief?.requirements || [])}
 Constraints: ${JSON.stringify(missionBrief?.constraints || [])}
 Context: ${JSON.stringify(taskRelevantContext || {})}
 Skills: ${JSON.stringify(resolvedSkills || [])}
+
+For requiredCapabilities, use only: ${ENGINEERING_CAPABILITIES.join(", ")}. For a simple file edit, use backend or documentation; never invent a capability.
 
 Return ONLY a JSON object:
 {

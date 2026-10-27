@@ -1,7 +1,10 @@
 "use strict";
 
+const os = require("node:os");
+const path = require("node:path");
 const { capabilities } = require("../core");
 const { ProviderAdapter } = require("./provider-adapter");
+const { isCloudTarget, openCodeConfig } = require("./cloud-consent");
 const { detectExecutable, startProcess } = require("./process-execution");
 const { assertSandboxHonourable } = require("./sandbox-contract");
 
@@ -18,6 +21,10 @@ class OpenCodeAdapter extends ProviderAdapter {
   // (fail-closed) instead of being silently ignored.
   async capabilities() { return capabilities({ headless: true, structuredEvents: true, streaming: true, sessionResume: true, modelSelection: true, mcp: true }); }
   async execute(request) {
+    const selectedModel = !request.model || request.model === "default" ? openCodeConfig().model : request.model;
+    if (typeof selectedModel === "string" && /(^|\/)deepseek(?:\/|-)/iu.test(selectedModel)) {
+      throw new Error("Use --provider deepseek para preservar o orçamento compartilhado do gateway.");
+    }
     const args = [...this.commandPrefixArgs, "run", "--format", "json"];
     if (request.model && request.model !== "default") args.push("--model", request.model);
     if (request.agent) args.push("--agent", request.agent);
@@ -29,7 +36,32 @@ class OpenCodeAdapter extends ProviderAdapter {
       providerId: this.id,
       supported: false
     });
-    return startProcess({ executable: this.executable, args, request, providerId: this.id });
+    const environment = {
+      XDG_DATA_HOME: path.join(os.homedir(), ".local", "share", "orquestrador-maestro"),
+      ...(request.environment || {})
+    };
+    if (!isCloudTarget(this.id, request.model)) {
+      const inline = JSON.parse(environment.OPENCODE_CONFIG_CONTENT || process.env.OPENCODE_CONFIG_CONTENT || "{}");
+      environment.OPENCODE_CONFIG_CONTENT = JSON.stringify({
+        ...inline,
+        provider: {
+          ...(inline.provider || {}),
+          ollama: {
+            ...(inline.provider?.ollama || {}),
+            options: { ...(inline.provider?.ollama?.options || {}), baseURL: "http://127.0.0.1:11434/v1" }
+          }
+        }
+      });
+    }
+    return startProcess({
+      executable: this.executable,
+      args,
+      request: {
+        ...request,
+        environment
+      },
+      providerId: this.id
+    });
   }
 }
 

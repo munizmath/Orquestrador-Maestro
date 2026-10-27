@@ -33,30 +33,30 @@ const EXPERT_PATTERNS = [
 const MODEL_MATRIX = Object.freeze({
   simple: {
     preferred: [
-      { provider: "opencode", model: "deepseek/deepseek-chat-v4-0324", cost: 0.14 },
-      { provider: "opencode", model: "groq/llama-3.3-70b", cost: 0 },
-      { provider: "codex", model: "gpt-4o-mini", cost: 0.15 }
+      { provider: "opencode", model: "ollama/llama3.1-maestro:8b", cost: 0 },
+      { provider: "codex", model: "default", cost: 0 }
     ]
   },
   medium: {
     preferred: [
-      { provider: "opencode", model: "deepseek/deepseek-reasoner-v4", cost: 0.44 },
-      { provider: "codex", model: "gpt-4o-mini", cost: 0.15 },
-      { provider: "claude", model: "claude-haiku-4", cost: 1.00 }
+      { provider: "opencode", model: "ollama/llama3.1-maestro:8b", cost: 0 },
+      { provider: "codex", model: "default", cost: 0 },
+      { provider: "deepseek", model: "deepseek-flash", cost: 0.3 }
     ]
   },
   complex: {
     preferred: [
-      { provider: "claude", model: "claude-sonnet-4-20250514", cost: 3.00 },
-      { provider: "codex", model: "o3-mini", cost: 1.10 },
-      { provider: "opencode", model: "deepseek/deepseek-reasoner-v4", cost: 0.44 }
+      { provider: "codex", model: "default", cost: 0 },
+      { provider: "claude", model: "sonnet", cost: 0 },
+      { provider: "deepseek", model: "deepseek-flash", cost: 0.3 },
+      { provider: "opencode", model: "ollama/llama3.1-maestro:8b", cost: 0 }
     ]
   },
   expert: {
     preferred: [
-      { provider: "claude", model: "claude-opus-4-20250514", cost: 15.00 },
-      { provider: "claude", model: "claude-sonnet-4-20250514", cost: 3.00 },
-      { provider: "codex", model: "o3", cost: 10.00 }
+      { provider: "codex", model: "default", cost: 0 },
+      { provider: "claude", model: "opus", cost: 0 },
+      { provider: "claude", model: "sonnet", cost: 0 }
     ]
   }
 });

@@ -5,7 +5,8 @@
 - **Task**: unidade de trabalho; **TaskGraph**: suas dependências.
 - **Run / Step / Execution**: execução rastreável via provider.
 - **Provider**: adapter real (`detect/capabilities/execute` + lifecycle).
-  Só `codex`, `claude`, `opencode`, `agy` são providers.
+  `codex`, `claude`, `opencode` e `agy` são providers diretos;
+  `deepseek` é um provider opcional via gateway local com orçamento compartilhado.
 - **Agent**: processo efêmero da ferramenta, executado pelo provider.
 - **Skill**: capacidade empacotada com `SKILL.md`, registrada no manifesto.
 - **Workspace / Worktree**: isolamento `shared` ou git worktree dedicado.

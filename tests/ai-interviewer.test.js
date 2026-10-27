@@ -33,3 +33,43 @@ test("AiInterviewer should throw error and not swallow when provider execute fai
     assert.strictEqual(e.message, "Simulated provider crash");
   }
 });
+
+test("AiInterviewer enforces read-only Codex execution during discovery and refinement", async () => {
+  const calls = [];
+  const provider = {
+    id: "codex",
+    detect: async () => ({ installed: true }),
+    execute: async (request) => {
+      calls.push(request);
+      return { result: Promise.resolve({ stdout: "{}" }) };
+    }
+  };
+  const interviewer = new AiInterviewer({
+    resolvedSkills: [],
+    preflightFacts: {},
+    application: { providers: { get: () => provider } },
+    intent: "Inspect project",
+    aiProvider: "codex",
+    sandbox: "read-only",
+    workspacePath: "/tmp/maestro-read-only-project"
+  });
+
+  await interviewer._providerForExecution(provider).execute({ prompt: "discover", workspacePath: process.cwd() });
+  await interviewer.refiner.provider.execute({ prompt: "refine", workspacePath: process.cwd() });
+  assert.deepEqual(calls.map(({ sandbox, workspacePath }) => ({ sandbox, workspacePath })), [
+    { sandbox: "read-only", workspacePath: "/tmp/maestro-read-only-project" },
+    { sandbox: "read-only", workspacePath: "/tmp/maestro-read-only-project" }
+  ]);
+});
+
+test("AiInterviewer rejects a non-Codex provider in read-only mode", () => {
+  assert.throws(() => new AiInterviewer({
+    resolvedSkills: [],
+    preflightFacts: {},
+    application: { providers: { get: () => ({ id: "opencode" }) } },
+    intent: "Inspect project",
+    aiProvider: "opencode",
+    sandbox: "read-only",
+    workspacePath: "/tmp/maestro-read-only-project"
+  }), /READ_ONLY_PROVIDER_UNSUPPORTED/);
+});

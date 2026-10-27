@@ -20,6 +20,7 @@ const { resolveGitContext } = require(path.join(rootDir, "orquestrador", "lib", 
 const workflowState = require(path.join(rootDir, "orquestrador", "bin", "workflow-state.js"));
 const { Memory } = require(path.join(rootDir, "orquestrador", "bin", "memory.js"));
 const { MaestroApplication } = require(path.join(rootDir, "runtime", "application"));
+const { assertCloudConsent } = require(path.join(rootDir, "runtime", "providers", "cloud-consent"));
 const { createBridge, createStdioServer } = require(path.join(rootDir, "runtime", "bridge"));
 const { resolveMaestroRoot } = require(path.join(rootDir, "runtime", "config", "maestro-paths"));
 const { loadGovernanceConfig, writeGovernanceConfig } = require(path.join(rootDir, "runtime", "governance", "compatibility"));
@@ -75,8 +76,8 @@ Uso:
   orquestrador-maestro check-dev-gates [--project-path PATH] [--max-entries N] [--strict]
   orquestrador-maestro context brief [--project-path PATH] [--task TEXT] [--max-chars N] [--since COMMIT] [--json]
   orquestrador-maestro context section --path FILE.md --heading TEXT [--project-path PATH] [--json]
-  orquestrador-maestro run [--provider ID] [--profile ID] [--workspace PATH] "tarefa"
-  orquestrador-maestro go|plan [--auto] [--router-version 2|3] [--complexity LEVEL] [--project-path PATH] "objetivo"
+  orquestrador-maestro run [--provider ID] [--model MODEL] [--allow-cloud-context] [--workspace PATH] "tarefa"
+  orquestrador-maestro go|plan [--auto] [--provider ID] [--model MODEL] [--allow-cloud-context] [--project-path PATH] "objetivo"
   orquestrador-maestro route explain [--json] [--complexity LEVEL] "objetivo"
   orquestrador-maestro governance <status|set> [opcoes]
   orquestrador-maestro interaction <list|get|set|reset> [opcoes]
@@ -114,6 +115,8 @@ Uso:
   orquestrador-maestro skills list [--project-path PATH]
   orquestrador-maestro skill-catalog <generate|check|validate>
   orquestrador-maestro providers list [--project-path PATH]
+  orquestrador-maestro providers observe nexus [--project-path PATH]
+  orquestrador-maestro providers preflight nexus --execution-id ID --task-id ID --pue-root PATH [--project-path PATH]
   orquestrador-maestro bridge --stdio [--project-path PATH]
   orquestrador-maestro desktop-plugin <install|status|doctor|stats|remove> [opcoes]
   orquestrador-maestro adapters <list|paths|validate> [id]
@@ -141,6 +144,10 @@ Opcoes de install/update/uninstall:
   --list-targets              Lista os destinos conhecidos
   --non-interactive           Evita prompts interativos
   --verbose-paths             Mostra caminhos reais nos relatorios
+
+go/plan em somente leitura:
+  --sandbox read-only         Restringe entrevista, planejamento e execução ao Codex
+  --state-file PATH           Arquivo de estado absoluto fora do projeto (obrigatório neste modo)
 
   Opcoes de targets:
   targets add <id> [--force]  Instala e habilita uma integracao
@@ -1224,8 +1231,8 @@ function handleGovernanceCommand(args) {
   return 0;
 }
 
-async function createRuntimeApplication(projectPath) {
-  const app = new MaestroApplication({ projectRoot: projectPath });
+async function createRuntimeApplication(projectPath, { runFile } = {}) {
+  const app = new MaestroApplication({ projectRoot: projectPath, ...(runFile ? { runFile } : {}) });
   await app.initialize();
   const { AttentionQueue } = require(path.join(rootDir, "runtime", "attention", "attention-queue"));
   const { AttentionProducers } = require(path.join(rootDir, "runtime", "attention", "attention-producers"));
@@ -1255,11 +1262,15 @@ async function handleRunCommand(args) {
     if (!cancelled) throw new Error(`Run ativo nao encontrado: ${runId}`);
     console.log(`Cancelamento solicitado para ${runId}.`); return 0;
   }
-  const options = parseRuntimeArgs(args, ["--provider", "--fallback-providers", "--profile", "--policy", "--workspace", "--project-path", "--model", "--mode", "--agent", "--sandbox", "--interaction", "--resolution-mode"]);
+  const options = parseRuntimeArgs(args, ["--provider", "--fallback-providers", "--profile", "--policy", "--workspace", "--project-path", "--model", "--mode", "--agent", "--sandbox", "--interaction", "--resolution-mode"], ["--allow-cloud-context"]);
   const description = options.values.join(" ").trim();
   if (!description) throw new Error("Informe a tarefa: maestro run [opcoes] \"tarefa\"");
   const app = await createRuntimeApplication(options.projectPath);
   const providerFallbacks = String(options.fallbackProviders || "").split(",").map((value) => value.trim()).filter(Boolean);
+  assertCloudConsent([
+    { providerId: options.provider || "codex", model: options.model },
+    ...providerFallbacks.map((providerId) => ({ providerId }))
+  ], options.allowCloudContext);
   const resolutionMode = options.resolutionMode || "shadow";
   if (!["shadow", "advisory"].includes(resolutionMode)) {
     throw new Error("--resolution-mode aceita apenas shadow ou advisory; enforce permanece bloqueado pelo promotion gate.");
@@ -1267,7 +1278,8 @@ async function handleRunCommand(args) {
   const request = {
     description, providerId: options.provider, providerFallbacks, profileId: options.profile, policyId: options.policy,
     workspacePath: options.workspace || options.projectPath, model: options.model, mode: options.mode, agent: options.agent,
-    sandbox: options.sandbox, interactionProfile: options.interaction, resolutionMode
+    sandbox: options.sandbox, interactionProfile: options.interaction, resolutionMode,
+    cloudContextApproved: options.allowCloudContext === true
   };
   const outcome = providerFallbacks.length > 0
     ? await app.executeTaskWithHandoff(request)
@@ -1521,10 +1533,35 @@ function handleSkillCatalogCommand(args) {
 }
 
 async function handleProvidersCommand(args) {
-  const options = parseRuntimeArgs(args.slice(1), ["--project-path"]);
-  if (args[0] !== "list" || options.values.length > 0) throw new Error("Uso: maestro providers list [--project-path PATH]");
-  console.log(JSON.stringify(await (await createRuntimeApplication(options.projectPath)).listProviders(), null, 2));
-  return 0;
+  const options = parseRuntimeArgs(args.slice(1), ["--project-path", "--execution-id", "--task-id", "--pue-root"]);
+  const subcommand = args[0];
+  if (subcommand === "list" && options.values.length === 0) {
+    console.log(JSON.stringify(await (await createRuntimeApplication(options.projectPath)).listProviders(), null, 2));
+    return 0;
+  }
+  if (subcommand === "observe" && options.values.length === 1) {
+    const app = await createRuntimeApplication(options.projectPath);
+    console.log(JSON.stringify(await app.observeProvider(options.values[0], { workspacePath: app.projectRoot }), null, 2));
+    return 0;
+  }
+  if (subcommand === "preflight" && options.values.length === 1 && options.values[0] === "nexus") {
+    const app = await createRuntimeApplication(options.projectPath);
+    const result = await app.checkProviderAdmission("nexus", {
+      workspacePath: app.projectRoot,
+      pueRoot: options.pueRoot,
+      executionId: options.executionId,
+      taskId: options.taskId
+    });
+    console.log(JSON.stringify(result, null, 2));
+    return result.status === "READY" ? 0 : 1;
+  }
+  if (["start", "report"].includes(subcommand) && options.values.length === 1 && options.values[0] === "deepseek") {
+    const app = await createRuntimeApplication(options.projectPath);
+    const gateway = app.providers.get("deepseek");
+    console.log(subcommand === "start" ? await gateway.start() : await gateway.report());
+    return 0;
+  }
+  throw new Error("Uso: maestro providers <list|observe nexus|preflight nexus|start deepseek|report deepseek> [--project-path PATH]");
 }
 
 async function handleBridgeCommand(args) {
@@ -2071,9 +2108,27 @@ function handleRouteCommand(args) {
 }
 
 async function handleGoCommand(args, planningOnly = false) {
-  const options = parseRuntimeArgs(args, ["--project-path", "--provider", "--fallback-providers", "--interviewer", "--model", "--max-cost", "--max-parallel", "--profile", "--interaction", "--resolution-mode", "--router-version", "--complexity"], ["--auto", "--plan"]);
+  const options = parseRuntimeArgs(args, ["--project-path", "--provider", "--fallback-providers", "--interviewer", "--model", "--max-cost", "--max-parallel", "--profile", "--interaction", "--resolution-mode", "--router-version", "--complexity", "--sandbox", "--state-file"], ["--auto", "--plan", "--allow-cloud-context"]);
   const description = options.values.join(" ").trim();
   if (!description) throw new Error('Informe a intenção: orquestrador-maestro go "tarefa"');
+  const consentTargets = [
+    { providerId: options.provider || (options.sandbox === "read-only" ? "codex" : "opencode"), model: options.model },
+    { providerId: options.sandbox === "read-only" ? "codex" : options.interviewer || "opencode" },
+    ...String(options.fallbackProviders || "").split(",").map((providerId) => ({ providerId: providerId.trim() })).filter((target) => target.providerId)
+  ];
+  assertCloudConsent(consentTargets, options.allowCloudContext);
+  if (options.sandbox && options.sandbox !== "read-only") {
+    throw new Error("go --sandbox aceita apenas read-only; use run para outros modos.");
+  }
+  if (options.sandbox === "read-only" && !options.stateFile) {
+    throw new Error("go --sandbox read-only exige --state-file fora do projeto.");
+  }
+  if (options.sandbox === "read-only" && options.interviewer && options.interviewer !== "codex") {
+    throw new Error("go --sandbox read-only exige Codex para a entrevista.");
+  }
+  if (options.sandbox === "read-only" && options.provider && options.provider !== "codex") {
+    throw new Error("go --sandbox read-only exige Codex para planejamento e execução.");
+  }
 
   const core = require(path.join(rootDir, "runtime", "core"));
   const { IntentRouter } = require(path.join(rootDir, "runtime", "planner", "intent-router"));
@@ -2088,7 +2143,26 @@ async function handleGoCommand(args, planningOnly = false) {
   const { LaneExecutor } = require(path.join(rootDir, "runtime", "planner", "lane-executor"));
 
   const workspacePath = path.resolve(options.projectPath || process.cwd());
-  const app = await createRuntimeApplication(workspacePath);
+  let runFile;
+  if (options.stateFile) {
+    if (!path.isAbsolute(options.stateFile)) throw new Error("--state-file exige caminho absoluto.");
+    runFile = path.resolve(options.stateFile);
+    const projectRoot = fs.realpathSync(workspacePath);
+    const stateParent = fs.realpathSync(path.dirname(runFile));
+    const relative = path.relative(projectRoot, stateParent);
+    if (relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative))) {
+      throw new Error("--state-file deve ficar fora do projeto em modo somente leitura.");
+    }
+    if (fs.existsSync(runFile)) {
+      const stateFileReal = fs.realpathSync(runFile);
+      const fileRelative = path.relative(projectRoot, stateFileReal);
+      if (fileRelative === "" || (!fileRelative.startsWith(`..${path.sep}`) && fileRelative !== ".." && !path.isAbsolute(fileRelative))) {
+        throw new Error("--state-file não pode apontar para dentro do projeto.");
+      }
+    }
+  }
+  const app = await createRuntimeApplication(workspacePath, { runFile });
+  if (options.allowCloudContext) app.providers.get("deepseek")?.approveCloudContextForTask();
   const benchmarkMarkerNonce = process.env.MAESTRO_BENCHMARK_MARKER_NONCE || "";
   const benchmarkUsageRequested = process.env.MAESTRO_BENCHMARK_USAGE === "1";
   if (benchmarkUsageRequested && !/^[A-Za-z0-9-]{16,128}$/u.test(benchmarkMarkerNonce)) {
@@ -2190,7 +2264,9 @@ async function handleGoCommand(args, planningOnly = false) {
     preflightFacts: relevantContext.items.reduce((acc, item) => ({...acc, [item.key]: item.value}), {}),
     application: app,
     intent: description,
-    aiProvider: options.interviewer
+    aiProvider: options.sandbox === "read-only" ? "codex" : options.interviewer,
+    sandbox: options.sandbox,
+    workspacePath
   });
 
   const spec = args.includes("--auto")
@@ -2231,12 +2307,18 @@ async function handleGoCommand(args, planningOnly = false) {
   s.start("Montando plano de engenharia");
 
   const providers = await app.listProviders();
-  const availableProviders = providers.filter((p) => p.installed).map((p) => p.id);
-  const selectedProviderId = options.provider || (availableProviders.includes("opencode") ? "opencode" : availableProviders[0]);
+  const availableProviders = providers.filter((p) => p.installed && p.executionAvailable !== false).map((p) => p.id);
+  const selectedProviderId = options.provider || (options.sandbox === "read-only" ? "codex" : availableProviders.includes("opencode") ? "opencode" : availableProviders[0]);
+  if (options.sandbox === "read-only" && selectedProviderId !== "codex") {
+    throw new Error("go --sandbox read-only exige Codex para planejamento e execução.");
+  }
 
   if (!selectedProviderId) {
     s.stop("Nenhum provedor de execução disponível.");
     throw new Error("MISSING_EXECUTION_TARGET: No installed provider available for execution");
+  }
+  if (!availableProviders.includes(selectedProviderId)) {
+    throw new Error(`EXECUTION_PROVIDER_UNAVAILABLE: provider ${selectedProviderId} is not eligible for task execution`);
   }
 
   const selectedModel = options.model || "default";
@@ -2264,6 +2346,9 @@ async function handleGoCommand(args, planningOnly = false) {
   const adaptivePolicyFingerprint = process.env.MAESTRO_ADAPTIVE_POLICY_FINGERPRINT || "";
   const adaptivePairId = process.env.MAESTRO_ADAPTIVE_PAIR_ID || "";
   const adaptiveRequested = Boolean(adaptivePolicyId || adaptivePolicyFingerprint || adaptivePairId);
+  if (options.sandbox === "read-only" && adaptiveRequested) {
+    throw new Error("go --sandbox read-only não suporta planejamento adaptativo neste momento.");
+  }
   let planResult;
 
   try {
@@ -2305,7 +2390,8 @@ async function handleGoCommand(args, planningOnly = false) {
       taskRelevantContext: relevantContext,
       resolvedSkills: resolved.allSkills,
       allowFallback: true,
-      workspacePath
+      workspacePath,
+      providerOptions: options.sandbox === "read-only" ? { sandbox: "read-only" } : {}
     });
   }
   } catch (error) {
@@ -2439,7 +2525,9 @@ async function handleGoCommand(args, planningOnly = false) {
     maxParallel: parseInt(options.maxParallel, 10) || 3,
     executionProfile: options.profile,
     interactionProfile: options.interaction,
-    resolutionMode
+    sandbox: options.sandbox,
+    resolutionMode,
+    cloudContextApproved: options.allowCloudContext === true
   });
   const { TaskLifecycleMonitor } = require(path.join(rootDir, "runtime", "planner", "task-lifecycle-monitor"));
   const lifecycleMonitor = TaskLifecycleMonitor.attach({

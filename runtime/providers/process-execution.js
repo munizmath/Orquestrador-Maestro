@@ -1,6 +1,9 @@
 "use strict";
 
 const { spawn } = require("node:child_process");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const { isDeniedCommand } = require("../governance/policy-enforcer");
 
 function requiredPrompt(request) {
@@ -21,7 +24,7 @@ function optionalPositiveInteger(value, name) {
   return value;
 }
 
-const BLOCKED_ENV_KEYS = new Set(["LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH", "NODE_OPTIONS", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN", "AWS_ACCESS_KEY_ID", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GITHUB_TOKEN", "BASH_ENV", "PYTHONPATH", "AZURE_OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY"]);
+const BLOCKED_ENV_KEYS = new Set(["LD_PRELOAD", "LD_LIBRARY_PATH", "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH", "NODE_OPTIONS", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN", "AWS_ACCESS_KEY_ID", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "DEEPSEEK_API_KEY", "GITHUB_TOKEN", "BASH_ENV", "PYTHONPATH", "AZURE_OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY"]);
 const BLOCKED_ENV_PREFIXES = ["MAESTRO_ADAPTIVE_", "MAESTRO_BENCHMARK_", "BENCHMARK_ADAPTIVE_"];
 
 function safeEnvironment(environment) {
@@ -49,6 +52,12 @@ function emit(onEvent, type, data) {
   }
 }
 
+function resolveExecutable(executable) {
+  if (typeof executable !== "string" || executable.includes(path.sep)) return executable;
+  const personal = path.join(os.homedir(), ".local", "bin", executable);
+  return fs.existsSync(personal) ? personal : executable;
+}
+
 function startProcess({ executable, args, request, providerId }) {
   const prompt = requiredPrompt(request);
   const timeoutMs = optionalPositiveInteger(request.timeoutMs, "execution request.timeoutMs");
@@ -66,7 +75,8 @@ function startProcess({ executable, args, request, providerId }) {
     error.rule = denial.rule;
     throw error;
   }
-  const child = spawn(executable, commandArgs, {
+  const resolvedExecutable = resolveExecutable(executable);
+  const child = spawn(resolvedExecutable, commandArgs, {
     cwd: request.workspacePath,
     env: safeEnvironment(request.environment),
     shell: false,
@@ -160,7 +170,7 @@ function startProcess({ executable, args, request, providerId }) {
 
 function detectExecutable({ executable, args = [], providerId }) {
   return new Promise((resolve) => {
-    const child = spawn(executable, [...args, "--version"], { shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(resolveExecutable(executable), [...args, "--version"], { shell: false, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk.toString("utf8"); });
@@ -176,4 +186,4 @@ function detectExecutable({ executable, args = [], providerId }) {
   });
 }
 
-module.exports = { detectExecutable, startProcess, safeEnvironment };
+module.exports = { detectExecutable, startProcess, safeEnvironment, resolveExecutable };

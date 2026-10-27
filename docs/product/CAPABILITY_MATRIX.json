@@ -172,18 +172,21 @@
         "runtime/providers/claude-adapter.js",
         "runtime/providers/opencode-adapter.js",
         "runtime/providers/agy-adapter.js",
+        "runtime/providers/nexus-adapter.js",
         "runtime/providers/process-execution.js"
       ],
       "testEvidence": [
         "runtime/providers/__tests__/adapters.test.js",
-        "runtime/providers/__tests__/provider-output.test.js"
+        "runtime/providers/__tests__/provider-output.test.js",
+        "runtime/providers/__tests__/nexus-adapter.test.js",
+        "runtime/providers/__tests__/nexus-pue-admission.test.js"
       ],
       "documentation": [
         "docs/architecture/MAESTRO_PROVIDER_ADAPTERS.md",
         "docs/product/PRODUCT_SPEC.md"
       ],
       "publicClaimAllowed": true,
-      "notes": "Runtime providers derivados dos adapters em runtime/providers/. agy é o CLI agy, não o IDE Antigravity."
+      "notes": "Runtime providers derivados dos adapters em runtime/providers/. O Nexus está em observação apenas; despacho PUE-safe ainda não é suportado. agy é o CLI agy, não o IDE Antigravity."
     },
     {
       "id": "runs-artifacts",
@@ -552,6 +555,51 @@
       "notes": "É o CLI agy, NÃO o IDE Antigravity. Sem entrada em TOOL_ADAPTERS/PROGRAM_ENTRYPOINTS."
     },
     {
+      "id": "deepseek",
+      "displayName": "DeepSeek via gateway local",
+      "kind": "provider-cli",
+      "compatible": true,
+      "integrated": true,
+      "runtimeProvider": true,
+      "experimental": true,
+      "entrypoints": [
+        "runtime/providers/deepseek-adapter.js",
+        "bin/orquestrador-maestro.js (providers start/report)"
+      ],
+      "integrationEvidence": [
+        "docs/provider-local-cloud.md"
+      ],
+      "runtimeEvidence": [
+        "runtime/providers/deepseek-adapter.js",
+        "runtime/providers/__tests__/cloud-consent.test.js"
+      ],
+      "notes": "Opcional: usa gateway externo configurado localmente, ledger compartilhado e confirmação de contexto por tarefa. O teto é imposto pelo gateway, não pelo adapter."
+    },
+    {
+      "id": "nexus",
+      "displayName": "IAPro Nexus",
+      "kind": "provider-cli",
+      "compatible": true,
+      "integrated": true,
+      "runtimeProvider": true,
+      "experimental": true,
+      "entrypoints": [
+        "runtime/providers/nexus-adapter.js",
+        "runtime/application/maestro-application.js (provider registry)",
+        "bin/orquestrador-maestro.js (providers observe/preflight nexus)",
+        "scripts/nexus-pue-admission.py"
+      ],
+      "integrationEvidence": [
+        "docs/provider-local-cloud.md"
+      ],
+      "runtimeEvidence": [
+        "runtime/providers/nexus-adapter.js",
+        "runtime/providers/__tests__/nexus-adapter.test.js",
+        "runtime/providers/__tests__/nexus-pue-admission.test.js"
+      ],
+      "notes": "Opcional e desativado por padrão. Build local dev foi observado por comandos JSON de leitura; sondagem de dev exige opt-in e nunca habilita execução. Checagem de admissão PUE por unidade integrada em modo sem escrita; despacho permanece bloqueado por falta de comando Nexus estruturado com recibo correlacionado."
+    },
+    {
       "id": "freebuff",
       "displayName": "Freebuff",
       "kind": "program",
@@ -837,7 +885,9 @@
     "codex",
     "claude",
     "opencode",
-    "agy"
+    "agy",
+    "deepseek",
+    "nexus"
   ],
   "surfaces": [
     "protocol",

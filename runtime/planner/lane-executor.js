@@ -13,13 +13,15 @@ const { classifyResolutionFailure } = require("../resolution");
  * conclui quando não há mais tarefas pendentes nem em execução.
  */
 class LaneExecutor extends EventEmitter {
-  constructor({ application, maxParallel = 3, interactionProfile, executionProfile, resolutionMode = "shadow" } = {}) {
+  constructor({ application, maxParallel = 3, interactionProfile, executionProfile, resolutionMode = "shadow", sandbox, cloudContextApproved = false } = {}) {
     super();
     this.app = application;
     this.maxParallel = maxParallel;
     this.interactionProfile = interactionProfile;
     this.executionProfile = executionProfile;
     this.resolutionMode = resolutionMode;
+    this.sandbox = sandbox;
+    this.cloudContextApproved = cloudContextApproved;
   }
 
   async execute(tasks, missionId) {
@@ -99,6 +101,8 @@ class LaneExecutor extends EventEmitter {
             missionId,
             semanticTaskId: task.id,
             semanticTask,
+            sandbox: this.sandbox,
+            cloudContextApproved: this.cloudContextApproved,
             resolutionMode: this.resolutionMode,
             ...executionOptions,
             interactionProfile: this.interactionProfile
