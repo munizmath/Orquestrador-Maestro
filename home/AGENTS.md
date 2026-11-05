@@ -64,6 +64,11 @@ A skill is a set of local instructions to follow that is stored in a `SKILL.md` 
 - Use `{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md` as the global catalog before proposing a new global pattern.
 - If an existing global skill is a good fit, propose using it before implementing a parallel pattern.
 - Do not create commits or pushes automatically.
+- For remote development, consult `{{USER_HOME}}/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json` and reuse its bounded, revocable mandate while it is active and the workspace is in scope; do not ask again solely because the tool or session changed.
+- That mandate never covers secrets, customer/production data, paid routes, deployment, publication, commit, push, or destructive actions.
+- Before broad work, use `orquestrador-maestro preflight --json`; it explains workspace, provider routes, cost, roster, and blockers without calling a model.
+- Use `context pack` for bounded context transfer and `providers health` to distinguish a real healthy agent from a merely detected connection.
+- `cleanup` is a dry run by default and removes only Maestro-owned temporary files; receipts and evidence are preserved.
 - Work solo by default. Routine Git/VCS operations, formatting, simple renames, one-file edits, and single validation commands must be handled directly; do not spawn a worker just to run `git commit` or another mechanical command.
 - Treat depth and fan-out as separate decisions: a hard task may use deeper reasoning without subagents. Use subagents only under an explicit multiagent/team/ultrawork request or profile, and only for 2+ independent non-overlapping workstreams.
 - Treat build and lint success as the completion gate when those commands exist for the project.

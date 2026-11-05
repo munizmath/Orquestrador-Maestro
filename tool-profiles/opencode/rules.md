@@ -13,6 +13,8 @@ Keep this file small. The canonical operating contract lives in:
 - Keep `{{USER_HOME}}/.agents/skills` populated for compatibility.
 - Never remove shared roots unless explicitly requested.
 - Verify before claiming completion.
+- For remote development routes, consult `{{USER_HOME}}/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json`; do not ask again while its bounded mandate is active and in scope.
+- The mandate never covers secrets, customer/production data, paid routes, deploy, publish, commit, push, or destructive actions.
 
 ## Token Discipline
 

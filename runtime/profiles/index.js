@@ -50,7 +50,8 @@ function deriveDelegationContract({ description = "", policyId = "standard" } = 
   return Object.freeze({
     mode: "multiagent",
     allowSubagents: true,
-    maxSubagents: 4,
+    maxSubagents: 20,
+    maxSubagentsMode: "elastic",
     reason: "explicit-multiagent-policy"
   });
 }

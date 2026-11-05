@@ -47,7 +47,8 @@ test("execution profiles keep fan-out explicit and separate from depth", () => {
   for (const [name, profile] of Object.entries(config.profiles)) {
     if (name === "multiagent") {
       assert.equal(profile.allowSubagents, true);
-      assert.ok(profile.maxSubagents > 0);
+      assert.equal(profile.maxSubagents, 20);
+      assert.equal(profile.maxSubagentsMode, "elastic");
     } else {
       assert.equal(profile.allowSubagents, false, name);
       assert.equal(profile.maxSubagents, 0, name);

@@ -17,9 +17,15 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
   const project = path.join(root, "project");
   const pue = path.join(root, "pue");
   const modules = path.join(pue, "policies", "ci");
+  const pueSchema = path.join(pue, "schemas", "project.schema.json");
   fs.mkdirSync(path.join(project, "policy"), { recursive: true });
+  fs.mkdirSync(path.join(project, "governance"), { recursive: true });
   fs.mkdirSync(modules, { recursive: true });
+  fs.mkdirSync(path.dirname(pueSchema), { recursive: true });
   fs.writeFileSync(path.join(project, "policy", "pue-policy.yaml"), "fixture: true\n");
+  fs.writeFileSync(pueSchema, JSON.stringify({ properties: { git: { properties: { worktrees: { enum: ["allowed", "forbidden"] } } } } }));
+  const worktreePolicy = path.join(project, "governance", "project.yaml");
+  fs.writeFileSync(worktreePolicy, "git:\n  worktrees: allowed\n");
   fs.writeFileSync(path.join(modules, "pue-preflight.py"), [
     "import json",
     "class EnvelopeVerifier:",
@@ -75,7 +81,7 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
       status: "READY", changeId: "CHANGE-1", executionId: "CHANGE-1", taskId: "UNIT-1",
       envelopeDigest: digest("a"), authorizationId: "MANDATE-1", authorizationDigest: digest("b"),
       trackId: "TRACK-1", specDigest: digest("c"), policyDigest: digest("d"), baselineGitSha: "e".repeat(40),
-      unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "UNSUPPORTED"
+      unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "NOT_DISPATCHED"
     });
     decision.change_id = "OTHER-CHANGE";
     assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_EXECUTION_MISMATCH" });
@@ -101,11 +107,24 @@ test("Nexus PUE bridge accepts only a canonical READY unit within an authorized 
     node.state = "CLAIMED";
     assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_UNIT_NOT_READY" });
     node.state = "READY";
+    fs.writeFileSync(worktreePolicy, "git:\n  worktrees: forbidden\n");
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_WORKTREE_ISOLATION_FORBIDDEN" });
+    fs.rmSync(worktreePolicy);
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_WORKTREE_POLICY_UNPROVEN" });
+    fs.writeFileSync(worktreePolicy, "git:\n  worktrees: allowed\n");
+    fs.writeFileSync(pueSchema, JSON.stringify({ properties: { git: { properties: { worktrees: { const: "forbidden" } } } } }));
+    assert.deepEqual(check(), { status: "BLOCKED_POLICY", reasonCode: "PUE_WORKTREE_ISOLATION_FORBIDDEN" });
+    fs.writeFileSync(pueSchema, JSON.stringify({ properties: { git: { properties: { worktrees: { enum: ["allowed", "forbidden"] } } } } }));
     envelope.schema_version = 3;
     assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_TRACK_MANDATE_REQUIRED" });
     envelope.schema_version = 4;
     decision.status = "BLOCKED_DECISION";
     assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_PREFLIGHT_REJECTED" });
+    decision.status = "AUTHORIZED";
+    const adr = path.join(project, "docs", "architecture", "decisions", "ADR-0021-descontinuacao-envelope-de-execucao.md");
+    fs.mkdirSync(path.dirname(adr), { recursive: true });
+    fs.writeFileSync(adr, "# ADR-0021 — Descontinuação do Envelope\n\n**Status:** aceita por decisão direta do Maestro.\n**Supersedes:** ADR-0020, para novas atividades.\n");
+    assert.deepEqual(check(), { status: "BLOCKED_DECISION", reasonCode: "PUE_ENVELOPE_REGIME_SUPERSEDED" });
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

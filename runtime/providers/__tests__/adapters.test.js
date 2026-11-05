@@ -144,7 +144,8 @@ test("provider subprocess environment strips adaptive benchmark identity and non
       MAESTRO_ADAPTIVE_PAIR_ID: "pair-secret",
       MAESTRO_BENCHMARK_USAGE: "1",
       BENCHMARK_ADAPTIVE_POLICY_ID: "policy-secret",
-      SAFE_VALUE: "visible"
+      SAFE_VALUE: "visible",
+      OPENROUTER_API_KEY: "not-forwarded"
     });
     assert.equal(env.MAESTRO_ADAPTIVE_POLICY_ID, undefined);
     assert.equal(env.MAESTRO_ADAPTIVE_PAIR_ID, undefined);
@@ -153,6 +154,7 @@ test("provider subprocess environment strips adaptive benchmark identity and non
     assert.equal(env.BENCHMARK_ADAPTIVE_POLICY_ID, undefined);
     assert.equal(env.BENCHMARK_ADAPTIVE_POLICY_FINGERPRINT, undefined);
     assert.equal(env.SAFE_VALUE, "visible");
+    assert.equal(env.OPENROUTER_API_KEY, undefined);
   } finally {
     for (const [key, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[key];

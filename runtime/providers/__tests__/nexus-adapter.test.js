@@ -206,6 +206,44 @@ test("unversioned local Nexus is observational only after an explicit JSON probe
   assert.equal((await unsupported.detect()).compatible, false);
 });
 
+test("a pinned version is incompatible when its provider catalog command fails or changes shape", async () => {
+  for (const catalog of [undefined, [], {}, { codex: { installed: "yes", profiles: 1, capabilities: {} } }]) {
+    const fixtures = { "version --json": observeFixtures["version --json"] };
+    if (catalog !== undefined) fixtures["providers --json"] = catalog;
+    const calls = [];
+    const nexus = new NexusAdapter({ mode: "observe", spawnProcess: fakeSpawn(fixtures, calls) });
+
+    const detection = await nexus.detect();
+    assert.equal(detection.installed, true);
+    assert.equal(detection.compatible, false);
+    assert.equal(detection.executionAvailable, false);
+    assert.equal(nexus.lastDetection.errorCode, "NEXUS_CATALOG_INVALID");
+    assert.equal((await nexus.observe()).state, "UNSUPPORTED");
+    assert.ok(calls.every((args) => ["version", "providers"].includes(args[0])));
+  }
+});
+
+test("malformed observation JSON becomes partial and never implies empty live state", async () => {
+  const fixtures = { ...observeFixtures,
+    "sessions --json": { unexpected: "private session" },
+    "usage --json": { unexpected: "private quota" },
+    "ps --json": { unexpected: "private runtime" },
+    "profiles --json": { unexpected: "private profile" },
+    "workspaces --json": { unexpected: "private workspace" }
+  };
+  const nexus = new NexusAdapter({ mode: "observe", spawnProcess: fakeSpawn(fixtures, []) });
+  const observation = await nexus.observe();
+
+  assert.equal(observation.state, "PARTIAL");
+  assert.equal(observation.sessions.state, "UNKNOWN");
+  assert.equal(observation.runtimes.state, "UNKNOWN");
+  assert.equal(observation.profiles.state, "UNKNOWN");
+  assert.equal(observation.workspaces.state, "UNKNOWN");
+  assert.equal(observation.quotaState, "UNKNOWN");
+  assert.deepEqual(observation.cost, { state: "UNKNOWN", amount: null, currency: null });
+  assert.equal(JSON.stringify(observation).includes("private"), false);
+});
+
 test("execute mode refuses dispatch because no PUE-safe CLI contract exists", async () => {
   const calls = [];
   const nexus = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn(observeFixtures, calls) });
@@ -215,7 +253,81 @@ test("execute mode refuses dispatch because no PUE-safe CLI contract exists", as
   assert.equal(detection.compatible, true);
   assert.equal(detection.executionAvailable, false);
   await assert.rejects(nexus.execute({ prompt: "simulated work unit" }), { code: "NEXUS_EXECUTION_UNSUPPORTED" });
-  assert.deepEqual(calls.map((args) => args.join(" ")).sort(), ["providers --json", "version --json"]);
+  assert.deepEqual(calls.map((args) => args.join(" ")).sort(), ["maestro-unit capabilities --json", "providers --json", "version --json"]);
+});
+
+test("Nexus unit dispatch is exposed only after a matching schema probe and uses the PUE bridge", async () => {
+  const calls = [];
+  const bridge = path.resolve(__dirname, "../../../scripts/nexus-pue-execution.py");
+  const bridgeArgs = [bridge, "dispatch", "--project-root", "/workspace/project", "--pue-root", "/pue",
+    "--execution-id", "CHANGE-1", "--task-id", "UNIT-1", "--nexus-project-id", "project-1",
+    "--nexus-executable", "nexus", "--provider", "codex", "--profile", "work"];
+  const statusArgs = [bridge, "status", "--project-root", "/workspace/project", "--pue-root", "/pue",
+    "--execution-id", "CHANGE-1", "--task-id", "UNIT-1", "--nexus-project-id", "project-1",
+    "--nexus-executable", "nexus"];
+  const fixtures = {
+    ...observeFixtures,
+    "maestro-unit capabilities --json": { schema_version: 1, command: "maestro-unit",
+      operations: ["dispatch", "status", "cancel", "recover", "release"], dispatch_mode: "jsonl",
+      status_mode: "json", admission: "external_pue_required", workspace_mode: "ephemeral_detached_worktree" },
+    [bridgeArgs.join(" ")]: { status: "COMPLETED", idempotencyKey: "unit-key" },
+    [statusArgs.join(" ")]: { status: "OBSERVED", pueUnitState: "RUNNING" }
+  };
+  const nexus = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn(fixtures, calls) });
+  const app = new MaestroApplication({ projectRoot: "/workspace/project", providers: new ProviderRegistry([nexus]) });
+  const request = { workspacePath: "/workspace/project", pueRoot: "/pue", executionId: "CHANGE-1",
+    taskId: "UNIT-1", nexusProjectId: "project-1", provider: "codex", profile: "work" };
+  assert.equal((await nexus.detect()).unitExecutionAvailable, true);
+  assert.equal((await nexus.detect()).trackReceiptTransportAvailable, false);
+  assert.deepEqual(await app.dispatchProviderUnit("nexus", request), fixtures[bridgeArgs.join(" ")]);
+  assert.deepEqual(await app.controlProviderUnit("nexus", { ...request, operation: "status" }), fixtures[statusArgs.join(" ")]);
+  assert.equal(calls.filter((args) => args[0] === bridge).length, 2);
+  assert.equal(calls.some((args) => args[0] === "run"), false);
+  await assert.rejects(nexus.execute({ prompt: "raw prompt" }), { code: "NEXUS_EXECUTION_UNSUPPORTED" });
+
+  const incompatible = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn({
+    ...fixtures, "maestro-unit capabilities --json": { schema_version: 2 }
+  }, []) });
+  assert.equal((await incompatible.detect()).unitExecutionAvailable, false);
+  await assert.rejects(incompatible.dispatchUnit(request), { code: "NEXUS_UNIT_CONTRACT_UNAVAILABLE" });
+
+  const branchBacked = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn({
+    ...fixtures, "maestro-unit capabilities --json": {
+      ...fixtures["maestro-unit capabilities --json"], workspace_mode: "branch_worktree"
+    }
+  }, []) });
+  assert.equal((await branchBacked.detect()).unitExecutionAvailable, false);
+  await assert.rejects(branchBacked.dispatchUnit(request), { code: "NEXUS_UNIT_CONTRACT_UNAVAILABLE" });
+});
+
+test("schema v2 transport is observed without activating receipt dispatch", async () => {
+  const calls = [];
+  const capabilities = {
+    schema_version: 1, request_schema_versions: [1, 2], command: "maestro-unit",
+    operations: ["dispatch", "status", "cancel", "recover", "release"],
+    dispatch_mode: "jsonl", status_mode: "json", admission: "external_pue_required",
+    admission_modes: ["pue_envelope", "track_receipt"],
+    workspace_mode: "ephemeral_detached_worktree"
+  };
+  const fixtures = { ...observeFixtures, "maestro-unit capabilities --json": capabilities };
+  const nexus = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn(fixtures, calls) });
+  const detected = await nexus.detect();
+  assert.equal(detected.unitExecutionAvailable, true);
+  assert.equal(detected.trackReceiptTransportAvailable, true);
+  assert.equal(detected.nexus.contract, "MAESTRO_UNIT_V1");
+  assert.equal(calls.some((args) => args[0] === "dispatch" || args[0] === "run"), false);
+
+  const missingReceiptMode = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn({
+    ...fixtures, "maestro-unit capabilities --json": { ...capabilities, admission_modes: ["pue_envelope"] }
+  }, []) });
+  assert.equal((await missingReceiptMode.detect()).trackReceiptTransportAvailable, false);
+
+  const missingLegacySchema = new NexusAdapter({ mode: "execute", spawnProcess: fakeSpawn({
+    ...fixtures, "maestro-unit capabilities --json": { ...capabilities, request_schema_versions: [2] }
+  }, []) });
+  const legacyDetection = await missingLegacySchema.detect();
+  assert.equal(legacyDetection.unitExecutionAvailable, false);
+  assert.equal(legacyDetection.trackReceiptTransportAvailable, false);
 });
 
 test("PUE preflight queries the canonical bridge without dispatching Nexus", async () => {
@@ -226,7 +338,7 @@ test("PUE preflight queries the canonical bridge without dispatching Nexus", asy
     envelopeDigest: `sha256:${"a".repeat(64)}`, authorizationId: "MANDATE-1",
     authorizationDigest: `sha256:${"b".repeat(64)}`, trackId: "TRACK-1",
     specDigest: `sha256:${"c".repeat(64)}`, policyDigest: `sha256:${"d".repeat(64)}`,
-    baselineGitSha: "e".repeat(40), unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "UNSUPPORTED" };
+    baselineGitSha: "e".repeat(40), unitState: "READY", envelopeState: "AUTHORIZED", dispatch: "NOT_DISPATCHED" };
   const nexus = new NexusAdapter({ mode: "observe", spawnProcess: fakeSpawn({ [admissionArgs.join(" ")]: fixture }, calls) });
   assert.deepEqual(await nexus.checkAdmission({ workspacePath: "/workspace/project", pueRoot: "/pue", executionId: "CHANGE-1", taskId: "UNIT-1" }), fixture);
   assert.deepEqual(calls, [admissionArgs]);

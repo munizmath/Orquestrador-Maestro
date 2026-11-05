@@ -1543,7 +1543,8 @@
           "design profile",
           "design system metadata",
           "visual qa harness",
-          "frontend definition of done"
+          "frontend definition of done",
+          "corrija a sobreposição"
         ],
         "doNotUseWhen": [
           "Site de marketing cinematográfico/premium; use skill-premium-web-experience.",
@@ -1640,7 +1641,8 @@
           "responsividade",
           "corrigir responsividade",
           "foco de teclado",
-          "touch targets"
+          "touch targets",
+          "audite a acessibilidade"
         ],
         "doNotUseWhen": [
           "Definição do sistema visual ou direção estética; use skill-open-design-ui.",
@@ -5371,7 +5373,8 @@
           "webapp testing",
           "teste e2e",
           "playwright",
-          "teste de aplicação web"
+          "teste de aplicação web",
+          "verifique no navegador"
         ],
         "doNotUseWhen": [
           "Automação genérica de navegador que não é teste da aplicação.",

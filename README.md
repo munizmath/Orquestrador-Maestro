@@ -93,6 +93,8 @@ Veja [Integração OpenAI Desktop](docs/openai-desktop-integration.md) para Cont
 
 Para o funcionamento técnico, consulte [como o Orquestrador funciona](docs/orquestrador-reference.md), [economia de contexto](docs/context-economy.md), [memória de projeto com DEV/](docs/project-dev-hierarchy.md) e [perfis de ferramentas](docs/tool-profiles.md).
 
+Para o fluxo persistente entre ferramentas, consulte o [modo operacional](docs/operating-mode.md): preflight explicável, pacote de contexto seguro, saúde de provedores, limpeza recuperável, canais `dev/stable` e recibos sanitizados.
+
 **Próximo passo:** [aprenda o fluxo que a IA deve seguir](docs/ai-agent-operating-guide.md) ou [configure um workflow declarativo](docs/workflows.md).
 
 ## Skills: você pede o resultado, o Maestro escolhe a capacidade

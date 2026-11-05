@@ -8,6 +8,7 @@ const path = require("node:path");
 const { spawn } = require("node:child_process");
 const { capabilities } = require("../core");
 const { ProviderAdapter } = require("./provider-adapter");
+const { assertCloudConsent } = require("./cloud-consent");
 const { detectExecutable, startProcess } = require("./process-execution");
 
 function configPath() {
@@ -113,7 +114,9 @@ class DeepSeekGatewayAdapter extends ProviderAdapter {
 
   async execute(request) {
     if (!this.config) throw new Error("Gateway DeepSeek não configurado");
-    if (request.cloudContextApproved !== true && this.cloudContextApproved !== true) throw new Error("CLOUD_CONTEXT_APPROVAL_REQUIRED: confirme o envio de contexto nesta tarefa");
+    if (request.cloudContextApproved !== true && this.cloudContextApproved !== true) {
+      assertCloudConsent([{ providerId: "deepseek" }], false, { workspacePath: request.workspacePath });
+    }
     if (request.model && !["default", "deepseek-flash"].includes(request.model)) throw new Error("O gateway permite apenas deepseek-flash");
     if (!await health(this.config.port)) throw new Error("Gateway DeepSeek parado. Execute 'orquestrador-maestro providers start deepseek'.");
     const agentId = `maestro-${crypto.randomUUID().replace(/-/gu, "").slice(0, 16)}`;

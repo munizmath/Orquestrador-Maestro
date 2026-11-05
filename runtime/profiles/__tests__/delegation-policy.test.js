@@ -15,7 +15,8 @@ test("multiagent is an explicit execution policy", () => {
     policyId: "multiagent"
   });
   assert.equal(contract.allowSubagents, true);
-  assert.equal(contract.maxSubagents, 4);
+  assert.equal(contract.maxSubagents, 20);
+  assert.equal(contract.maxSubagentsMode, "elastic");
 });
 
 test("routine git operations remain solo even under multiagent policy", () => {

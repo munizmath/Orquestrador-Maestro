@@ -28,3 +28,13 @@ If the project has no `DEV/`, initialize it with `orquestrador-maestro init-dev 
 ## One operating contract
 
 Codex, OpenCode, Claude, Cursor, Gemini, Windsurf, Antigravity, and compatible agents must treat `AGENTS.md`, `.orquestrador/rules.md`, `.orquestrador/maestro.md`, and this file as the shared source of truth. Tool-specific memories, commands, and hooks may accelerate recovery, but must not replace these files.
+
+## Persistent provider authorization
+
+Recurring consent for remote development providers is persisted separately in
+`{{USER_HOME}}/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json`. Agents must consult it
+before asking again. It is a bounded, revocable mandate: it covers only the listed providers,
+workspace roots, validity window, and development data classes. It never grants access to
+secrets, customer or production data, paid routes, deployment, publication, commit, push, or
+destructive operations. Missing, expired, revoked, or out-of-scope authorization falls back to
+fresh task approval.

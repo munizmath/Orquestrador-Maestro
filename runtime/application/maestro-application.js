@@ -42,6 +42,7 @@ const {
 } = require("../resolution");
 const { sanitizeDiagnostic } = require("../telemetry/diagnostic-sanitizer");
 const { resolveGitContext } = require("../../orquestrador/lib/git-context");
+const { writeRunReceipt } = require("../receipts/run-receipt");
 
 function id(prefix) { return `${prefix}-${crypto.randomUUID()}`; }
 function projectIdForPath(workspacePath) { return `project-${crypto.createHash("sha256").update(path.resolve(workspacePath)).digest("hex").slice(0, 16)}`; }
@@ -60,6 +61,7 @@ function projectIdForPath(workspacePath) { return `project-${crypto.createHash("
 // FOLLOW-UP (not this PR): if post-restart replay becomes a requirement, it
 // needs a privacy-reviewed design first — never raw ANSI in the RunStore.
 const EPHEMERAL_EVENT_TYPES = new Set(["provider.started", "provider.output", "provider.completed", "run.output", "terminal.output"]);
+const RECEIPT_EVENT_TYPES = new Set(["run.completed", "run.failed", "run.blocked", "run.cancelled"]);
 
 function sanitizeProviderError(message) {
   // Durable error strings flow into execution metadata and run events, so
@@ -266,6 +268,20 @@ class ProviderRegistry {
     }
     return adapter.checkAdmission(request);
   }
+  async dispatchUnit(id, request = {}) {
+    const adapter = this.get(id);
+    if (!adapter || typeof adapter.dispatchUnit !== "function") {
+      throw new Error(`provider unit dispatch unavailable: ${id}`);
+    }
+    return adapter.dispatchUnit(request);
+  }
+  async controlUnit(id, request = {}) {
+    const adapter = this.get(id);
+    if (!adapter || typeof adapter.controlUnit !== "function") {
+      throw new Error(`provider unit control unavailable: ${id}`);
+    }
+    return adapter.controlUnit(request);
+  }
   async list() {
     return Promise.all([...this.adapters.values()].map(async (adapter) => ({
       ...(await adapter.detect()), capabilities: await adapter.capabilities()
@@ -312,6 +328,15 @@ class MaestroApplication {
   async listProviders() { return this.providers.list(); }
   async observeProvider(providerId, request = {}) { return this.providers.observe(providerId, request); }
   async checkProviderAdmission(providerId, request = {}) { return this.providers.checkAdmission(providerId, request); }
+  async dispatchProviderUnit(providerId, request = {}) {
+    if (providerId === "nexus") {
+      const targets = [{ providerId: "nexus" }];
+      if (request.provider) targets.push({ providerId: request.provider });
+      assertCloudConsent(targets, request.cloudContextApproved, { workspacePath: request.workspacePath });
+    }
+    return this.providers.dispatchUnit(providerId, request);
+  }
+  async controlProviderUnit(providerId, request = {}) { return this.providers.controlUnit(providerId, request); }
   async listRuns(filters = {}) {
     const resolved = { ...filters };
     if (resolved.projectPath && !resolved.projectId) resolved.projectId = projectIdForPath(resolved.projectPath);
@@ -450,7 +475,8 @@ class MaestroApplication {
   async createRun(request) {
     await this.initialize();
     if (!request || typeof request.description !== "string" || request.description.trim() === "") throw new TypeError("description is required");
-    assertCloudConsent([{ providerId: request.providerId || "codex", model: request.model }], request.cloudContextApproved);
+    const consentWorkspacePath = path.resolve(request.workspacePath || this.projectRoot);
+    assertCloudConsent([{ providerId: request.providerId || "codex", model: request.model }], request.cloudContextApproved, { workspacePath: consentWorkspacePath });
     const provider = this.providers.get(request.providerId || "codex");
     if (!provider) throw new Error(`provider unavailable: ${request.providerId || "codex"}`);
     const installation = await provider.detect();
@@ -907,7 +933,7 @@ class MaestroApplication {
         ...run,
         status: "failed",
         completedAt,
-        metadata: { ...run.metadata, resolution: failedResolution, cognitiveTelemetry: failedCognitiveTelemetry }
+        metadata: { ...run.metadata, resolution: failedResolution, cognitiveTelemetry: failedCognitiveTelemetry, changeSet: { changedFiles: failedChanges.changedFiles || [] } }
       });
       await this._recordTaskOutcomeTransition(task.id, run.id, failedResolution.outcome);
       await this.record(run.id, "budget.committed", { reservationId: committedReservation.id, actual: committedReservation.actual });
@@ -1018,7 +1044,7 @@ class MaestroApplication {
       status,
       startedAt: execution.startedAt,
       completedAt,
-      metadata: { ...run.metadata, resolution: finalizedResolution }
+      metadata: { ...run.metadata, resolution: finalizedResolution, changeSet: { changedFiles: changes.changedFiles || [] }, verificationStatus: verification.status }
     });
     await this.record(run.id, status === "completed" ? "run.completed" : "run.failed", { status, resolutionState: finalizedResolution.outcome.state });
     if (unexpectedSubagents) {
@@ -1323,7 +1349,9 @@ class MaestroApplication {
         kind: "instruction",
         content: JSON.stringify(executionPackage.delegation || {}),
         text: executionPackage.delegation?.allowSubagents === true
-          ? `Delegation contract: MULTIAGENT permitted, maximum ${executionPackage.delegation.maxSubagents || 1} subagents. Delegate only independent workstreams with non-overlapping ownership.`
+          ? (executionPackage.delegation.maxSubagentsMode === "elastic"
+            ? `Delegation contract: MULTIAGENT permitted with an elastic roster up to ${executionPackage.delegation.maxSubagents} agents. Use only healthy, authorized provider/agent routes that fit independent ownership, worktree isolation, quota, machine capacity, budget, and verification gates.`
+            : `Delegation contract: MULTIAGENT permitted, maximum ${executionPackage.delegation.maxSubagents || 1} subagents. Delegate only independent workstreams with non-overlapping ownership.`)
           : "Delegation contract: SOLO. Do not spawn subagents, task workers, swarms, parallel model calls, or delegate routine git operations. Complete the task directly in this provider process."
       },
       { id: "execution-boundary", kind: "instruction", content: "Work only within the workspace and report concrete changes.", text: "Work only within the workspace and report concrete changes." }
@@ -1350,7 +1378,18 @@ class MaestroApplication {
       this.events.emit("event", event);
       return event;
     }
-    await this.store.appendEvent(event); this.events.emit("event", event); return event;
+    await this.store.appendEvent(event);
+    if (runId && RECEIPT_EVENT_TYPES.has(type)) {
+      try {
+        const run = await this.store.getRun(runId);
+        const task = run?.taskId ? await this.store.getTask(run.taskId) : null;
+        const project = task?.projectId ? await this.store.getProject(task.projectId) : null;
+        if (run && project?.path) writeRunReceipt({ run, task, workspacePath: project.path, terminalEvent: data });
+      } catch {
+        // Receipt persistence must never turn a completed task into a failed task.
+      }
+    }
+    this.events.emit("event", event); return event;
   }
 
   publishEphemeral(runId, type, data) {

@@ -10,6 +10,10 @@ source: local-product-ux-guardrails
 
 Run this skill near the end of a frontend change, especially after a complex marketing experience, redesign, or interaction pass. It is a quality gate, not a replacement for experience strategy, visual direction, component implementation, or browser automation.
 
+## Scope and stopping rule
+
+Check the user task and its affected states first. A local correction needs relevant breakpoints, interaction states, and adjacent regressions; a whole-product audit needs the approved inventory. Mark an inaccessible state or unavailable browser as `SKIP`/`BLOCKED` with the cause. Source tests and static checks are technical evidence, not proof of rendered interaction or assistive use. Resolve P0/P1 issues in the requested path; record unrelated P2/P3 issues for triage without creating an automatic polish cycle.
+
 ## Gate Order
 
 1. Inspect the real rendered surface, routes, components, tokens, breakpoints, states, and test expectations.
@@ -26,7 +30,7 @@ Score the target from 0 to 4 for hierarchy, contrast, responsiveness, accessibil
 
 ## Responsive And Layout
 
-- Verify `320x568`, `390x844`, `768x1024`, `1024x768`, and `1440x900` or a representative desktop width.
+- For a broad responsive audit, verify `320x568`, `390x844`, `768x1024`, `1024x768`, and `1440x900` or a representative desktop width. For a local fix, verify the affected breakpoints and a relevant neighboring width.
 - At `320px`, check button wrapping, text clipping, tables, dialogs, sticky areas, and bottom bars.
 - At tablet widths, check sidebars, drawers, charts, grids, and action collisions.
 - At desktop widths, prevent unreadable line lengths, sparse accidental grids, and stretched media.

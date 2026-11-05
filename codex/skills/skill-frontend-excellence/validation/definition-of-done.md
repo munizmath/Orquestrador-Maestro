@@ -1,6 +1,6 @@
 # Frontend Definition of Done
 
-No frontend task is complete because the build is green.
+No frontend task is complete because the build is green. Apply the checks to the affected task, states, and breakpoints; record `not applicable`, `SKIP`, or `BLOCKED` with a reason instead of silently omitting a check. A broad audit uses its approved inventory.
 
 ## Always
 
@@ -13,10 +13,10 @@ No frontend task is complete because the build is green.
 - [ ] application boots (or Storybook/fixture when the app cannot boot in this environment)
 - [ ] browser smoke test
 - [ ] console clean of **new** errors
-- [ ] responsive validation (`390`, `768`, `1280`, `1440`)
+- [ ] responsive validation at affected breakpoints (default smoke widths: `390`, `768`, `1280`, `1440`)
 - [ ] accessibility validation
 - [ ] contrast validation
-- [ ] screenshots stored
+- [ ] screenshots or browser artifacts stored when the visual surface changed
 - [ ] visual inspection / structured review
 - [ ] component-library compliance (active design-system lookup done)
 - [ ] design-profile compliance

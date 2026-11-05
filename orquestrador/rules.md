@@ -14,6 +14,31 @@ This is the compact global contract for agents on this machine.
 5. New reusable intelligence should be saved under `{{USER_HOME}}/.orquestrador` first, then synced outward.
 6. Execute solo by default. Do not spawn subagents, task workers, swarms, or parallel model calls for routine Git/VCS operations, formatting, simple renames, one-file edits, or a single validation command. In particular, `git status`, `git diff`, `git add`, `git commit`, `git push`, and equivalent routine operations stay with the lead agent. Multiagent execution is a separate explicit decision and requires genuinely independent, non-overlapping workstreams.
 
+## Elastic multiagent roster
+
+For an explicitly multiagent unit, the roster may use the healthy authorized Codex, OpenCode,
+OpenRouter, DeepSeek, Claude CLI, and Nexus routes up to the technical cap of 20 editors.
+Provider catalogs do not prove agent capacity; ownership, worktree isolation, quota, cost,
+machine capacity, and verification gates still determine the active roster.
+
+## Standing remote-provider mandate
+
+When `{{USER_HOME}}/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json` is active and matches the current local project, the maestro's standing mandate covers development-context transfer to the listed OpenCode, OpenRouter, DeepSeek, Claude CLI, and Nexus routes for the validity window recorded there. Do not ask again merely because the session or tool changed.
+
+- The mandate is limited to source code, tests, documentation, and synthetic fixtures inside the listed workspace roots.
+- It does not authorize secrets, credentials, environment files, personal or customer data, production data, paid routes, subscriptions, credit, deploy, publish, commit, push, or destructive actions.
+- If the file is absent, expired, revoked, the workspace is outside its roots, or a sensitive file is detected, require fresh task approval and explain the exact boundary.
+- Revoke it by changing `status` to `revoked`; never copy provider credentials into this file.
+
+## Persistent operating mode
+
+- Before broad work, run `orquestrador-maestro preflight --json` to inspect workspace, mandate, providers, cost, roster, and blockers without calling a model.
+- Use `context pack` to assemble only allowed context. Secrets, binaries, tool directories, and oversized files are omitted; content requires explicit `--include-content`.
+- `providers health` records sanitized observations with TTL. A listed connection or model is not counted as a healthy agent without execution evidence.
+- `cleanup` is a dry run by default and may remove only Maestro-owned temporary files. Receipts, source, worklogs, and evidence are preserved.
+- `dev` may point to an evolving checkout. `stable` requires a clean, identifiable checkout and a verifiable non-symlink entrypoint.
+- Terminal runs persist a sanitized receipt without prompts, raw provider output, file contents, tokens, or credentials.
+
 ## Language Continuity
 
 - Use the language explicitly requested by the user; otherwise use the latest substantive user message, preserving the established conversation language when prompts are mixed or ambiguous.

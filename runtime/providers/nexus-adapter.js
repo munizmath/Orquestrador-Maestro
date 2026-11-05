@@ -12,7 +12,8 @@ const SUPPORTED_SOURCE_VERSION = "0.5.0-beta.23";
 const MAX_OUTPUT_BYTES = 1024 * 1024;
 const MAX_RUNTIME_STATUS_QUERIES = 8;
 const DEFAULT_TIMEOUT_MS = 5000;
-const EXECUTION_LIMITATION = "The locally inspected Nexus CLI has no JSON dispatch contract that binds one PUE-authorized unit to a structured WorkReceipt. `nexus run <provider>` launches a provider directly and cannot prove PUE admission or return a unit-bound receipt.";
+const EXECUTION_LIMITATION = "Generic prompt execution is unsupported. Use the PUE Work Graph unit dispatch path and a Nexus CLI with maestro-unit schema v1.";
+const UNIT_OPERATIONS = ["dispatch", "status", "cancel", "recover", "release"];
 
 function nexusMode(value = process.env.MAESTRO_NEXUS_MODE) {
   if (value === undefined || value === "") return "disabled";
@@ -113,6 +114,24 @@ function recordsFrom(value) {
   return Object.entries(value).map(([id, record]) => record && typeof record === "object" && !Array.isArray(record)
     ? { id, ...record }
     : null).filter(Boolean);
+}
+
+function validProviderCatalog(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    && Object.keys(value).length > 0
+    && Object.entries(value).every(([id, record]) => safeIdentifier(id) === id
+      && record !== null && typeof record === "object" && !Array.isArray(record)
+      && (record.id === undefined || record.id === id)
+      && typeof record.installed === "boolean"
+      && Number.isInteger(record.profiles) && record.profiles >= 0
+      && record.capabilities !== null && typeof record.capabilities === "object"
+      && !Array.isArray(record.capabilities));
+}
+
+function validObservationList(value) {
+  // Nexus serializes an empty Go slice as null in some JSON commands.
+  return value === null || (Array.isArray(value) && value.every((record) =>
+    record !== null && typeof record === "object" && !Array.isArray(record)));
 }
 
 function scalarStatus(value) {
@@ -260,6 +279,7 @@ function safeIdentifier(...values) {
 class NexusAdapter extends ProviderAdapter {
   constructor({ executable = process.env.MAESTRO_NEXUS_EXECUTABLE || "nexus", mode,
     allowDevObservation = process.env.MAESTRO_NEXUS_ALLOW_DEV_OBSERVATION === "1",
+    allowDevExecution = process.env.MAESTRO_NEXUS_ALLOW_DEV_EXECUTION === "1",
     timeoutMs = DEFAULT_TIMEOUT_MS, spawnProcess = spawn } = {}) {
     super("nexus");
     this.executable = executable;
@@ -267,6 +287,7 @@ class NexusAdapter extends ProviderAdapter {
     this.timeoutMs = timeoutMs;
     this.spawnProcess = spawnProcess;
     this.allowDevObservation = allowDevObservation === true;
+    this.allowDevExecution = allowDevExecution === true;
     this.lastDetection = null;
   }
 
@@ -287,7 +308,7 @@ class NexusAdapter extends ProviderAdapter {
     }
 
     const version = parseVersion(versionOutput);
-    const devObservation = this.allowDevObservation && versionOutput?.version === "dev";
+    const devObservation = (this.allowDevObservation || this.allowDevExecution) && versionOutput?.version === "dev";
     if (!version && !devObservation) {
       this.lastDetection = { installed: true, compatible: false, errorCode: "NEXUS_VERSION_UNKNOWN" };
       return {
@@ -304,48 +325,80 @@ class NexusAdapter extends ProviderAdapter {
       };
     }
 
-    const [catalogResult] = await Promise.allSettled([this.query(["providers", "--json"], cwd)]);
-    const catalogShapeValid = catalogResult.status === "fulfilled"
-      && catalogResult.value && typeof catalogResult.value === "object";
-    const catalog = catalogShapeValid ? normalizeProviders(catalogResult.value) : null;
-    if (devObservation && (!catalog || catalog.length === 0)) {
-      this.lastDetection = { installed: true, compatible: false, version: "dev", errorCode: "NEXUS_DEV_PROBE_FAILED" };
-      return { id: this.id, installed: true, executionAvailable: false, enabled: true, mode: this.mode,
-        compatible: false, version: "dev", error: "Unversioned Nexus failed the read-only JSON capability probe." };
+    let catalogOutput;
+    try {
+      catalogOutput = await this.query(["providers", "--json"], cwd);
+    } catch {
+      catalogOutput = null;
     }
+    if (!validProviderCatalog(catalogOutput)) {
+      const detectedVersion = devObservation ? "dev" : version.raw;
+      this.lastDetection = { installed: true, compatible: false, version: detectedVersion, errorCode: "NEXUS_CATALOG_INVALID" };
+      return { id: this.id, installed: true, executionAvailable: false, enabled: true, mode: this.mode,
+        compatible: false, version: detectedVersion, error: "Nexus providers --json failed or returned an incompatible catalog." };
+    }
+    const catalog = normalizeProviders(catalogOutput);
     const detectedVersion = devObservation ? "dev" : version.raw;
     this.lastDetection = {
       installed: true,
       compatible: true,
       version: detectedVersion,
       providers: catalog,
-      providerCatalogState: catalog ? "LIVE" : "UNKNOWN",
+      providerCatalogState: "LIVE",
       providerHealthState: "UNSUPPORTED"
     };
+
+    let unitContract = null;
+    let trackReceiptTransportAvailable = false;
+    if (this.mode === "execute") {
+      try {
+        const probed = await this.query(["maestro-unit", "capabilities", "--json"], cwd);
+        const schemas = probed?.request_schema_versions;
+        const supportsV1 = schemas === undefined || (Array.isArray(schemas) && schemas.includes(1));
+        if (probed?.schema_version === 1 && probed.command === "maestro-unit"
+          && probed.dispatch_mode === "jsonl" && probed.status_mode === "json"
+          && probed.admission === "external_pue_required"
+          && probed.workspace_mode === "ephemeral_detached_worktree"
+          && Array.isArray(probed.operations)
+          && UNIT_OPERATIONS.every((operation) => probed.operations.includes(operation))
+          && supportsV1
+          && (!devObservation || this.allowDevExecution)) {
+          unitContract = "MAESTRO_UNIT_V1";
+          trackReceiptTransportAvailable = Array.isArray(schemas) && schemas.includes(2)
+            && Array.isArray(probed.admission_modes) && probed.admission_modes.includes("track_receipt");
+        }
+      } catch {
+        // A instalação antiga continua observável, mas não recebe trabalhos.
+      }
+    }
+    this.lastDetection.unitContract = unitContract;
+    this.lastDetection.trackReceiptTransportAvailable = trackReceiptTransportAvailable;
 
     return {
       id: this.id,
       installed: true,
       executionAvailable: false,
+      unitExecutionAvailable: unitContract !== null,
+      trackReceiptTransportAvailable,
       enabled: true,
       mode: this.mode,
       version: detectedVersion,
       compatible: true,
       nexus: {
         mode: this.mode,
-        contract: devObservation ? "PROBED_DEV_READ_ONLY" : "PINNED_SOURCE_VERSION",
+        contract: unitContract || (devObservation ? "PROBED_DEV_READ_ONLY" : "PINNED_SOURCE_VERSION"),
         observation: "SUPPORTED",
         providers: this.lastDetection.providerCatalogState,
         providerHealth: this.lastDetection.providerHealthState,
-        execution: "UNSUPPORTED",
+        execution: unitContract ? "PUE_UNIT_SUPPORTED" : "UNSUPPORTED",
         executionLimitation: EXECUTION_LIMITATION
       }
     };
   }
 
   async capabilities() {
-    // The reviewed CLI has no structured single-unit dispatch contract that
-    // Maestro can safely call through its provider executor interface.
+    // The generic prompt executor stays unavailable. PUE units use the
+    // dedicated dispatchUnit/controlUnit contract and its structured receipts.
     return capabilities({
       headless: false,
       structuredEvents: false,
@@ -384,11 +437,12 @@ class NexusAdapter extends ProviderAdapter {
       this.query(["profiles", "--json"], cwd),
       this.query(["workspaces", "--json"], cwd)
     ]);
-    const sessions = commands[0].status === "fulfilled" ? normalizeSessions(commands[0].value) : { state: "UNKNOWN", total: null, byProvider: {} };
-    const quota = commands[1].status === "fulfilled" ? normalizeQuota(commands[1].value) : [];
-    const runtimes = commands[2].status === "fulfilled" ? normalizeRuntimes(commands[2].value) : { state: "UNKNOWN", activeCount: null, items: [] };
-    const profiles = commands[3].status === "fulfilled" ? normalizeProfiles(commands[3].value) : { state: "UNKNOWN", eligibilityState: "UNKNOWN", byProvider: {} };
-    const workspaces = commands[4].status === "fulfilled" ? normalizeWorkspaces(commands[4].value) : { state: "UNKNOWN", total: null, sessionCount: null };
+    const validLists = commands.map((result) => result.status === "fulfilled" && validObservationList(result.value));
+    const sessions = validLists[0] ? normalizeSessions(commands[0].value) : { state: "UNKNOWN", total: null, byProvider: {} };
+    const quota = validLists[1] ? normalizeQuota(commands[1].value) : [];
+    const runtimes = validLists[2] ? normalizeRuntimes(commands[2].value) : { state: "UNKNOWN", activeCount: null, items: [] };
+    const profiles = validLists[3] ? normalizeProfiles(commands[3].value) : { state: "UNKNOWN", eligibilityState: "UNKNOWN", byProvider: {} };
+    const workspaces = validLists[4] ? normalizeWorkspaces(commands[4].value) : { state: "UNKNOWN", total: null, sessionCount: null };
     const statusTargets = runtimes.items.filter((runtime) => runtime.id).slice(0, MAX_RUNTIME_STATUS_QUERIES);
     const statusResults = await Promise.allSettled(statusTargets
       .map((runtime) => this.query(["control", "status", runtime.id, "--json"], cwd)));
@@ -396,7 +450,7 @@ class NexusAdapter extends ProviderAdapter {
       ? normalizeRuntimeStatus(result.value, statusTargets[index].id) : null).filter(Boolean);
     const quotaStates = new Set(quota.map((record) => record.state));
     const quotaState = quotaStates.size === 1 ? quota[0].state : "UNKNOWN";
-    const hasUnknown = commands.some((result) => result.status === "rejected")
+    const hasUnknown = validLists.some((valid) => !valid)
       || statusResults.some((result) => result.status === "rejected")
       || runtimeStatus.length !== statusTargets.length
       || runtimes.items.length > statusTargets.length
@@ -428,6 +482,69 @@ class NexusAdapter extends ProviderAdapter {
     throw makeError("NEXUS_EXECUTION_UNSUPPORTED", EXECUTION_LIMITATION);
   }
 
+  async dispatchUnit({ workspacePath, pueRoot = process.env.MAESTRO_PUE_ROOT,
+    executionId, taskId, nexusProjectId, provider, profile = "" } = {}) {
+    if (this.mode !== "execute") {
+      throw makeError("NEXUS_MODE_BLOCKS_EXECUTION", `Nexus execution is unavailable in mode '${this.mode}'.`);
+    }
+    if (![workspacePath, pueRoot, executionId, taskId, nexusProjectId, provider]
+      .every((value) => typeof value === "string" && value.trim())
+      || (typeof profile !== "string")) {
+      throw makeError("NEXUS_UNIT_INPUT_REQUIRED", "PUE root, execution, task, Nexus project, and fixed provider are required.");
+    }
+    const detection = await this.detect({ workspacePath });
+    if (!detection.unitExecutionAvailable) {
+      throw makeError("NEXUS_UNIT_CONTRACT_UNAVAILABLE", "Nexus maestro-unit schema v1 is unavailable or incompatible.");
+    }
+    const result = await runJsonCommand({
+      executable: "python3",
+      args: [path.resolve(__dirname, "../../scripts/nexus-pue-execution.py"), "dispatch",
+        "--project-root", path.resolve(workspacePath), "--pue-root", path.resolve(pueRoot),
+        "--execution-id", executionId, "--task-id", taskId,
+        "--nexus-project-id", nexusProjectId, "--nexus-executable", resolveExecutable(this.executable),
+        "--provider", provider, "--profile", profile],
+      cwd: path.resolve(workspacePath),
+      timeoutMs: 43_000_000,
+      spawnProcess: this.spawnProcess
+    });
+    if (!result || !["COMPLETED", "COMPLETED_CLEANUP_PENDING", "PUE_GATES_BLOCKED", "INTERVENTION_REQUIRED",
+      "BLOCKED_POLICY", "BLOCKED_DECISION"].includes(result.status)) {
+      throw makeError("NEXUS_UNIT_RESULT_INVALID", "PUE/Nexus bridge returned an invalid result.");
+    }
+    return result;
+  }
+
+  async controlUnit({ operation, workspacePath, pueRoot = process.env.MAESTRO_PUE_ROOT,
+    executionId, taskId, nexusProjectId } = {}) {
+    if (this.mode !== "execute") {
+      throw makeError("NEXUS_MODE_BLOCKS_EXECUTION", `Nexus unit control is unavailable in mode '${this.mode}'.`);
+    }
+    if (!["status", "cancel", "recover", "cleanup"].includes(operation)
+      || ![workspacePath, pueRoot, executionId, taskId, nexusProjectId]
+        .every((value) => typeof value === "string" && value.trim())) {
+      throw makeError("NEXUS_UNIT_INPUT_REQUIRED", "Operation, PUE root, execution, task, and Nexus project are required.");
+    }
+    const detection = await this.detect({ workspacePath });
+    if (!detection.unitExecutionAvailable) {
+      throw makeError("NEXUS_UNIT_CONTRACT_UNAVAILABLE", "Nexus maestro-unit schema v1 is unavailable or incompatible.");
+    }
+    const result = await runJsonCommand({
+      executable: "python3",
+      args: [path.resolve(__dirname, "../../scripts/nexus-pue-execution.py"), operation,
+        "--project-root", path.resolve(workspacePath), "--pue-root", path.resolve(pueRoot),
+        "--execution-id", executionId, "--task-id", taskId,
+        "--nexus-project-id", nexusProjectId, "--nexus-executable", resolveExecutable(this.executable)],
+      cwd: path.resolve(workspacePath),
+      timeoutMs: operation === "recover" ? 43_000_000 : Math.max(this.timeoutMs, 30_000),
+      spawnProcess: this.spawnProcess
+    });
+    if (!result || !["OBSERVED", "CANCEL_REQUESTED", "COMPLETED", "COMPLETED_CLEANUP_PENDING", "PUE_GATES_BLOCKED",
+      "INTERVENTION_REQUIRED", "BLOCKED_POLICY"].includes(result.status)) {
+      throw makeError("NEXUS_UNIT_RESULT_INVALID", "PUE/Nexus unit control returned an invalid result.");
+    }
+    return result;
+  }
+
   async checkAdmission({ workspacePath, pueRoot = process.env.MAESTRO_PUE_ROOT, executionId, taskId } = {}) {
     if (this.mode === "disabled" || this.mode === "invalid") {
       throw makeError("NEXUS_MODE_BLOCKS_ADMISSION", `Nexus admission is unavailable in mode '${this.mode}'.`);
@@ -448,7 +565,7 @@ class NexusAdapter extends ProviderAdapter {
       || (result.status === "READY" && (result.changeId !== executionId
         || result.executionId !== executionId || result.taskId !== taskId
         || result.unitState !== "READY" || result.envelopeState !== "AUTHORIZED"
-        || result.dispatch !== "UNSUPPORTED"
+        || result.dispatch !== "NOT_DISPATCHED"
         || ![result.envelopeDigest, result.authorizationDigest, result.specDigest, result.policyDigest]
           .every((digest) => typeof digest === "string" && /^sha256:[0-9a-f]{64}$/u.test(digest))
         || ![result.authorizationId, result.trackId]

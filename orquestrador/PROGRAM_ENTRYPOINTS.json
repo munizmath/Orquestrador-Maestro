@@ -13,6 +13,7 @@
     "rules": "{{USER_HOME}}/.orquestrador/rules.md",
     "maestro": "{{USER_HOME}}/.orquestrador/maestro.md",
     "persistence": "{{USER_HOME}}/.orquestrador/PERSISTENCE.md",
+    "remoteProviderAuthorization": "{{USER_HOME}}/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json",
     "hooks": "{{USER_HOME}}/.orquestrador/hooks.md",
     "skillsIndex": "{{USER_HOME}}/.orquestrador/SKILLS_INDEX.md",
     "skillsRouter": "{{USER_HOME}}/.orquestrador/SKILLS_ROUTER.json",
@@ -27,6 +28,14 @@
     "skillSyncUnix": "{{USER_HOME}}/.orquestrador/sync-skills.sh",
     "skillsRoot": "{{USER_HOME}}/.orquestrador/skills",
     "globalSkillsRoot": "{{USER_HOME}}/.global-skills"
+  },
+  "operationalCommands": {
+    "preflight": "orquestrador-maestro preflight --json",
+    "contextPack": "orquestrador-maestro context pack --project-path PATH --json",
+    "providerHealth": "orquestrador-maestro providers health --json",
+    "cleanup": "orquestrador-maestro cleanup --project-path PATH --json",
+    "channelStatus": "orquestrador-maestro channel status --json",
+    "runReceipt": "orquestrador-maestro run receipt RUN_ID --project-path PATH"
   },
   "programs": {
     "codex": {

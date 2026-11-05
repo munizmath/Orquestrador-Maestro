@@ -13,11 +13,12 @@ Use only against applications the user owns or is authorized to test.
 ## Workflow
 
 1. Discover the app URL, startup command, test account policy, and allowed origins.
-2. Map critical journeys and acceptance criteria.
-3. Prefer semantic locators and accessibility state over brittle selectors.
-4. Test happy path, validation errors, loading, empty, unauthorized, and failure states.
-5. Capture screenshots, console errors, network failures, and trace artifacts when useful.
-6. Clean up test data and avoid sending real messages or payments.
-7. Report reproducible steps and artifacts.
+2. Confirm the served Web/API revision and that required auth, fixture, and reset paths actually reach the target state. Keep captures from different revisions separate.
+3. Map the affected journey, states, roles, breakpoints, and acceptance criteria; use a full inventory only for a broad audit.
+4. Prefer semantic locators and accessibility state over brittle selectors.
+5. Exercise relevant success, validation, loading, empty, unauthorized, and failure paths. If a state is unreachable, report `BLOCKED` with the missing fixture or runtime dependency.
+6. Capture interaction evidence, screenshots, console errors, network failures, and trace artifacts when useful. An accessibility tree or screenshot is not a real screen-reader test.
+7. Clean up test data and avoid sending real messages or payments.
+8. Report reproducible steps, revision, artifacts, and the exact level of proof obtained.
 
 Never bypass authorization or test third-party systems without explicit scope.

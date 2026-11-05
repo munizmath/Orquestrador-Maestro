@@ -40,7 +40,13 @@ Use one owner for each concern:
 | One-off conversational visual polish | `skill-impeccable` | Use instead of open-design for a bounded polish pass. |
 | Cinematic marketing experience | `skill-premium-web-experience` | It owns the strategy for marketing surfaces; do not also treat this skill as the top-level owner. |
 
-When more than one downstream skill applies, load at most two for a standard task. The top-level intent and Definition of Done remain owned here.
+When more than one downstream skill applies, load at most two for a standard task. The top-level intent and Definition of Done remain owned here. For product UI, do not route a local fix through a visual-direction or polish skill unless that is the requested outcome.
+
+## Unit-sized evidence
+
+Before editing, identify the affected user task, rendered context and state, expected observable behavior, available fixture, and adjacent regression risk. Scale validation to those affected contexts; use the full screen inventory only for an explicitly broad review. If a required state cannot be reached in the running app, record the missing fixture or environment and keep the experience claim partial.
+
+Distinguish source/unit proof, browser interaction proof, assistive-technology proof, and human acceptance. A passing build, source assertion, or screenshot never promotes a journey to browser or assistive PASS. Compare before/after artifacts from known revisions; do not combine captures across hot reloads or different bundles as one baseline. Record P2/P3 issues outside the user task for triage instead of opening an unrequested polish loop.
 
 ## When to load
 

@@ -21,6 +21,12 @@ const workflowState = require(path.join(rootDir, "orquestrador", "bin", "workflo
 const { Memory } = require(path.join(rootDir, "orquestrador", "bin", "memory.js"));
 const { MaestroApplication } = require(path.join(rootDir, "runtime", "application"));
 const { assertCloudConsent } = require(path.join(rootDir, "runtime", "providers", "cloud-consent"));
+const { buildPreflight, formatPreflight, resolveProviders } = require(path.join(rootDir, "runtime", "maintenance", "preflight"));
+const { buildContextPack } = require(path.join(rootDir, "runtime", "maintenance", "context-pack"));
+const { cleanupWorkspace } = require(path.join(rootDir, "runtime", "maintenance", "cleanup"));
+const { getChannelStatus, setChannel } = require(path.join(rootDir, "runtime", "maintenance", "channel"));
+const { listProviderHealth, recordProviderHealth } = require(path.join(rootDir, "runtime", "providers", "provider-health"));
+const { readRunReceipt } = require(path.join(rootDir, "runtime", "receipts", "run-receipt"));
 const { createBridge, createStdioServer } = require(path.join(rootDir, "runtime", "bridge"));
 const { resolveMaestroRoot } = require(path.join(rootDir, "runtime", "config", "maestro-paths"));
 const { loadGovernanceConfig, writeGovernanceConfig } = require(path.join(rootDir, "runtime", "governance", "compatibility"));
@@ -71,10 +77,14 @@ Uso:
   orquestrador-maestro verify [opcoes]
   orquestrador-maestro rollback [--home-path PATH] [--to STAMP] [--list]
   orquestrador-maestro doctor [opcoes]
+  orquestrador-maestro preflight [--project-path PATH] [--providers IDS] [--explain|--json]
+  orquestrador-maestro cleanup [--project-path PATH] [--apply] [--json]
+  orquestrador-maestro channel <status|validate|set> [--json]
   orquestrador-maestro init-dev [--project-path PATH]
   orquestrador-maestro compact-worklog [--project-path PATH] [--keep N]
   orquestrador-maestro check-dev-gates [--project-path PATH] [--max-entries N] [--strict]
   orquestrador-maestro context brief [--project-path PATH] [--task TEXT] [--max-chars N] [--since COMMIT] [--json]
+  orquestrador-maestro context pack [--project-path PATH] [--include-content] [--json]
   orquestrador-maestro context section --path FILE.md --heading TEXT [--project-path PATH] [--json]
   orquestrador-maestro run [--provider ID] [--model MODEL] [--allow-cloud-context] [--workspace PATH] "tarefa"
   orquestrador-maestro go|plan [--auto] [--provider ID] [--model MODEL] [--allow-cloud-context] [--project-path PATH] "objetivo"
@@ -115,8 +125,11 @@ Uso:
   orquestrador-maestro skills list [--project-path PATH]
   orquestrador-maestro skill-catalog <generate|check|validate>
   orquestrador-maestro providers list [--project-path PATH]
+  orquestrador-maestro providers health [--json]
   orquestrador-maestro providers observe nexus [--project-path PATH]
   orquestrador-maestro providers preflight nexus --execution-id ID --task-id ID --pue-root PATH [--project-path PATH]
+  orquestrador-maestro providers dispatch nexus --execution-id ID --task-id ID --pue-root PATH --nexus-project-id ID --provider NAME [--profile NAME] [--project-path PATH] [--allow-cloud-context]
+  orquestrador-maestro providers status|cancel|recover|cleanup nexus --execution-id ID --task-id ID --pue-root PATH --nexus-project-id ID [--project-path PATH]
   orquestrador-maestro bridge --stdio [--project-path PATH]
   orquestrador-maestro desktop-plugin <install|status|doctor|stats|remove> [opcoes]
   orquestrador-maestro adapters <list|paths|validate> [id]
@@ -997,6 +1010,69 @@ function runDevContextHelper(helperCommand, args) {
   return run(process.execPath, [script, helperCommand, ...args], { cwd: process.cwd() });
 }
 
+function handlePreflightCommand(args) {
+  const options = parseRuntimeArgs(args, ["--project-path", "--providers", "--data-class", "--max-agents", "--channel"], ["--json", "--explain"]);
+  if (options.values.length > 0) throw new Error("Uso: maestro preflight [--project-path PATH] [--providers IDS] [--explain|--json]");
+  const maxAgents = options.maxAgents === undefined ? undefined : Number(options.maxAgents);
+  if (maxAgents !== undefined && (!Number.isInteger(maxAgents) || maxAgents < 1 || maxAgents > 20)) throw new Error("--max-agents deve ser um inteiro entre 1 e 20.");
+  const result = buildPreflight({
+    workspacePath: options.projectPath,
+    providers: resolveProviders(options.providers),
+    dataClass: options.dataClass || "source-code",
+    maxAgents,
+    channel: options.channel || "auto"
+  });
+  console.log(options.json ? JSON.stringify(result, null, 2) : formatPreflight(result));
+  return result.status === "READY" ? 0 : 1;
+}
+
+function handleCleanupCommand(args) {
+  const options = parseRuntimeArgs(args, ["--project-path", "--max-age-days"], ["--apply", "--json"]);
+  if (options.values.length > 0) throw new Error("Uso: maestro cleanup [--project-path PATH] [--max-age-days N] [--apply] [--json]");
+  const maxAgeDays = options.maxAgeDays === undefined ? 7 : Number(options.maxAgeDays);
+  if (!Number.isInteger(maxAgeDays) || maxAgeDays < 1 || maxAgeDays > 3650) throw new Error("--max-age-days deve ser um inteiro entre 1 e 3650.");
+  const result = cleanupWorkspace({ workspacePath: options.projectPath, maxAgeMs: maxAgeDays * 24 * 60 * 60 * 1000, apply: options.apply === true });
+  console.log(options.json ? JSON.stringify(result, null, 2) : `Limpeza ${result.apply ? "aplicada" : "simulada"}: ${result.candidates.length} candidato(s), ${result.removed.length} removido(s).`);
+  return 0;
+}
+
+function handleChannelCommand(args) {
+  const [subcommand = "status", ...rest] = args;
+  const options = parseRuntimeArgs(rest, [], ["--json"]);
+  if (options.values.length > 1) throw new Error("Uso: maestro channel <status|validate|set dev|set stable> [--json]");
+  const status = getChannelStatus({ rootDir });
+  if (subcommand === "status") {
+    console.log(options.json ? JSON.stringify(status, null, 2) : `Canal: ${status.channel}\nVersão: ${status.packageVersion}\nCheckout limpo: ${status.git.dirty === false ? "sim" : "não"}\nStable pronta: ${status.stableReady ? "sim" : "não"}`);
+    return 0;
+  }
+  if (subcommand === "validate") {
+    console.log(options.json ? JSON.stringify(status, null, 2) : status.stableReady ? "Canal stable validado." : `Canal stable não está pronta: ${status.warning || "checkout não validado"}.`);
+    return status.stableReady ? 0 : 1;
+  }
+  if (subcommand === "set") {
+    const channel = options.values[0];
+    if (!channel) throw new Error("Informe o canal: dev ou stable.");
+    if (channel === "stable" && !status.stableReady) throw new Error(`Não é seguro ativar stable: ${status.warning || "checkout sujo ou não versionado"}.`);
+    console.log(JSON.stringify(setChannel(channel), null, 2));
+    return 0;
+  }
+  throw new Error("Subcomando de channel desconhecido: status, validate ou set.");
+}
+
+function handleContextPackCommand(args) {
+  const options = parseRuntimeArgs(args, ["--project-path", "--max-files", "--max-bytes", "--max-file-bytes"], ["--include-content", "--json"]);
+  if (options.values.length > 0) throw new Error("Uso: maestro context pack [--project-path PATH] [--include-content] [--json]");
+  const result = buildContextPack({
+    workspacePath: options.projectPath,
+    includeContent: options.includeContent === true,
+    maxFiles: options.maxFiles === undefined ? undefined : Number(options.maxFiles),
+    maxBytes: options.maxBytes === undefined ? undefined : Number(options.maxBytes),
+    maxFileBytes: options.maxFileBytes === undefined ? undefined : Number(options.maxFileBytes)
+  });
+  console.log(JSON.stringify(result, null, 2));
+  return 0;
+}
+
 function runToolAdapters(args) {
   const script = path.join(rootDir, "orquestrador", "bin", "tool-adapters.js");
   if (!commandExists(script)) {
@@ -1246,6 +1322,15 @@ async function createRuntimeApplication(projectPath, { runFile } = {}) {
 
 async function handleRunCommand(args) {
   const [subcommand, ...rest] = args;
+  if (subcommand === "receipt") {
+    const options = parseRuntimeArgs(rest, ["--project-path"]);
+    const runId = options.values[0];
+    if (!runId || options.values.length !== 1) throw new Error("Uso: maestro run receipt <id> [--project-path PATH]");
+    const receipt = readRunReceipt(options.projectPath, runId);
+    if (!receipt) throw new Error(`Recibo não encontrado: ${runId}`);
+    console.log(JSON.stringify(receipt, null, 2));
+    return 0;
+  }
   if (subcommand === "show" || subcommand === "inspect") {
     const options = parseRuntimeArgs(rest, ["--project-path"]);
     const runId = options.values[0];
@@ -1267,17 +1352,18 @@ async function handleRunCommand(args) {
   if (!description) throw new Error("Informe a tarefa: maestro run [opcoes] \"tarefa\"");
   const app = await createRuntimeApplication(options.projectPath);
   const providerFallbacks = String(options.fallbackProviders || "").split(",").map((value) => value.trim()).filter(Boolean);
+  const workspacePath = path.resolve(options.workspace || options.projectPath || process.cwd());
   assertCloudConsent([
     { providerId: options.provider || "codex", model: options.model },
     ...providerFallbacks.map((providerId) => ({ providerId }))
-  ], options.allowCloudContext);
+  ], options.allowCloudContext, { workspacePath });
   const resolutionMode = options.resolutionMode || "shadow";
   if (!["shadow", "advisory"].includes(resolutionMode)) {
     throw new Error("--resolution-mode aceita apenas shadow ou advisory; enforce permanece bloqueado pelo promotion gate.");
   }
   const request = {
     description, providerId: options.provider, providerFallbacks, profileId: options.profile, policyId: options.policy,
-    workspacePath: options.workspace || options.projectPath, model: options.model, mode: options.mode, agent: options.agent,
+    workspacePath, model: options.model, mode: options.mode, agent: options.agent,
     sandbox: options.sandbox, interactionProfile: options.interaction, resolutionMode,
     cloudContextApproved: options.allowCloudContext === true
   };
@@ -1533,15 +1619,24 @@ function handleSkillCatalogCommand(args) {
 }
 
 async function handleProvidersCommand(args) {
-  const options = parseRuntimeArgs(args.slice(1), ["--project-path", "--execution-id", "--task-id", "--pue-root"]);
+  const options = parseRuntimeArgs(args.slice(1), ["--project-path", "--execution-id", "--task-id", "--pue-root", "--nexus-project-id", "--provider", "--profile", "--max-age"], ["--allow-cloud-context", "--json"]);
   const subcommand = args[0];
+  if (subcommand === "health" && options.values.length === 0) {
+    const maxAge = options.maxAge === undefined ? undefined : Number(options.maxAge);
+    if (maxAge !== undefined && (!Number.isInteger(maxAge) || maxAge < 1)) throw new Error("--max-age deve ser um inteiro positivo em minutos.");
+    const result = listProviderHealth({ maxAgeMs: maxAge === undefined ? undefined : maxAge * 60 * 1000 });
+    console.log(JSON.stringify(result, null, 2));
+    return 0;
+  }
   if (subcommand === "list" && options.values.length === 0) {
     console.log(JSON.stringify(await (await createRuntimeApplication(options.projectPath)).listProviders(), null, 2));
     return 0;
   }
   if (subcommand === "observe" && options.values.length === 1) {
     const app = await createRuntimeApplication(options.projectPath);
-    console.log(JSON.stringify(await app.observeProvider(options.values[0], { workspacePath: app.projectRoot }), null, 2));
+    const result = await app.observeProvider(options.values[0], { workspacePath: app.projectRoot });
+    try { recordProviderHealth(options.values[0], result); } catch {}
+    console.log(JSON.stringify(result, null, 2));
     return 0;
   }
   if (subcommand === "preflight" && options.values.length === 1 && options.values[0] === "nexus") {
@@ -1555,13 +1650,42 @@ async function handleProvidersCommand(args) {
     console.log(JSON.stringify(result, null, 2));
     return result.status === "READY" ? 0 : 1;
   }
+  if (subcommand === "dispatch" && options.values.length === 1 && options.values[0] === "nexus") {
+    const app = await createRuntimeApplication(options.projectPath);
+    const result = await app.dispatchProviderUnit("nexus", {
+      workspacePath: app.projectRoot,
+      pueRoot: options.pueRoot,
+      executionId: options.executionId,
+      taskId: options.taskId,
+      nexusProjectId: options.nexusProjectId,
+      provider: options.provider,
+      profile: options.profile || "",
+      cloudContextApproved: options.allowCloudContext === true
+    });
+    console.log(JSON.stringify(result, null, 2));
+    return result.status === "COMPLETED" ? 0 : 1;
+  }
+  if (["status", "cancel", "recover", "cleanup"].includes(subcommand)
+      && options.values.length === 1 && options.values[0] === "nexus") {
+    const app = await createRuntimeApplication(options.projectPath);
+    const result = await app.controlProviderUnit("nexus", {
+      operation: subcommand,
+      workspacePath: app.projectRoot,
+      pueRoot: options.pueRoot,
+      executionId: options.executionId,
+      taskId: options.taskId,
+      nexusProjectId: options.nexusProjectId
+    });
+    console.log(JSON.stringify(result, null, 2));
+    return ["OBSERVED", "CANCEL_REQUESTED", "COMPLETED"].includes(result.status) ? 0 : 1;
+  }
   if (["start", "report"].includes(subcommand) && options.values.length === 1 && options.values[0] === "deepseek") {
     const app = await createRuntimeApplication(options.projectPath);
     const gateway = app.providers.get("deepseek");
     console.log(subcommand === "start" ? await gateway.start() : await gateway.report());
     return 0;
   }
-  throw new Error("Uso: maestro providers <list|observe nexus|preflight nexus|start deepseek|report deepseek> [--project-path PATH]");
+  throw new Error("Uso: maestro providers <list|health|observe nexus|preflight nexus|dispatch nexus|status nexus|cancel nexus|recover nexus|cleanup nexus|start deepseek|report deepseek> [--project-path PATH]");
 }
 
 async function handleBridgeCommand(args) {
@@ -2111,12 +2235,13 @@ async function handleGoCommand(args, planningOnly = false) {
   const options = parseRuntimeArgs(args, ["--project-path", "--provider", "--fallback-providers", "--interviewer", "--model", "--max-cost", "--max-parallel", "--profile", "--interaction", "--resolution-mode", "--router-version", "--complexity", "--sandbox", "--state-file"], ["--auto", "--plan", "--allow-cloud-context"]);
   const description = options.values.join(" ").trim();
   if (!description) throw new Error('Informe a intenção: orquestrador-maestro go "tarefa"');
+  const workspacePath = path.resolve(options.projectPath || process.cwd());
   const consentTargets = [
     { providerId: options.provider || (options.sandbox === "read-only" ? "codex" : "opencode"), model: options.model },
     { providerId: options.sandbox === "read-only" ? "codex" : options.interviewer || "opencode" },
     ...String(options.fallbackProviders || "").split(",").map((providerId) => ({ providerId: providerId.trim() })).filter((target) => target.providerId)
   ];
-  assertCloudConsent(consentTargets, options.allowCloudContext);
+  assertCloudConsent(consentTargets, options.allowCloudContext, { workspacePath });
   if (options.sandbox && options.sandbox !== "read-only") {
     throw new Error("go --sandbox aceita apenas read-only; use run para outros modos.");
   }
@@ -2142,7 +2267,6 @@ async function handleGoCommand(args, planningOnly = false) {
   const { estimateCost } = require(path.join(rootDir, "runtime", "planner", "model-router"));
   const { LaneExecutor } = require(path.join(rootDir, "runtime", "planner", "lane-executor"));
 
-  const workspacePath = path.resolve(options.projectPath || process.cwd());
   let runFile;
   if (options.stateFile) {
     if (!path.isAbsolute(options.stateFile)) throw new Error("--state-file exige caminho absoluto.");
@@ -3212,6 +3336,9 @@ async function dispatch(command, args) {
   }
 
   if (command === "context") {
+    if (args[0] === "pack") {
+      return handleContextPackCommand(args.slice(1));
+    }
     if (args[0] === "inspect") {
       return handleContextCommand(args);
     }
@@ -3291,6 +3418,18 @@ async function dispatch(command, args) {
     return runDoctor(args);
   }
 
+  if (command === "preflight") {
+    return handlePreflightCommand(args);
+  }
+
+  if (command === "cleanup") {
+    return handleCleanupCommand(args);
+  }
+
+  if (command === "channel") {
+    return handleChannelCommand(args);
+  }
+
   if (command === "init-dev") {
     return runInitDev(args);
   }
@@ -3367,9 +3506,17 @@ async function main() {
     exitCode = 1;
   }
 
+  // Automatic maintenance is deliberately narrow: only stale files inside
+  // Maestro-owned temporary directories and expired provider-health entries.
+  // It never compacts DEV, deletes receipts, touches user code, or runs for
+  // install/update/rollback operations.
+  if (process.env.MAESTRO_DISABLE_AUTO_CLEANUP !== "1" && !["install", "update", "uninstall", "rollback"].includes(command)) {
+    try { cleanupWorkspace({ workspacePath: process.cwd(), apply: true }); } catch {}
+  }
+
   const telemetryCommands = new Set([
     "install", "update", "uninstall", "list-targets", "dry-run", "verify", "rollback", "doctor",
-    "init-dev", "compact-worklog", "check-dev-gates", "changelog", "version", "run",
+    "init-dev", "compact-worklog", "check-dev-gates", "preflight", "cleanup", "channel", "changelog", "version", "run",
     "runs", "usage", "projects", "project", "missions", "mission", "terminal",
     "skills", "skill-catalog", "providers", "bridge", "governance", "interaction",
     "status", "memory", "benchmark", "adapters", "targets", "go", "plan", "desktop-plugin"

@@ -629,7 +629,8 @@
         "responsividade",
         "corrigir responsividade",
         "foco de teclado",
-        "touch targets"
+        "touch targets",
+        "audite a acessibilidade"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-frontend-ux-guardrails/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-frontend-ux-guardrails/SKILL.md",
@@ -986,7 +987,8 @@
         "webapp testing",
         "teste e2e",
         "playwright",
-        "teste de aplicação web"
+        "teste de aplicação web",
+        "verifique no navegador"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-webapp-testing/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-webapp-testing/SKILL.md",
@@ -1268,7 +1270,8 @@
         "design profile",
         "design system metadata",
         "visual qa harness",
-        "frontend definition of done"
+        "frontend definition of done",
+        "corrija a sobreposição"
       ],
       "canonicalPath": "{{USER_HOME}}/.orquestrador/skills/skill-frontend-excellence/SKILL.md",
       "codexPath": "{{USER_HOME}}/.codex/skills/skill-frontend-excellence/SKILL.md",

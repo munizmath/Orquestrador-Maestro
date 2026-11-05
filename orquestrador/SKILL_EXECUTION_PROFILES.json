@@ -43,8 +43,9 @@
       "loadReferences": "progressive",
       "allowSubagents": true,
       "validation": "integration-plus-lane-verification",
-      "notes": "Explicit fan-out profile. Use only when the user asks for multiagent/team/swarm/parallel work or the plan contains 2+ genuinely independent workstreams with non-overlapping ownership.",
-      "maxSubagents": 4
+      "notes": "Explicit fan-out profile with an elastic roster capped at 20 agents. Use authorized healthy Codex, OpenCode, OpenRouter, DeepSeek, Claude CLI, and Nexus routes when independent workstreams, ownership, worktree isolation, quota, budget, and verification gates allow it; never treat a provider catalog as a guaranteed agent count.",
+      "maxSubagents": 20,
+      "maxSubagentsMode": "elastic"
     },
     "phase-loop": {
       "maxSkills": 4,

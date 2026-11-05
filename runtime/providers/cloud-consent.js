@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { isAuthorizedRemoteTarget, loadRemoteAuthorization } = require("./remote-authorization");
 
 function openCodeConfig() {
   try {
@@ -13,7 +14,7 @@ function openCodeConfig() {
 }
 
 function isCloudTarget(providerId, model, config = openCodeConfig()) {
-  if (providerId === "claude" || providerId === "deepseek") return true;
+  if (["claude", "deepseek", "nexus", "openrouter"].includes(providerId)) return true;
   if (providerId !== "opencode") return false;
   const selected = !model || model === "default" ? config.model : model;
   if (typeof selected !== "string" || !selected.startsWith("ollama/")) return true;
@@ -25,13 +26,22 @@ function isCloudTarget(providerId, model, config = openCodeConfig()) {
   }
 }
 
-function assertCloudConsent(targets, approved) {
-  const cloud = targets.find(({ providerId, model }) => isCloudTarget(providerId, model));
-  if (cloud && approved !== true) {
-    const error = new Error(`CLOUD_CONTEXT_APPROVAL_REQUIRED: ${cloud.providerId} pode enviar contexto do projeto; confirme esta tarefa com --allow-cloud-context.`);
+function assertCloudConsent(targets, approved, options = {}) {
+  const cloudTargets = targets.filter(({ providerId, model }) => isCloudTarget(providerId, model, options.openCodeConfig));
+  if (cloudTargets.length === 0 || approved === true) return { authorized: true, source: approved === true ? "task" : "local" };
+  const authorization = options.authorization || loadRemoteAuthorization(options).value;
+  const unauthorized = cloudTargets.filter((target) => !isAuthorizedRemoteTarget(target, {
+    authorization,
+    workspacePath: options.workspacePath,
+    dataClass: options.dataClass || "source-code"
+  }));
+  if (unauthorized.length > 0) {
+    const providers = unauthorized.map(({ providerId }) => providerId).join(", ");
+    const error = new Error(`CLOUD_CONTEXT_APPROVAL_REQUIRED: ${providers} pode enviar contexto do projeto; confirme esta tarefa com --allow-cloud-context ou configure um mandato persistente limitado ao workspace.`);
     error.code = "CLOUD_CONTEXT_APPROVAL_REQUIRED";
     throw error;
   }
+  return { authorized: true, source: "standing-mandate", providers: cloudTargets.map(({ providerId }) => providerId) };
 }
 
 module.exports = { isCloudTarget, assertCloudConsent, openCodeConfig };

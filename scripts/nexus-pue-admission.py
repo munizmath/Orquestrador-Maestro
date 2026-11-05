@@ -12,6 +12,8 @@ import json
 import re
 from pathlib import Path
 
+import yaml
+
 
 def load_module(name: str, source: Path):
     if not source.is_file():
@@ -32,10 +34,57 @@ def valid_digest(value: object) -> bool:
     return isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value) is not None
 
 
-def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -> dict:
+def decommissioned_envelope(project_root: Path) -> bool:
+    """Do not authorize new work through a superseded project Envelope regime."""
+    decision_path = (project_root / "docs" / "architecture" / "decisions"
+                     / "ADR-0021-descontinuacao-envelope-de-execucao.md")
+    if not decision_path.is_file():
+        return False
+    decision = decision_path.read_text(encoding="utf-8")
+    return (re.search(r"\*\*Status:\*\*\s*aceita\b", decision, re.IGNORECASE) is not None
+            and re.search(r"\*\*Supersedes:\*\*\s*ADR-0020\b", decision, re.IGNORECASE) is not None)
+
+
+def worktree_permission(project_root: Path, pue_root: Path) -> dict | None:
+    """The current Nexus unit runner requires a Git worktree for write isolation."""
+    schema_path = pue_root / "schemas" / "project.schema.json"
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        worktree_schema = schema["properties"]["git"]["properties"]["worktrees"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_POLICY_UNPROVEN"}
+    if not isinstance(worktree_schema, dict):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_POLICY_UNPROVEN"}
+    if worktree_schema.get("const") == "forbidden":
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_ISOLATION_FORBIDDEN"}
+    values = worktree_schema.get("enum", [worktree_schema.get("const")])
+    if not isinstance(values, list) or "allowed" not in values:
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_POLICY_UNPROVEN"}
+    manifest_path = project_root / "governance" / "project.yaml"
+    try:
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, yaml.YAMLError):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_POLICY_UNPROVEN"}
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("git"), dict):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_POLICY_UNPROVEN"}
+    if manifest["git"].get("worktrees") != "allowed":
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_WORKTREE_ISOLATION_FORBIDDEN"}
+    return None
+
+
+def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str,
+          include_contract: bool = False) -> dict:
     base = pue_root / "policies" / "ci"
     if not (project_root / "policy" / "pue-policy.yaml").is_file():
         return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_POLICY_MISSING"}
+    try:
+        if decommissioned_envelope(project_root):
+            return {"status": "BLOCKED_DECISION", "reasonCode": "PUE_ENVELOPE_REGIME_SUPERSEDED"}
+    except (OSError, UnicodeError):
+        return {"status": "BLOCKED_POLICY", "reasonCode": "PUE_AUTHORIZATION_REGIME_UNPROVEN"}
+    isolation_block = worktree_permission(project_root, pue_root)
+    if isolation_block is not None:
+        return isolation_block
     try:
         preflight = load_module("nexus_pue_preflight", base / "pue-preflight.py")
         graph_module = load_module("nexus_pue_work_graph", base / "pue-work-graph.py")
@@ -119,7 +168,7 @@ def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -
     allowed_capabilities = envelope.get("request", {}).get("capabilities", [])
     if not isinstance(unit_capabilities, list) or not set(unit_capabilities).issubset(set(allowed_capabilities)):
         return {"status": "BLOCKED_DECISION", "reasonCode": "PUE_UNIT_OUTSIDE_CAPABILITIES"}
-    return {
+    result = {
         "status": "READY",
         "changeId": decision["change_id"],
         "executionId": execution_id,
@@ -133,8 +182,12 @@ def check(project_root: Path, pue_root: Path, execution_id: str, task_id: str) -
         "baselineGitSha": baseline["git_sha"],
         "unitState": node["state"],
         "envelopeState": verified["effective_status"],
-        "dispatch": "UNSUPPORTED",
+        "dispatch": "NOT_DISPATCHED",
     }
+    if include_contract:
+        result["_envelope"] = envelope
+        result["_node"] = node
+    return result
 
 
 def main() -> None:

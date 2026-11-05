@@ -58,6 +58,7 @@
     "test:xkiro": "node scripts/test-xkiro.js",
     "validate:paths": "node scripts/validate-git-paths.js",
     "verify:pr": "node scripts/verify-pr.js",
+    "verify:operating-mode": "node scripts/verify-operating-mode.js",
     "validate": "node scripts/validate.js",
     "bench:list": "node --import tsx benchmark-harness/src/cli/index.ts list --dir benchmark-harness/scenarios",
     "bench:validate": "node --import tsx benchmark-harness/src/cli/index.ts validate",

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "status": "active",
+  "authority": "maestro",
+  "issuedAt": "YYYY-MM-DD",
+  "validUntil": "YYYY-MM-DDTHH:MM:SS-03:00",
+  "scope": "development-context",
+  "projects": "local-user-projects",
+  "workspaceRoots": [
+    "{{USER_HOME}}/Projetos",
+    "{{USER_HOME}}/Documents/Codex"
+  ],
+  "providers": [
+    "opencode",
+    "openrouter",
+    "deepseek",
+    "claude",
+    "nexus"
+  ],
+  "actions": [
+    "send-source-code-context",
+    "provider-model-call",
+    "multiagent-editor-dispatch"
+  ],
+  "dataClassesAllowed": [
+    "source-code",
+    "tests",
+    "documentation",
+    "synthetic-fixtures"
+  ],
+  "dataClassesForbidden": [
+    "secrets",
+    "tokens",
+    "credentials",
+    "env-files",
+    "personal-data",
+    "customer-data",
+    "production-data"
+  ],
+  "costPolicy": {
+    "maxIncrementalBRL": 0,
+    "paidRoutes": false,
+    "paidPlans": false,
+    "note": "This mandate authorizes context transfer only; it never authorizes spending, subscription, credit, or a paid fallback."
+  },
+  "revocation": {
+    "setStatusTo": "revoked",
+    "file": "~/.orquestrador/REMOTE_PROVIDER_AUTHORIZATION.json"
+  }
+}
