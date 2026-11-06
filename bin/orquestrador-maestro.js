@@ -29,6 +29,8 @@ const { listProviderHealth, recordProviderHealth } = require(path.join(rootDir, 
 const { readRunReceipt } = require(path.join(rootDir, "runtime", "receipts", "run-receipt"));
 const { createBridge, createStdioServer } = require(path.join(rootDir, "runtime", "bridge"));
 const { resolveMaestroRoot } = require(path.join(rootDir, "runtime", "config", "maestro-paths"));
+const { AutopilotMissionController, MissionSupervisor, ProviderCouncilAdapter, SharedElasticScheduler, createApplicationExecutionAdapter } = require(path.join(rootDir, "runtime", "autopilot"));
+const { JsonFileRunStore } = require(path.join(rootDir, "runtime", "store"));
 const { loadGovernanceConfig, writeGovernanceConfig } = require(path.join(rootDir, "runtime", "governance", "compatibility"));
 const { loadInteractionCatalog, resolveInteractionProfile, setInteractionProfile, resetInteractionProfile } = require(path.join(rootDir, "runtime", "interaction"));
 const { formatStatus, resolveStatus } = require(path.join(rootDir, "runtime", "status"));
@@ -119,6 +121,7 @@ Uso:
   orquestrador-maestro missions [--project-path PATH]
   orquestrador-maestro mission create [--project-path PATH] "objetivo"
   orquestrador-maestro mission show <id> [--project-path PATH]
+  orquestrador-maestro autopilot <start|status|resume|task|event|decision|complete-task|complete|dispatch|supervisor> [opcoes]
   orquestrador-maestro terminal list [--project-path PATH]
   orquestrador-maestro terminal start [--project-path PATH] -- <comando> [argumentos]
   orquestrador-maestro terminal stop <id> [--project-path PATH]
@@ -1561,6 +1564,213 @@ async function handleMissionCommand(args) {
     return 0;
   }
   throw new Error("Uso: maestro mission <create|show>");
+}
+
+function commaList(value) {
+  if (value === undefined) return undefined;
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function handleAutopilotCommand(args) {
+  const [subcommand = "status", ...rest] = args;
+  const options = parseRuntimeArgs(rest, [
+    "--project-path", "--controller-id", "--run-id", "--id", "--lane-id", "--description",
+    "--capabilities", "--depends-on", "--write-scope", "--task-id", "--reason", "--event-type",
+    "--attempt-id", "--result-ref", "--evidence-refs", "--decision-id", "--effect", "--authority-ref",
+    "--source-ref", "--decision-ref", "--technical-result", "--disposition", "--min-agents",
+    "--preferred-agents", "--max-agents", "--provider", "--model", "--execution-unit", "--council-providers", "--council-routes",
+    "--council-agent", "--council-model", "--council-max-members", "--interval-ms"
+  ], ["--json", "--authorizes-completion", "--allow-serial-fallback", "--allow-cloud-context"]);
+  if (!new Set(["start", "status", "resume", "task", "event", "decision", "complete-task", "complete", "dispatch", "supervisor"]).has(subcommand)) {
+    throw new Error("Uso: maestro autopilot <start|status|resume|task|event|decision|complete-task|complete|dispatch|supervisor> [opcoes]");
+  }
+  const app = await createRuntimeApplication(options.projectPath);
+  const leaseStore = new JsonFileRunStore({ filePath: path.join(resolveMaestroRoot(), "runtime", "runs.json") });
+  const configuredMaxAgents = Number.parseInt(process.env.MAESTRO_MAX_AGENTS || "20", 10);
+  const scheduler = new SharedElasticScheduler({
+    store: leaseStore,
+    maxAgents: Number.isInteger(configuredMaxAgents) && configuredMaxAgents > 0 ? configuredMaxAgents : 20
+  });
+  let councilRoutes;
+  if (options.councilRoutes) {
+    try { councilRoutes = JSON.parse(options.councilRoutes); } catch { throw new Error("--council-routes deve conter JSON válido"); }
+    if (!Array.isArray(councilRoutes)) throw new Error("--council-routes deve ser uma lista JSON");
+  } else {
+    councilRoutes = commaList(options.councilProviders || "opencode").map((providerId) => ({
+      providerId,
+      agent: options.councilAgent,
+      model: options.councilModel
+    }));
+  }
+  const council = new ProviderCouncilAdapter({
+    application: app,
+    routes: councilRoutes,
+    maxMembers: options.councilMaxMembers === undefined ? 4 : Number(options.councilMaxMembers),
+    cloudContextApproved: options.allowCloudContext === true
+  });
+  let executionUnit;
+  if (options.executionUnit) {
+    try { executionUnit = JSON.parse(options.executionUnit); } catch { throw new Error("--execution-unit deve conter JSON válido"); }
+    if (!executionUnit || typeof executionUnit !== "object" || Array.isArray(executionUnit)) throw new Error("--execution-unit deve conter um objeto JSON");
+  }
+  const executionAdapter = options.provider
+    ? createApplicationExecutionAdapter({
+      application: app,
+      providerId: options.provider,
+      model: options.model,
+      agent: options.councilAgent,
+      unit: executionUnit,
+      cloudContextApproved: options.allowCloudContext === true
+    })
+    : null;
+  const supervisor = new MissionSupervisor({ store: leaseStore, scheduler, council, executionAdapter });
+  const controller = new AutopilotMissionController({
+    projectRoot: options.projectPath,
+    controllerId: options.controllerId,
+    leaseStore,
+    scheduler,
+    council,
+    supervisor
+  });
+  const print = (value) => console.log(options.json ? JSON.stringify(value, null, 2) : JSON.stringify(value, null, 2));
+  try {
+    if (subcommand === "supervisor") {
+      const supervisorCommand = options.values.shift() || "once";
+      if (options.values.length) throw new Error("Uso: maestro autopilot supervisor <once|list|run> [opcoes]");
+      if (supervisorCommand === "list") { print(await supervisor.list({ status: "active" })); return 0; }
+      if (supervisorCommand === "once") { print(await supervisor.tick()); return 0; }
+      if (supervisorCommand === "run") {
+        const intervalMs = options.intervalMs === undefined ? 10_000 : Number(options.intervalMs);
+        await supervisor.run({ intervalMs, onTick: (result) => { if (options.json) print(result); } });
+        return 0;
+      }
+      throw new Error("Uso: maestro autopilot supervisor <once|list|run> [opcoes]");
+    }
+    if (subcommand === "status") {
+      if (options.values.length) throw new Error("Uso: maestro autopilot status [--project-path PATH] [--json]");
+      print(await controller.status());
+      return 0;
+    }
+    if (subcommand === "start") {
+      if (options.values.length === 0) throw new Error('Uso: maestro autopilot start [--project-path PATH] "objetivo"');
+      const policy = {};
+      if (options.minAgents !== undefined) policy.min_agents = Number(options.minAgents);
+      if (options.preferredAgents !== undefined) policy.preferred_agents = Number(options.preferredAgents);
+      if (options.maxAgents !== undefined) policy.max_agents = Number(options.maxAgents);
+      if (options.allowSerialFallback !== undefined) policy.allow_serial_fallback = true;
+      print(await controller.start({ objective: options.values.join(" "), runId: options.runId, resourcePolicy: policy }));
+      return 0;
+    }
+    if (subcommand === "resume") {
+      if (options.values.length) throw new Error("Uso: maestro autopilot resume [--project-path PATH] [--json]");
+      print(await controller.resume());
+      return 0;
+    }
+    if (subcommand === "dispatch") {
+      if (options.values.length) throw new Error("Uso: maestro autopilot dispatch [--provider ID] [--model MODEL] [opcoes]");
+      const providerId = options.provider || "codex";
+      const adapter = {
+        id: `maestro:${providerId}`,
+        startTask: async ({ task, workspacePath }) => {
+          try {
+            return await app.executeTaskWithHandoff({
+              description: task.description,
+              workspacePath,
+              providerId,
+              model: options.model,
+              cloudContextApproved: options.allowCloudContext === true,
+              semanticTask: { paths: task.write_scope, capabilities: task.capabilities_required }
+            });
+          } catch (error) {
+            return { run: { status: "failed" }, execution: { error: error.message }, failureClass: "provider-failure" };
+          }
+        }
+      };
+      const dispatched = await controller.dispatchReady({ adapter });
+      if (Array.isArray(dispatched.started)) {
+        const state = await controller.artifacts.readAll();
+        for (const started of dispatched.started) {
+          const task = state.tasks.tasks.find((candidate) => candidate.task_id === started.taskId);
+          const response = started.response || {};
+          const completed = response.run?.status === "completed";
+          await controller.ingestEvent({
+            event_id: `DISPATCH-${started.taskId}-${Date.now()}`,
+            source: adapter.id,
+            event_type: completed ? "execution.completed" : "execution.failed",
+            project_id: state.checkpoint.project_id,
+            run_id: state.checkpoint.run_id,
+            task_id: started.taskId,
+            attempt_id: task?.attempt_id,
+            result_ref: response.run?.id || null,
+            evidence_refs: response.evidence?.map((item) => item.id).filter(Boolean) || [],
+            reason: response.execution?.error || response.run?.metadata?.resolution?.outcome?.reason || (completed ? null : "provider_execution_failed")
+          });
+        }
+      }
+      print(await controller.status());
+      return 0;
+    }
+    if (subcommand === "task") {
+      const taskCommand = options.values.shift();
+      if (taskCommand !== "add") throw new Error("Uso: maestro autopilot task add [opcoes]");
+      if (options.values.length || !options.description) throw new Error("Uso: maestro autopilot task add --description TEXT [--id ID] [opcoes]");
+      print(await controller.addTasks({
+        task_id: options.id,
+        lane_id: options.laneId,
+        description: options.description,
+        capabilities_required: commaList(options.capabilities),
+        depends_on: commaList(options.dependsOn),
+        write_scope: commaList(options.writeScope)
+      }));
+      return 0;
+    }
+    if (subcommand === "event") {
+      if (options.values.length || !options.eventType) throw new Error("Uso: maestro autopilot event --event-type TYPE [--task-id ID] [opcoes]");
+      const status = await controller.status();
+      if (!status.initialized) throw new Error("Autopilot não inicializado; use autopilot start primeiro.");
+      print(await controller.ingestEvent({
+        event_id: options.id || `CLI-${Date.now()}`,
+        source: "maestro-cli",
+        event_type: options.eventType,
+        project_id: status.projectId,
+        run_id: status.runId,
+        task_id: options.taskId,
+        attempt_id: options.attemptId,
+        result_ref: options.resultRef,
+        evidence_refs: commaList(options.evidenceRefs),
+        reason: options.reason
+      }));
+      return 0;
+    }
+    if (subcommand === "decision") {
+      if (options.values.length || !options.effect) throw new Error("Uso: maestro autopilot decision --effect TEXT [--decision-id ID] [opcoes]");
+      print(await controller.recordDecision({
+        decision_id: options.decisionId || options.id,
+        effect: options.effect,
+        authority_ref: options.authorityRef,
+        source_ref: options.sourceRef,
+        authorizes_completion: options.authorizesCompletion === true
+      }));
+      return 0;
+    }
+    if (subcommand === "complete-task") {
+      if (options.values.length || !options.taskId) throw new Error("Uso: maestro autopilot complete-task --task-id ID [opcoes]");
+      print(await controller.completeTask({
+        taskId: options.taskId,
+        technicalResult: options.technicalResult || "pass",
+        disposition: options.disposition || "accepted",
+        decisionRef: options.decisionRef,
+        evidenceRef: options.resultRef,
+        verificationRefs: commaList(options.evidenceRefs)
+      }));
+      return 0;
+    }
+    if (options.values.length) throw new Error("Uso: maestro autopilot complete [--project-path PATH] [--json]");
+    print(await controller.completeMission());
+    return 0;
+  } finally {
+    await controller.release();
+  }
 }
 
 async function handleTerminalCommand(args) {
@@ -3452,6 +3662,7 @@ async function dispatch(command, args) {
   if (command === "project") return handleProjectCommand(args);
   if (command === "missions") return handleMissionsCommand(args);
   if (command === "mission") return handleMissionCommand(args);
+  if (command === "autopilot") return handleAutopilotCommand(args);
   if (command === "terminal") return handleTerminalCommand(args);
   if (command === "skills") return handleSkillsCommand(args);
   if (command === "skill-catalog") return handleSkillCatalogCommand(args);
@@ -3519,7 +3730,7 @@ async function main() {
     "init-dev", "compact-worklog", "check-dev-gates", "preflight", "cleanup", "channel", "changelog", "version", "run",
     "runs", "usage", "projects", "project", "missions", "mission", "terminal",
     "skills", "skill-catalog", "providers", "bridge", "governance", "interaction",
-    "status", "memory", "benchmark", "adapters", "targets", "go", "plan", "desktop-plugin"
+    "status", "memory", "benchmark", "adapters", "targets", "go", "plan", "autopilot", "desktop-plugin"
   ]);
   if (telemetryCommands.has(command)) {
     await sendTelemetry(buildTelemetryPayload(command, args, exitCode, errorName));

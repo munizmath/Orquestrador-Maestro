@@ -4,7 +4,7 @@ description: Use when the user explicitly wants an autonomous, end-to-end softwa
 ---
 
 <Purpose>
-Autopilot takes a sufficiently clear software brief and handles the full lifecycle: requirements analysis, technical design, planning, implementation, QA, review, recovery, and evidence-based handoff.
+Autopilot is the mission controller for one product objective. It turns a sufficiently clear brief into a verified delivery, classifies domains and capabilities, coordinates a temporary council when needed, distributes bounded execution lanes, recovers from blockers, and reports decisions in language the Maestro can act on.
 </Purpose>
 
 <Use_When>
@@ -15,284 +15,260 @@ Autopilot takes a sufficiently clear software brief and handles the full lifecyc
 </Use_When>
 
 <Do_Not_Use_When>
-- User wants to explore options or brainstorm -- use `plan` skill instead
+- User wants to explore options or brainstorm -- use the plan skill instead
 - User says "just explain", "draft only", or "what would you suggest" -- respond conversationally
-- User wants a single focused code change -- use `ralph` or delegate to an executor agent
-- User wants to review or critique an existing plan -- use `plan --review`
+- User wants a single focused code change -- use ralph or delegate to an executor agent
+- User wants to review or critique an existing plan -- use plan --review
 - Task is a quick fix or small bug -- use direct executor delegation
 </Do_Not_Use_When>
 
 <Why_This_Exists>
-Most non-trivial software tasks require coordinated phases: understanding requirements, designing a solution, implementing in parallel, testing, and validating quality. Autopilot orchestrates all of these phases automatically so the user can describe what they want and receive working code without managing each step.
+Non-trivial software work needs coordinated requirements, design, implementation, recovery, verification, and product decisions. Autopilot owns the continuity of one mission so the Maestro can decide reserved trade-offs without manually directing every technical action.
 </Why_This_Exists>
 
 <Non_Negotiables>
-- User instructions, repository instructions, and existing uncommitted work are binding context. Never overwrite unrelated user changes.
-- Do not commit, push, merge, publish, deploy, delete, reset, or modify external systems unless the user explicitly authorizes that exact action.
-- Inspect repository entrypoints and compact project memory before making assumptions. Prefer evidence from files and commands over remembered conventions.
+- Autopilot owns one mission and is the single logical writer of its consolidated state.
+- Use one authorized controller per project. Put independent work in lanes under that controller instead of starting competing Autopilots for the same project.
+- The Maestro system may provide a global scheduler, capacity, leases, fencing, and fairness. The Maestro agent is consulted for decisions expressly reserved to its authority; it does not manually dispatch every slot.
+- Autopilot invokes a council on its own when the trigger conditions in the mission contract are met. It must not wait for the user to force a technical retry.
+- Escalate only when the executable alternative would exceed a current limit or require a decision expressly reserved to the Maestro authority.
+- Boundaries are a projection of sovereign decisions. Autopilot may apply a valid authorization but cannot expand authority by editing its projection.
+- Technical results and business dispositions are separate. An accepted risk never turns a failed check into a passed check.
 - A claim of completion requires fresh evidence. A worker's self-report, a planned command, or code that merely looks right is not verification.
-- Use only tools and skills available in the current runtime. If an optional tool is unavailable, use the closest local path and record the limitation.
-- Every non-trivial automatic decision must be recorded with its evidence, rejected alternative, and cost if wrong.
+- Do not commit, push, merge, publish, deploy, delete, reset, or modify external systems unless the operation is covered by a current, applicable authorization issued by the user or by a validly delegated authority. Authorization at the wave, project, or execution level remains valid for the operations it covers; require a new decision only when the operation exceeds that scope or reaches an expressly reserved choice.
+- Do not use a generic force path. Use explicit actions such as retry-council, choose-option, approve-cost, reduce-scope, accept-risk, or pause-run.
+- If a required reviewer, council route, or adapter is unavailable, record the limitation and do not claim that unavailable work was performed.
 </Non_Negotiables>
 
 <Execution_Policy>
-- Each phase must complete before the next begins
-- Default to the lightest mode that can finish the task; do not expand into a heavy workflow unless the task truly needs multiple phases
-- Parallel execution is used only for independent workstreams with clear ownership (Phase 2 and Phase 4)
-- QA cycles repeat up to 5 times; if the same error persists 3 times, stop and report the fundamental issue
-- Validation requires approval from all reviewers; rejected items get fixed and re-validated
-- Cancel with `/cancel` at any time; progress is preserved for resume
-- If a deep-interview spec exists, use it as high-clarity phase input instead of re-expanding from scratch
-- If input is too vague for reliable expansion, offer/trigger `$deep-interview` first
-- Do not enter expansion/planning/execution-heavy phases until pre-context grounding exists; if fast execution is forced, proceed only with explicit risk notes
-- Default to concise, evidence-dense progress and completion reporting unless the user or risk level requires more detail
-- Treat newer user task updates as local overrides for the active workflow branch while preserving earlier non-conflicting constraints
-- If correctness depends on additional inspection, retrieval, execution, or verification, keep using the relevant tools until the workflow is grounded
-- Continue through clear, low-risk, reversible next steps automatically; ask only when the next step is materially branching, destructive, or preference-dependent
-- After compaction or resume, continue from the latest checkpoint and newest user message; do not restart discovery unless the checkpoint is missing or contradicted
-- If the same diagnosis appears twice, make the next smallest safe fix or report the exact blocker; do not repeat the same investigation loop
-- State MCP tools are helpful but optional; if an OMX MCP call fails, write a local checkpoint and continue instead of blocking
-- Before changing code, define boundaries: files/behaviors that must not break, destructive commands that are forbidden, and the rollback point
-- Every phase must have a gate: required artifact, owner, next action, and verification command; do not advance on vague outputs
-- Prefer task-by-task execution with fresh context from checkpoint artifacts instead of relying on the full conversation history
-- Treat autopilot as a bounded state machine: `intake -> expansion -> planning -> execution -> qa -> validation -> handoff`.
-- A new user message is a local override. Preserve earlier non-conflicting requirements, invalidate affected downstream artifacts, and resume from the earliest invalid phase.
-- Do not claim that unavailable reviewers approved anything. If review tools are missing, perform an adversarial single-agent review and disclose the limitation.
+- The mission is a bounded state machine with orthogonal execution status, work phase, and blocker reason.
+- The normal lifecycle is intake -> expansion -> planning -> execution -> QA -> validation -> handoff. Recovery is a work phase that can run while independent tasks remain active.
+- A task blocker does not stop the mission when other useful, authorized tasks can continue.
+- A mission enters waiting only when no executable next action exists within current authority and resources. Every wait needs a condition and an operational watcher or scheduled recheck.
+- A known correction may be applied once when it is authorized and directly verifiable. A failed correction, uncertain cross-capability cause, incompatible specialist advice, or materially different technical alternatives trigger the council.
+- Parallel execution requires current dependency satisfaction, authorized write scope, compatible changes, available resources, and an integration point. A parallel-safe flag alone is never sufficient.
+- Use the smallest mode that can genuinely finish the mission. Do not increase council size or agent fan-out merely because more skills exist.
+- Treat newer user task updates as local overrides for the active workflow branch while preserving earlier non-conflicting requirements.
+- If correctness depends on additional inspection, retrieval, execution, or verification, keep using the relevant tools until the workflow is grounded.
+- State tools are helpful but optional. The five filesystem artifacts and their revisions remain the source of truth when an optional runtime tool fails.
+- Every non-trivial automatic decision records evidence, rejected alternatives, authority, and the cost or risk if wrong.
+- Before changing code, define boundaries, forbidden operations, affected scopes, and the rollback or reconciliation point.
+- Do not restart all validation after every change. Re-run the affected gate and declared dependents while retaining still-valid evidence.
+- If the same diagnosis appears again, change the hypothesis, information, resource, or alternative; do not reset counters by renaming the blocker or restarting the process.
 </Execution_Policy>
 
 ## Operating Modes
 
-- `quick`: one compact plan, one implementation lane, one validation pass. Use for small, well-scoped work.
-- `standard`: spec -> plan -> execute -> verify with focused artifacts and limited agents. Default mode.
-- `deep`: multiple lanes, explicit boundaries, task graph, review team, and broader validation. Use only for large/risky work or explicit user request.
+- quick: one compact plan, one implementation lane, one validation pass. Use for small, well-scoped work.
+- standard: spec -> plan -> execute -> verify with focused artifacts and limited agents. Default mode.
+- deep: multiple lanes, explicit boundaries, task graph, council review, recovery, and broader validation. Use only for large or risky work or explicit user request.
 
-Autopilot should choose the smallest mode that can genuinely finish the task. The user can override with `quick`, `standard`, or `deep`.
+Autopilot chooses the smallest mode that can genuinely finish the task. The user can override with quick, standard, or deep.
 
-## Persistent Artifacts
+## Mission Artifacts
 
-For non-trivial work, keep a compact artifact set under `.omx/autopilot/<task-slug>/`:
+For a project mission, use one fixed tree. Do not create one Autopilot subdirectory per task or per domain:
 
-- `checkpoint.md`: current phase, root cause/hypothesis, files touched, next action, validation command.
-- `boundaries.md`: do-not-break behavior, forbidden operations, secrets/production constraints, rollback point.
-- `tasks.md`: task list with dependencies, ownership, parallel markers, and verification commands.
-- `validation.md`: commands run, failures, fixes, final evidence.
-- `survival-guide.md`: short handoff for compaction/restart with only the information needed to resume.
+~~~text
+.omx/autopilot/
+├── checkpoint.md
+├── boundaries.md
+├── tasks.md
+├── validation.md
+└── survival-guide.md
+~~~
 
-Keep artifacts short and update them at phase boundaries and before long repair loops.
+- checkpoint.md: small current state, document revisions, active tasks, blocker IDs, council reference, controller lease, and next action.
+- boundaries.md: objective, non-goals, authorized operations, reserved choices, decision references, cost and time limits, rollback, and completion definition.
+- tasks.md: recoverable task and lane records with capability requirements, dependencies, owner, write scope, resource references, attempts, results, verification references, and blocker reference.
+- validation.md: versioned technical gates, evidence, environment, technical result, business disposition, decision references, residual risk, and relevant rechecks.
+- survival-guide.md: derived resumption summary with its source document revisions. It cannot create rules, revoke authorization, or reopen tasks.
+
+Read references/mission-contracts.md before creating, resuming, or repairing a mission. It defines the artifact fields, controller write discipline, state transitions, council outputs, scheduler interaction, adapter events, leases, fencing, operation identity, and retention rules.
+
+Keep the checkpoint short. The controller consolidates the other document revisions first and writes the checkpoint last. These files are not assumed to be one transaction; recovery reconciles revisions and effects before the next action with external impact.
 
 ## Phase Gates
 
-Each phase must pass these gates before advancing:
+Each phase gate must identify:
 
-- Artifact exists and names the next concrete action.
-- Open questions are either answered, explicitly deferred, or converted into a safe assumption.
-- Risk boundary is clear for files, data, secrets, billing, production, and destructive commands.
-- Verification command is known, or the reason no command exists is written down.
-- For parallel work, every lane has disjoint ownership or is sequenced.
+- the required artifact;
+- the responsible owner;
+- the next concrete action;
+- the authority and risk boundary;
+- the verification command or evidence target.
+
+Phases are gates for progress, not a reason to paralyze independent lanes. The current phase may be recovery while other tasks continue.
 
 <Steps>
 0. **Pre-context Intake (required before Phase 0 starts)**:
-   - Derive a task slug from the request.
-   - Load the latest relevant snapshot from `.omx/context/{slug}-*.md` when available.
-   - If this is a resumed or compacted conversation, read the newest local checkpoint before opening new files.
-   - If no snapshot exists, create `.omx/context/{slug}-{timestamp}.md` (UTC `YYYYMMDDTHHMMSSZ`) with:
-     - Task statement
-     - Desired outcome
-     - Known facts/evidence
-     - Constraints
-     - Unknowns/open questions
-     - Likely codebase touchpoints
-     - Current phase
-     - Next concrete action
-     - Validation command
-   - Read applicable `AGENTS.md` files and, when present, compact `DEV/` files in order: `README`/`INDEX`, `HANDOFF`, `CONTEXT`, active spec. Load only task-relevant detail afterward.
-   - Inspect branch/status/diff and record a baseline. Treat pre-existing changes as protected and choose a safe rollback point without destructive commands.
-   - Identify stack, package manager, available test/build/lint/typecheck commands, entrypoints, and deployment/data boundaries.
-   - Create or update `.omx/autopilot/{slug}/survival-guide.md` with only the context needed after compaction.
-   - Create or update `.omx/autopilot/{slug}/boundaries.md` before code edits when the task is broad, risky, or production-facing.
-   - If ambiguity remains high, run `explore` first for brownfield facts, then run `$deep-interview --quick <task>` before proceeding.
-   - Carry the snapshot path into autopilot artifacts/state so all phases share grounded context.
-   - Keep the checkpoint short enough to read quickly in a new session. The gate passes only when the next action, owner, risk boundary, and verification target are explicit.
+   - Derive a task slug for the conversational context, but do not use it to create an Autopilot artifact subdirectory.
+   - Load the latest relevant snapshot from .omx/context/{slug}-*.md when available.
+   - If this is a resumed or compacted conversation, read checkpoint.md, its referenced document revisions, and the survival guide before opening new files.
+   - If no snapshot exists, create .omx/context/{slug}-{timestamp}.md (UTC YYYYMMDDTHHMMSSZ) with task statement, desired outcome, known facts, constraints, unknowns, likely touchpoints, current phase, next action, and validation command.
+   - Read applicable AGENTS.md files and compact DEV files in their required order.
+   - Inspect status, branch, diff, project memory, and existing uncommitted work. Treat pre-existing changes as protected.
+   - Confirm or acquire the single controller lease for the project. If the lease is unavailable, register a waiting condition and do not create a competing controller.
+   - Initialize or reconcile the five files under .omx/autopilot/. Preserve recoverable prior runs and do not silently merge unrelated objectives.
+   - Identify stack, package manager, available checks, entrypoints, deployment/data boundaries, and current decision references.
+   - Keep the checkpoint short enough to read quickly. Its next action, owner, lease reference, risk boundary, and verification target must be explicit.
+   - If ambiguity remains high, run explore first for brownfield facts, then route to deep-interview --quick before proceeding.
 
-1. **Phase 0 - Expansion**: Turn the user's idea into a detailed spec
-   - If `.omx/specs/deep-interview-*.md` exists for this task: reuse it and skip redundant expansion work
-   - If prompt is highly vague: route to `$deep-interview` for Socratic ambiguity-gated clarification
-   - Analyst (THOROUGH tier): Extract requirements
-   - Architect (THOROUGH tier): Create technical specification
-   - Output: `.omx/plans/autopilot-spec.md`
-   - Gate: spec lists acceptance criteria, non-goals, risk boundaries, assumptions, and a concrete evidence target for every criterion (or an explicit human-validation dependency)
+1. **Phase 0 - Expansion**: Turn the user's idea into a detailed spec.
+   - Reuse an existing deep-interview spec when it applies.
+   - Classify the objective into domains, capabilities, roles, and possible execution lanes. Do not treat every skill as a domain or invite every skill by default.
+   - Invoke the council when the objective has a genuine cross-capability question or when a reserved product decision needs a bounded technical comparison.
+   - Use the analyst and architect roles to define acceptance criteria, non-goals, assumptions, risks, authority boundaries, and evidence targets.
+   - Output .omx/plans/autopilot-spec.md.
+   - Gate: the spec identifies what is authorized, what is reserved, and how every criterion will be verified or explicitly human-validated.
 
-2. **Phase 1 - Planning**: Create an implementation plan from the spec
-   - Architect (THOROUGH tier): Create plan (direct mode, no interview)
-   - Critic (THOROUGH tier): Validate plan
-   - Output: `.omx/plans/autopilot-impl.md`
-   - Break work into tasks with:
-     - `id`
-     - `owner`
-     - `files/modules`
-     - `dependsOn`
-     - `parallelSafe: true|false`
-      - `verify`
-      - `acceptanceEvidence`
-   - Mark independent work with `[P]` and explicit verification work with `[VERIFY]`
-   - Before execution, check for contradictory tasks, overlapping ownership, missing dependencies, stale paths, unverifiable criteria, and commands with external side effects; record rulings.
-   - Gate: every task has an owner, dependency decision, acceptance evidence, and verification command or evidence target
+2. **Phase 1 - Planning**: Create an implementation plan from the spec.
+   - Build tasks and lanes with stable task_id and lane_id values.
+   - For each task record capabilities_required, depends_on, owner, write_scope, resource_refs, status, attempt_id, result_refs, verification_refs, blocker_ref, and the current reason it is or is not runnable.
+   - Resolve overlapping ownership, shared interfaces, migrations, configuration, lockfiles, generated files, and external resources as sequential or explicitly coordinated work.
+   - Define resource_policy with min_agents, preferred_agents, max_agents, and allow_serial_fallback. These are request bounds; the scheduler resolves actual capacity.
+   - Mark parallel-safe metadata only as a hint. Dispatch occurs only after current dependency, authority, lease, compatibility, and integration checks.
+   - Output .omx/plans/autopilot-impl.md.
+   - Gate: every task has an owner, dependency decision, write scope, acceptance evidence, and verification command or evidence target.
 
-3. **Phase 2 - Execution**: Implement the plan with available execution workflows
-   - LOW-tier executor/search roles: Simple tasks
-   - STANDARD-tier executor roles: Standard tasks
-   - THOROUGH-tier executor/architect roles: Complex tasks
-   - Run independent tasks in parallel only when write ownership is disjoint, the integration point is clear, and each lane has an independent verification target. Shared interfaces, migrations, configuration, lockfiles, and generated files are sequential by default.
-   - The lead agent keeps the critical path moving while side agents work
-   - Before each long edit or test loop, update the checkpoint with changed files, current hypothesis, next action, and verification command
-   - Execute tasks one-by-one unless `[P]` lanes are proven independent
-   - For each task, use a fresh compact context: spec summary, relevant files, task definition, boundary notes, and verify command
-   - The lead orchestrator should coordinate outputs and integration; avoid filling lead context with full file dumps that belong to specialist lanes
+3. **Phase 2 - Execution**: Implement the plan through bounded lanes.
+   - Request capacity from the Maestro scheduler. Do not manually allocate global slots and do not occupy a permanent model slot while waiting.
+   - Use Nexus or OpenCode only through an available adapter contract. Treat adapter events as runtime facts; the controller converts them into task and mission transitions.
+   - Assign isolated write scopes and resource leases. A controller, editor, and shared-resource lease are distinct.
+   - Run only lanes whose current dependencies, authority, resources, write scope, and integration conditions are satisfied.
+   - Keep the critical path moving while independent lanes work.
+   - For each attempt, persist task_id, attempt_id, operation_id when external effects are possible, and the verification target.
+   - The controller incorporates executor results and is the only logical writer of the five consolidated artifacts.
+   - Before long edit or test loops, update the current artifact revisions and checkpoint next action.
+   - If a task blocks, classify the blocker, continue useful independent work, and invoke the council automatically when its trigger conditions apply.
+   - Set status to running with phase recovery while diagnosis or remediation is active. Set status to waiting only with a concrete return condition. Never report blocked without the blocker reason, attempted recovery, condition, and next re-evaluation.
 
-4. **Phase 3 - QA**: Verify in layers, then repair
-   - Start with existence and relevance checks, then focused behavior checks, then integration/regression checks, and finally boundary checks for secrets, private paths, permissions, destructive operations, and generated output.
-   - Build, lint, test, and fix failures when those checks exist; never invent a passing result for an unavailable command.
-   - Repeat up to 5 cycles
-   - Stop early if the same error repeats 3 times (indicates a fundamental issue)
-   - Do not rerun broad tests blindly; after one broad failure, switch to the smallest failing test or command until fixed
-   - For every failure, record root cause, changed hypothesis, smallest safe fix, covering check, and result. After one broad failure, switch to the smallest failing check before rerunning the broad gate.
-   - Use layered gates:
-     - existence: changed files and expected artifacts exist
-     - relevance: changes address the requested behavior
-     - root cause: failure explanation maps to code changed
-     - regression: focused tests plus broad gate when available
-     - momentum: next step is smaller than the previous loop
-   - A gate may pass with an explicitly classified environmental, pre-existing, or unavailable check only when impact and next action are recorded; unresolved failures cannot be silently waived.
+4. **Phase 3 - QA**: Verify in layers and repair.
+   - Start with existence and relevance checks, then focused behavior checks, integration/regression checks, and boundary checks for secrets, private paths, permissions, destructive operations, and generated output.
+   - Apply a known authorized correction once, then verify it. If it fails or the cause is uncertain across capabilities, invoke the council.
+   - Record technical_result independently from disposition. A decision can permit a limited delivery or defer work, but it cannot rewrite the technical result.
+   - Re-run only affected gates and declared dependents after a change. Retain evidence whose artifact, environment, and assumptions remain applicable.
+   - Repeat repair cycles within the configured cap. A new cycle must have a changed hypothesis, information, resource, or alternative.
+   - Record root cause, changed hypothesis, smallest safe fix, covering check, result, residual risk, and any decision reference.
 
-5. **Phase 4 - Validation**: Evidence-based independent review
-   - Architect: Functional completeness
-   - Security-reviewer: Vulnerability check
-   - Code-reviewer: Quality review
-   - Reviewers receive concise artifacts and diffs, not full session history
-   - Review findings must include severity, file/path, and required action
-   - Review the actual diff and evidence, not only worker reports.
-   - Findings must include severity, path/symbol, evidence, and required action. Critical or important findings require a fix and scoped re-review; use one consolidated fix wave when findings share a cause.
-   - After the validation cap, adjudicate each residual finding as fixed, deferred, or blocked with a reason. Do not silently convert disagreement into approval.
-   - If reviewers or MCP tools are unavailable, perform a single-agent adversarial review and disclose that limitation.
+5. **Phase 4 - Validation**: Perform evidence-based independent review.
+   - Give reviewers concise artifacts, the actual diff, relevant evidence, boundaries, and decision references.
+   - Use functional, security, quality, and verification reviewers only when required by scope or risk. A single agent performing several skills is not independent review by several agents.
+   - Findings include severity, path or symbol, evidence, required action, and disposition.
+   - Rejected findings require a fix and scoped re-review. Do not convert unavailable review into approval.
+   - The final validation record distinguishes technical result, accepted or deferred disposition, and the decision that authorized it.
 
-6. **Phase 5 - Handoff and cleanup**: Clear only state owned by this run
-   - `state_clear({mode: "autopilot"})`
-   - `state_clear({mode: "ralph"})`
-   - `state_clear({mode: "ultrawork"})`
-   - `state_clear({mode: "ultraqa"})`
-   - Or run `/cancel` for clean exit. Do not delete project artifacts or user changes as cleanup.
+6. **Phase 5 - Handoff and cleanup**:
+   - Update validation.md, survival-guide.md, and checkpoint.md with final revisions, remaining risks, and exact next action.
+   - Report what completed, what remains, what was accepted as a limitation, and what evidence supports each conclusion.
+   - Clear only runtime state owned by this run:
+     - state_clear({mode: "autopilot"})
+     - state_clear({mode: "ralph"})
+     - state_clear({mode: "ultrawork"})
+     - state_clear({mode: "ultraqa"})
+   - Do not delete the five mission artifacts, project evidence, or user changes as cleanup.
+   - Do not mark the mission completed while a required technical gate remains blocking under the criteria and dispositions currently in force. A formal disposition may permit completion when the applicable decision expressly authorizes delivery with that limitation and all other criteria are satisfied. Preserve the original technical_result, record the disposition and decision_ref, and report the accepted limitation clearly.
 </Steps>
 
-<Tool_Usage>
-- Use available local tools, subagents, and MCP tools directly when present; do not block on discovery tooling that is unavailable in the current runtime.
-- Give reviewers concise artifacts and the actual diff. Ask for severity, path/symbol, evidence, and required action; never pre-judge findings or ask a reviewer to ignore a risk.
-- Agents form their own analysis first. Cross-validation is additive, not a substitute for tests or direct inspection.
-- If a requested reviewer or MCP tool is unavailable, perform the closest local review and record the limitation instead of assuming approval.
-</Tool_Usage>
+## Automatic blocker recovery
+
+Before declaring a mission waiting or failed:
+
+1. identify the affected task and stable blocker ID;
+2. classify the blocker reason;
+3. apply one known correction when it is authorized and directly verifiable;
+4. invoke the council automatically when a correction failed, the cause crosses capabilities, specialist advice conflicts, or alternatives need comparison;
+5. execute a returned remediation plan when it is within boundaries;
+6. verify the affected gate and its dependents;
+7. continue independent lanes;
+8. escalate only when the next executable alternative exceeds a current limit or requires a reserved decision.
+
+Council outputs are RESOLVED, REMEDIATION_PLAN, WAITING_CONDITION, NEEDS_DECISION, or UNRESOLVED. A remediation plan must name the proposed change, affected tasks, executor, verification, and residual risk. An unresolved council keeps its diagnosis and attempts; changing the agent or renaming the blocker does not reset limits.
+
+When the Maestro authority must act, send a decision packet in plain language:
+
+1. what happened;
+2. what is actually stopped;
+3. what was attempted;
+4. what continues;
+5. how the mission will resume;
+6. the exact choice or action required;
+7. the impact and residual risk of each option.
+
+Estimates remain estimates. Do not invent cost, schedule, success, or availability.
+
+## Tool and adapter integration
+
+Use the runtime adapter for actual execution, capacity, status, cancellation, and result events. Do not treat a skill name, route count, or session existence as proof that an agent is available or that work completed.
+
+The adapter must maintain the internal contract's project, run, task, attempt, session, event, lease, lease epoch, result, and evidence identities and links. It correlates commands with native sessions or executions when the runtime exposes them. Native fields beyond the internal contract are optional and their absence must be represented explicitly. A result that cannot be correlated safely remains unknown until reconciliation. A requested cancellation is not a confirmed cancellation. A lost connection is an unknown outcome that requires reconciliation before repeating an effectful operation.
+
+Use the scheduler for cross-project fairness and resource availability. Use the Autopilot controller for mission continuity, council invocation, task transitions, artifact consolidation, and user communication.
+
+## State management
+
+Use omx_state lifecycle tools when available, but keep the filesystem artifacts authoritative:
+
+- on start, record active mission, run_id, status, phase, snapshot reference, and controller lease;
+- on phase changes, record the current phase without erasing task-level blockers;
+- on waiting, record the return condition, watcher or recheck, and affected task;
+- on completion, record final evidence and disposition before clearing runtime state;
+- on resume, verify lease, document revisions, operation outcomes, and evidence validity.
+
+If omx_state fails, continue with the five artifacts and record the limitation. Never claim that a runtime state operation succeeded when it was unavailable.
 
 ## Token And Compaction Discipline
 
 - Load router/index files before full catalogs or long references.
-- Prefer file paths, symbols, and focused snippets over full file dumps.
-- Summarize long command output immediately into the checkpoint instead of replaying it.
-- Do not spawn agents to do the same search as the lead agent.
-- Treat automatic compaction as a resume event, not a reason to restart the workflow.
-- If context is getting large, finish the current fix/verification step before broadening scope.
-- Keep a `survival-guide.md` current enough that a new session can continue without reading the raw conversation.
-
-## Multiagent Discipline
-
-- Use subagents only when the user explicitly asks or when independent lanes materially reduce time or risk.
-- Assign each subagent a non-overlapping file/module/question scope.
-- Require each subagent to return changed paths, commands run, findings, blockers, and residual risk.
-- Keep integration, conflict resolution, and final validation with the lead agent.
-- If agents would edit the same file, sequence the work instead of parallelizing it.
-- Use specialist agents with single responsibilities; do not ask multiple agents to solve the same vague problem.
-
-## Boundary Discipline
-
-Before broad or risky execution, write boundaries:
-
-- `NEVER`: destructive git commands, deleting user work, exposing secrets, unsafe production changes.
-- `DANGER`: payments, auth, RLS, migrations, billing, customer data, cron jobs, external API side effects.
-- `ROLLBACK`: current branch/status, backup path, or command needed to return to the pre-change state.
-- `VERIFY`: the commands or manual evidence that prove the boundary was preserved.
-
-## State Management
-
-Use `omx_state` MCP tools for autopilot lifecycle state when available. The filesystem checkpoint and task ledger remain the source of truth when state tools are unavailable or fail.
-
-- **On start**:
-  `state_write({mode: "autopilot", active: true, current_phase: "expansion", started_at: "<now>", state: {context_snapshot_path: "<snapshot-path>"}})`
-- **On phase transitions**:
-  `state_write({mode: "autopilot", current_phase: "planning"})`
-  `state_write({mode: "autopilot", current_phase: "execution"})`
-  `state_write({mode: "autopilot", current_phase: "qa"})`
-  `state_write({mode: "autopilot", current_phase: "validation"})`
-- **On completion**:
-  `state_write({mode: "autopilot", active: false, current_phase: "complete", completed_at: "<now>"})`
-- **On cancellation/cleanup**:
-  run `$cancel` (which should call `state_clear(mode="autopilot")`)
-
+- Prefer file paths, symbols, revisions, and focused snippets over full file dumps.
+- Summarize long output into validation.md or the checkpoint instead of replaying it.
+- Do not spawn agents to repeat the same search as the controller.
+- Treat compaction as a resume event. Reconcile the latest checkpoint and document revisions before continuing.
+- Keep survival-guide.md current enough for a new session to continue without raw conversation history.
 
 ## Scenario Examples
 
-**Good:** The user says `continue` after the workflow already has a clear next step. Continue the current branch of work instead of restarting or re-asking the same question.
+Good: user asks Autopilot to build a REST API with a clear domain, features, and technology constraint. Autopilot creates a mission, classifies capabilities, plans lanes, verifies dependencies, and executes.
 
-**Good:** The user changes only the output shape or downstream delivery step (for example `make a PR`). Preserve earlier non-conflicting workflow constraints and apply the update locally.
+Good: an API authorization test fails while documentation and independent frontend work can continue. Autopilot records the blocker, keeps useful work running, invokes the relevant council, and enters recovery without freezing the mission.
 
-**Bad:** The user says `continue`, and the workflow restarts discovery or stops before the missing verification/evidence is gathered.
+Good: a provider credential is unavailable. Autopilot records a waiting condition and recheck mechanism, explains the user's exact action in plain language, and continues authorized independent lanes.
 
-<Examples>
-<Good>
-User: "autopilot A REST API for a bookstore inventory with CRUD operations using TypeScript"
-Why good: Specific domain (bookstore), clear features (CRUD), technology constraint (TypeScript). Autopilot has enough context to expand into a full spec.
-</Good>
+Bad: a generic force command bypasses a missing authorization or expands a cost limit.
 
-<Good>
-User: "build me a CLI tool that tracks daily habits with streak counting"
-Why good: Clear product concept with a specific feature. The "build me" trigger activates autopilot.
-</Good>
+Bad: two Autopilots write the same project-level task ledger because a controller lease expired without fencing.
 
-<Bad>
-User: "fix the bug in the login page"
-Why bad: This is a single focused fix, not a multi-phase project. Use direct executor delegation or ralph instead.
-</Bad>
-
-<Bad>
-User: "what are some good approaches for adding caching?"
-Why bad: This is an exploration/brainstorming request. Respond conversationally or use the plan skill.
-</Bad>
-</Examples>
+Bad: a business decision marks a failed security gate as passed.
 
 <Escalation_And_Stop_Conditions>
-- Stop and report when the same QA error persists across 3 cycles (fundamental issue requiring human input)
-- Stop and report when validation keeps failing after 3 re-validation rounds
-- Stop when the user says "stop", "cancel", or "abort"
-- If requirements were too vague and expansion produces an unclear spec, pause and redirect to `$deep-interview` before proceeding
-- Pause before deploy, publish, push, merge, delete, reset, production-data changes, account/auth changes, paid services, or third-party communication unless explicitly authorized.
+- Suspend the affected task and its dependents, preserve the diagnosis and attempts, and continue independent authorized lanes when the same diagnosis persists after its bounded remediation cycles and no changed hypothesis, information, resource, or alternative is available. Only pause the whole mission when no useful independent work remains.
+- When a task needs a decision reserved to the Maestro authority and no valid decision exists, record the pending decision and continue other eligible tasks. Put the mission into the appropriate waiting, paused, or failed state only when no next action remains for the mission.
+- When a task needs a resource with no watcher or recheck condition, do not present it as automatically resumable waiting. Record the missing return mechanism, continue independent work, and pause the mission if no other executable work remains; state the condition that would permit resumption.
+- Stop the mission when the user says stop, cancel, or abort; if the instruction targets a task or lane, stop only that scope and preserve unaffected work.
+- Pause before deploy, publish, push, merge, delete, reset, production-data changes, account/auth changes, paid services, or third-party communication unless the operation is covered by a current, applicable authorization issued by the user or a validly delegated authority.
 - If a dependency, credential, service, or platform is unavailable, try a local substitute or static verification and report the limitation; never invent success.
-- If the same diagnosis appears twice, change the hypothesis or report the blocker; do not repeat the same investigation loop.
 </Escalation_And_Stop_Conditions>
 
 <Final_Checklist>
-- [ ] Request contract and risk boundaries are recorded
-- [ ] Plan tasks have owners, dependencies, disjointness decisions, and verification targets
-- [ ] Every changed behavior has focused evidence where feasible
-- [ ] Required lint/typecheck/tests/build/package checks have fresh results, or limitations are explicit
-- [ ] Review covers completeness, safety, and maintainability
-- [ ] Residual findings and rulings are visible in the handoff
+- [ ] Mission envelope, authority references, and controller lease are recorded
+- [ ] The five fixed artifacts are current and their revisions reconcile
+- [ ] Tasks have stable identities, owners, dependencies, write scopes, attempts, and verification targets
+- [ ] Parallel lanes passed current dependency, authority, lease, compatibility, and resource checks
+- [ ] Blockers have reasons, recovery attempts, return conditions, and council references where applicable
+- [ ] Technical results are separate from business dispositions
+- [ ] Required gates and reviews have fresh evidence, or limitations are explicit
+- [ ] External effects have operation identity and reconciled outcomes
+- [ ] Residual findings and decisions are visible in the handoff
 - [ ] No unauthorized commit, push, merge, publish, deploy, deletion, or external side effect occurred
-- [ ] Checkpoint and applicable durable project memory are current
-- [ ] User informed of outcome, evidence, limitations, and exact next action if needed
+- [ ] Runtime state cleanup preserves mission artifacts and user changes
 </Final_Checklist>
 
 <Advanced>
 ## Configuration
 
-Optional settings in `~/.codex/config.toml`:
+Optional settings may define QA and validation caps, but they cannot override project authority, the controller lease, fencing, or cost policy.
 
-```toml
+~~~toml
 [omx.autopilot]
 maxIterations = 10
 maxQaCycles = 5
@@ -301,57 +277,29 @@ pauseAfterExpansion = false
 pauseAfterPlanning = false
 skipQa = false
 skipValidation = false
-```
+~~~
 
 ## Resume
 
-If autopilot was cancelled or failed, run `/autopilot` again to resume from where it stopped.
+If Autopilot was cancelled or failed, run /autopilot again. Resume from the five fixed artifacts after reconciling the controller lease, document revisions, interrupted effects, and still-valid evidence.
 
 ## Recommended Clarity Pipeline
 
 For ambiguous requests, prefer:
 
-```
+~~~text
 deep-interview -> ralplan -> autopilot
-```
+~~~
 
-- `deep-interview`: ambiguity-gated Socratic requirements
-- `ralplan`: consensus planning (planner/architect/critic)
-- `autopilot`: execution + QA + validation
+- deep-interview: ambiguity-gated requirements
+- ralplan: consensus planning
+- autopilot: execution, council recovery, QA, validation, and handoff
 
-## Best Practices for Input
+## Pipeline Orchestrator
 
-1. Be specific about the domain -- "bookstore" not "store"
-2. Mention key features -- "with CRUD", "with authentication"
-3. Specify constraints -- "using TypeScript", "with PostgreSQL"
-4. Let it run -- avoid interrupting unless truly needed
-
-## Pipeline Orchestrator (v0.8+)
-
-Autopilot can be driven by the configurable pipeline orchestrator (`src/pipeline/`), which
-sequences stages through a uniform `PipelineStage` interface:
-
-```
-RALPLAN (consensus planning) -> team-exec (Codex CLI workers) -> ralph-verify (architect verification)
-```
-
-Pipeline configuration options:
-
-```toml
-[omx.autopilot.pipeline]
-maxRalphIterations = 10    # Ralph verification iteration ceiling
-workerCount = 2            # Number of Codex CLI team workers
-agentType = "executor"     # Agent type for team workers
-```
-
-The pipeline persists state via `pipeline-state.json` and supports resume from the last
-incomplete stage. See `src/pipeline/orchestrator.ts` for the full API.
+Autopilot may use a configurable pipeline orchestrator when available. Treat its stages as adapters of the mission controller, not as a second source of truth. Pipeline state must correlate to run, task, attempt, lease, result, and evidence references and must resume through the same reconciliation rules.
 
 ## Troubleshooting
 
-**Stuck in a phase?** Check the active task list for blocked tasks, run `state_read({mode: "autopilot"})`, or cancel and resume.
-
-**QA cycles exhausted?** The same error 3 times indicates a fundamental issue. Review the error pattern; manual intervention may be needed.
-
-**Validation keeps failing?** Review the specific issues. Requirements may have been too vague -- cancel and provide more detail.
+If a mission appears stuck, inspect checkpoint.md, the active task records, blocker condition, controller lease, scheduler capacity, and the last adapter events. Do not solve a controller or lease problem by creating a second Autopilot for the same project.
 </Advanced>

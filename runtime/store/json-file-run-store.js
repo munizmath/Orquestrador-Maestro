@@ -5,10 +5,10 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { RunStore } = require("./run-store");
 
-const COLLECTIONS = Object.freeze(["projects", "missions", "tasks", "runs", "steps", "executions", "events", "artifacts", "evidence", "verifications", "terminals", "projectSnapshots", "intentSessions", "missionBriefs", "taskGraphs", "attention"]);
+const COLLECTIONS = Object.freeze(["projects", "missions", "tasks", "runs", "steps", "executions", "events", "artifacts", "evidence", "verifications", "terminals", "projectSnapshots", "intentSessions", "missionBriefs", "taskGraphs", "attention", "leases", "autopilotAllocations", "autopilotWatches"]);
 
 function emptyState() {
-  return { version: 1, projects: [], missions: [], tasks: [], runs: [], steps: [], executions: [], events: [], artifacts: [], evidence: [], verifications: [], terminals: [], projectSnapshots: [], intentSessions: [], missionBriefs: [], taskGraphs: [], attention: [] };
+  return { version: 1, projects: [], missions: [], runs: [], tasks: [], steps: [], executions: [], events: [], artifacts: [], evidence: [], verifications: [], terminals: [], projectSnapshots: [], intentSessions: [], missionBriefs: [], taskGraphs: [], attention: [], leases: [], autopilotAllocations: [], autopilotWatches: [] };
 }
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -21,6 +21,33 @@ function assertRecord(record, label) {
 
 function assertKnownCollection(collection) {
   if (!COLLECTIONS.includes(collection)) throw new TypeError(`unknown RunStore collection: ${collection}`);
+}
+
+function assertNonEmptyLeaseString(value, name) {
+  if (typeof value !== "string" || value.trim() === "") throw new TypeError(`${name} must be a non-empty string`);
+}
+
+function assertPositiveInteger(value, name) {
+  if (!Number.isInteger(value) || value <= 0) throw new TypeError(`${name} must be a positive integer`);
+}
+
+function assertLeaseIdentity({ resourceId, leaseId, holderId, epoch } = {}) {
+  assertNonEmptyLeaseString(resourceId, "resourceId");
+  assertNonEmptyLeaseString(leaseId, "leaseId");
+  assertNonEmptyLeaseString(holderId, "holderId");
+  if (!Number.isInteger(epoch) || epoch < 1) throw new TypeError("epoch must be a positive integer");
+}
+
+function normalizeLeaseIdentity(identity = {}) {
+  return { ...identity, leaseId: identity.leaseId || identity.id };
+}
+
+function assertActiveLease(lease, resourceId) {
+  if (!lease || lease.status !== "active" || Date.parse(lease.expiresAt) <= Date.now()) {
+    const error = new Error(`lease expired or inactive for resource: ${resourceId}`);
+    error.code = "LEASE_EXPIRED";
+    throw error;
+  }
 }
 
 /**
@@ -101,6 +128,82 @@ class JsonFileRunStore extends RunStore {
   async saveTaskGraph(graph) { return this._save("taskGraphs", graph); }
   async saveAttention(request) { return this._save("attention", request); }
 
+  async acquireLease({ resourceId, holderId, ttlMs = 60_000 } = {}) {
+    assertNonEmptyLeaseString(resourceId, "resourceId");
+    assertNonEmptyLeaseString(holderId, "holderId");
+    assertPositiveInteger(ttlMs, "ttlMs");
+    return this._mutate(async () => {
+      const now = Date.now();
+      const current = this._state.leases.find((lease) => lease.resourceId === resourceId);
+      const active = current?.status === "active" && Date.parse(current.expiresAt) > now;
+      if (active && current.holderId !== holderId) {
+        const error = new Error(`lease unavailable for resource: ${resourceId}`);
+        error.code = "LEASE_UNAVAILABLE";
+        throw error;
+      }
+      if (active) return clone(current);
+      const lease = {
+        id: `lease-${crypto.randomUUID()}`,
+        resourceId,
+        holderId,
+        epoch: Number.isInteger(current?.epoch) ? current.epoch + 1 : 1,
+        status: "active",
+        issuedAt: new Date(now).toISOString(),
+        expiresAt: new Date(now + ttlMs).toISOString(),
+        renewedAt: null
+      };
+      const leaseIndex = this._state.leases.findIndex((candidate) => candidate.resourceId === resourceId);
+      if (leaseIndex === -1) this._state.leases.push(lease);
+      else this._state.leases[leaseIndex] = lease;
+      await this._flush();
+      return clone(lease);
+    });
+  }
+
+  async renewLease(identity = {}) {
+    const { resourceId, holderId, epoch, ttlMs = 60_000 } = identity;
+    const leaseId = identity.leaseId || identity.id;
+    assertLeaseIdentity({ resourceId, leaseId, holderId, epoch });
+    assertPositiveInteger(ttlMs, "ttlMs");
+    return this._mutate(async () => {
+      const lease = this._findLease({ resourceId, leaseId, holderId, epoch });
+      assertActiveLease(lease, resourceId);
+      lease.expiresAt = new Date(Date.now() + ttlMs).toISOString();
+      lease.renewedAt = new Date().toISOString();
+      await this._flush();
+      return clone(lease);
+    });
+  }
+
+  async releaseLease(identity = {}) {
+    const { resourceId, holderId, epoch } = identity;
+    const leaseId = identity.leaseId || identity.id;
+    assertLeaseIdentity({ resourceId, leaseId, holderId, epoch });
+    return this._mutate(async () => {
+      const lease = this._findLease({ resourceId, leaseId, holderId, epoch });
+      if (lease.status === "active") {
+        lease.status = "released";
+        lease.releasedAt = new Date().toISOString();
+        await this._flush();
+      }
+      return clone(lease);
+    });
+  }
+
+  async withLease(leaseIdentity, callback) {
+    leaseIdentity = normalizeLeaseIdentity(leaseIdentity);
+    assertLeaseIdentity(leaseIdentity);
+    if (typeof callback !== "function") throw new TypeError("callback must be a function");
+    return this._mutate(async () => {
+      const lease = this._findLease(leaseIdentity);
+      assertActiveLease(lease, leaseIdentity.resourceId);
+      // The callback must not call this store recursively. Holding the same
+      // lock while the protected operation is applied is what prevents an
+      // older controller epoch from writing after a new epoch was issued.
+      return callback(clone(lease));
+    });
+  }
+
   async appendEvent(event) {
     assertRecord(event, "event");
     return this._mutate(async () => {
@@ -135,6 +238,7 @@ class JsonFileRunStore extends RunStore {
   async getMissionBrief(id) { return this._get("missionBriefs", id); }
   async getTaskGraph(id) { return this._get("taskGraphs", id); }
   async getAttention(id) { return this._get("attention", id); }
+  async getLease(id) { return this._get("leases", id); }
 
   async listProjects() { return this._list("projects"); }
   async listMissions(filters) { return this._list("missions", filters, ["projectId", "status", "mode"]); }
@@ -157,6 +261,35 @@ class JsonFileRunStore extends RunStore {
   async listTerminals(filters) { return this._list("terminals", filters, ["projectId", "kind", "backend", "status", "providerId"]); }
   async listTaskGraphs(filters) { return this._list("taskGraphs", filters, ["missionId", "status"]); }
   async listAttention(filters) { return this._list("attention", filters, ["projectId", "status", "type"]); }
+  async listLeases(filters) { return this._list("leases", filters, ["resourceId", "holderId", "status"]); }
+  async getAutopilotAllocation(id) { return this._get("autopilotAllocations", id); }
+  async listAutopilotAllocations(filters) { return this._list("autopilotAllocations", filters, ["allocationId", "projectId", "status"]); }
+  async getAutopilotWatch(id) { return this._get("autopilotWatches", id); }
+  async listAutopilotWatches(filters) { return this._list("autopilotWatches", filters, ["watchId", "projectId", "runId", "status", "condition"]); }
+
+  async transactAutopilotAllocations(mutator) {
+    if (typeof mutator !== "function") throw new TypeError("mutator must be a function");
+    return this._mutate(async () => {
+      const current = clone(this._state.autopilotAllocations);
+      const outcome = await mutator(current);
+      if (!outcome || !Array.isArray(outcome.allocations)) throw new TypeError("autopilot allocation transaction must return allocations");
+      this._state.autopilotAllocations = clone(outcome.allocations);
+      await this._flush();
+      return clone(outcome.value ?? null);
+    });
+  }
+
+  async transactAutopilotWatches(mutator) {
+    if (typeof mutator !== "function") throw new TypeError("mutator must be a function");
+    return this._mutate(async () => {
+      const current = clone(this._state.autopilotWatches);
+      const outcome = await mutator(current);
+      if (!outcome || !Array.isArray(outcome.watches)) throw new TypeError("autopilot watch transaction must return watches");
+      this._state.autopilotWatches = clone(outcome.watches);
+      await this._flush();
+      return clone(outcome.value ?? null);
+    });
+  }
 
   async _save(collection, record) {
     assertKnownCollection(collection);
@@ -169,6 +302,22 @@ class JsonFileRunStore extends RunStore {
       await this._flush();
       return clone(persisted);
     });
+  }
+
+  _findLease({ resourceId, leaseId, holderId, epoch } = {}) {
+    const lease = this._state.leases.find((candidate) => candidate.resourceId === resourceId);
+    if (!lease || lease.id !== leaseId || lease.holderId !== holderId || lease.epoch !== epoch) {
+      const error = new Error(`lease identity is stale for resource: ${resourceId}`);
+      error.code = "STALE_LEASE";
+      throw error;
+    }
+    return lease;
+  }
+
+  _upsert(collection, record) {
+    const index = this._state[collection].findIndex((entry) => entry.id === record.id);
+    if (index === -1) this._state[collection].push(record);
+    else this._state[collection][index] = record;
   }
 
   async _get(collection, id) {
@@ -378,6 +527,9 @@ class JsonFileRunStore extends RunStore {
     if (!Array.isArray(state.missionBriefs)) state.missionBriefs = [];
     if (!Array.isArray(state.taskGraphs)) state.taskGraphs = [];
     if (!Array.isArray(state.attention)) state.attention = [];
+    if (!Array.isArray(state.leases)) state.leases = [];
+    if (!Array.isArray(state.autopilotAllocations)) state.autopilotAllocations = [];
+    if (!Array.isArray(state.autopilotWatches)) state.autopilotWatches = [];
     for (const collection of COLLECTIONS) {
       if (!Array.isArray(state[collection])) throw new Error(`RunStore data is missing collection: ${collection}`);
     }

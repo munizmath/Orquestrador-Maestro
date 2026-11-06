@@ -36,7 +36,7 @@
       "description": "Use when the user explicitly wants an autonomous, end-to-end software delivery workflow from an idea or brief to verified working code.",
       "source": "codex",
       "relativePath": "codex/skills/autopilot",
-      "contentHash": "d5f00a2034c0f3c5f1c1be724e7411170a8a3593d65f9632f1cdb36469dddffc"
+      "contentHash": "6bc45110f966229de9b1a38c0226dfd955da20eff6859ce7210d98993a24cdac"
     },
     {
       "id": "cancel",

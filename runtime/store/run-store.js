@@ -27,6 +27,12 @@ class RunStore {
   async saveAttention() { throw new Error("RunStore.saveAttention must be implemented"); }
   async getAttention() { throw new Error("RunStore.getAttention must be implemented"); }
   async listAttention() { throw new Error("RunStore.listAttention must be implemented"); }
+  async getAutopilotAllocation() { throw new Error("RunStore.getAutopilotAllocation must be implemented"); }
+  async listAutopilotAllocations() { throw new Error("RunStore.listAutopilotAllocations must be implemented"); }
+  async transactAutopilotAllocations() { throw new Error("RunStore.transactAutopilotAllocations must be implemented"); }
+  async getAutopilotWatch() { throw new Error("RunStore.getAutopilotWatch must be implemented"); }
+  async listAutopilotWatches() { throw new Error("RunStore.listAutopilotWatches must be implemented"); }
+  async transactAutopilotWatches() { throw new Error("RunStore.transactAutopilotWatches must be implemented"); }
   async getLatestProjectSnapshot() { throw new Error("RunStore.getLatestProjectSnapshot must be implemented"); }
   async getIntentSession() { throw new Error("RunStore.getIntentSession must be implemented"); }
   async getMissionBrief() { throw new Error("RunStore.getMissionBrief must be implemented"); }

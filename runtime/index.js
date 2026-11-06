@@ -18,4 +18,5 @@ module.exports = {
   ,...require("./status")
   ,...require("./interaction/errors")
   ,...require("./resolution")
+  ,...require("./autopilot")
 };
