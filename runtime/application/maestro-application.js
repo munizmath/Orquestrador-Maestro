@@ -43,6 +43,7 @@ const {
 const { sanitizeDiagnostic } = require("../telemetry/diagnostic-sanitizer");
 const { resolveGitContext } = require("../../orquestrador/lib/git-context");
 const { writeRunReceipt } = require("../receipts/run-receipt");
+const { samePhysicalPath } = require("../runs/workspace-authority");
 
 function id(prefix) { return `${prefix}-${crypto.randomUUID()}`; }
 function projectIdForPath(workspacePath) { return `project-${crypto.createHash("sha256").update(path.resolve(workspacePath)).digest("hex").slice(0, 16)}`; }
@@ -299,6 +300,9 @@ class MaestroApplication {
     this.verification = options.verification || new VerificationEngine();
     this.events = new EventEmitter();
     this.activeRuns = new Map();
+    // Process-local one-shot authorization. After a crash, unknown external
+    // effects must not be redispatched using a stale prepared object.
+    this._preparedRuns = new WeakSet();
     this.terminals = options.terminals || new TerminalManager({ store: this.store, emitEvent: (runId, type, data) => this.record(runId, type, data) });
     this.governance = mergeConfig(options.governance || loadGovernanceConfig({ cwd: this.projectRoot }).config);
     // Enforce mode is a runtime-owned capability. A request/Bridge client
@@ -500,6 +504,16 @@ class MaestroApplication {
     }
     const profile = getProfile(request.profileId || derivedProfileId);
     if (!policy || !profile) throw new Error("unknown execution profile or policy");
+    // Trusted bounded submissions may impose a stricter timeout than the
+    // general interactive execution policy. Never widen policy limits.
+    const executionTimeoutMs = request.executionTimeoutMs === undefined
+      ? policy.timeoutMs : request.executionTimeoutMs;
+    if (!Number.isInteger(executionTimeoutMs) || executionTimeoutMs < 1000 ||
+        executionTimeoutMs > policy.timeoutMs) {
+      const error = new Error("execution timeout must be within the selected policy ceiling");
+      error.code = "INVALID_EXECUTION_TIMEOUT";
+      throw error;
+    }
     const delegation = deriveDelegationContract({ description: request.description, policyId: policy.id });
     const capabilities = await provider.capabilities();
     for (const capability of policy.requiredCapabilities) if (!capabilities[capability]) throw new Error(`provider ${provider.id} lacks ${capability}`);
@@ -588,7 +602,7 @@ class MaestroApplication {
     const run = core.createRun({ id: id("run"), taskId: task.id, providerId: provider.id, status: "pending", metadata: taskMetadata });
     const step = core.createStep({ id: id("step"), runId: run.id, profileId: profile.id, status: "pending" });
     const existingProject = await this.store.getProject(projectId);
-    if (existingProject?.path && path.resolve(existingProject.path) !== workspacePath) {
+    if (existingProject?.path && !samePhysicalPath(existingProject.path, workspacePath)) {
       const error = new Error("PROJECT_SCOPE_MISMATCH: projectId is already bound to a different workspacePath");
       error.code = "PROJECT_SCOPE_MISMATCH";
       throw error;
@@ -637,9 +651,13 @@ class MaestroApplication {
       await this._recordTaskOutcomeTransition(task.id, run.id, blockedResolution.outcome);
       await this.record(run.id, "budget.released", { reservationId: releasedReservation.id, reason: releasedReservation.reason });
       await this.record(run.id, "run.blocked", { reason: preflightBlock });
-      return { task, run: blockedRun, step: blockedStep, profile, policy, provider, capabilities, workspacePath, preflightBlock };
+      const prepared = Object.freeze({ task, run: blockedRun, step: blockedStep, profile, policy, provider, capabilities, workspacePath, preflightBlock, executionTimeoutMs });
+      this._preparedRuns.add(prepared);
+      return prepared;
     }
-    return { task, run, step, profile, policy, provider, capabilities, workspacePath, preflightBlock: null };
+    const prepared = Object.freeze({ task, run, step, profile, policy, provider, capabilities, workspacePath, preflightBlock: null, executionTimeoutMs });
+    this._preparedRuns.add(prepared);
+    return prepared;
   }
 
   async executeTaskWithHandoff(request = {}) {
@@ -765,9 +783,55 @@ class MaestroApplication {
     throw lastError || new Error("PROVIDER_HANDOFF_EXHAUSTED");
   }
 
+  discardPreparedRun(prepared) {
+    // Removing an unused in-memory handle never changes a persisted Run.
+    // If the supervisor cancelled before dispatch, its own fenced RunStore
+    // transition is responsible for cancelling the pending Run and Steps.
+    return this._preparedRuns.delete(prepared);
+  }
+
   async executeRun(request) {
-    const prepared = await this.createRun(request);
-    const { task, run, step, profile, policy, provider, workspacePath } = prepared;
+    // Preserve the original blocking CLI behavior. The supervisor can
+    // prepare a persistent Run and bind its identity before execution.
+    return this.executePreparedRun(await this.createRun(request), request);
+  }
+
+  async executePreparedRun(prepared, request) {
+    if (!prepared || !this._preparedRuns.has(prepared)) {
+      const error = new Error("PREPARED_RUN_NOT_OWNED: preparation is one-shot and local to this Maestro instance");
+      error.code = "PREPARED_RUN_NOT_OWNED";
+      throw error;
+    }
+    // Consume before awaiting storage. Neither a second client nor a failed
+    // preflight may reuse the handle to duplicate provider side effects.
+    this._preparedRuns.delete(prepared);
+    const { task, run, step, profile, policy, provider, workspacePath, executionTimeoutMs } = prepared;
+    const currentRun = await this.store.getRun(run.id);
+    const currentTask = await this.store.getTask(task.id);
+    const currentStep = await this.store.getStep(step.id);
+    const currentProject = await this.store.getProject(task.projectId);
+    const runStatus = prepared.preflightBlock ? "blocked" : "pending";
+    const stepStatus = prepared.preflightBlock ? "failed" : "pending";
+    if (!currentRun || !currentTask || !currentStep || !currentProject ||
+        currentRun.status !== runStatus ||
+        currentStep.status !== stepStatus ||
+        currentRun.taskId !== task.id || currentStep.runId !== run.id ||
+        currentTask.projectId !== task.projectId ||
+        currentTask.description !== task.description ||
+        !samePhysicalPath(currentProject.path, workspacePath) ||
+        run.providerId !== provider.id || currentRun.providerId !== provider.id ||
+        this.providers.get(provider.id) !== provider ||
+        !request || request.description !== task.description ||
+        (request.providerId && request.providerId !== provider.id) ||
+        (request.workspacePath && !samePhysicalPath(request.workspacePath, workspacePath)) ||
+        (request.profileId && request.profileId !== profile.id) ||
+        (request.policyId && request.policyId !== policy.id) ||
+        (request.executionTimeoutMs !== undefined &&
+          request.executionTimeoutMs !== executionTimeoutMs)) {
+      const error = new Error("PREPARED_RUN_STATE_MISMATCH: persisted Run or prepared arguments changed");
+      error.code = "PREPARED_RUN_STATE_MISMATCH";
+      throw error;
+    }
     if (prepared.preflightBlock) {
       return { run, verification: null, qualityFindings: [], review: { status: "blocked", verdict: "not-requested", calls: 0, reason: prepared.preflightBlock }, execution: null, governanceWarnings: [], governanceBlocking: [prepared.preflightBlock], recommendations: [] };
     }
@@ -839,7 +903,7 @@ class MaestroApplication {
       // Claude's noninteractive default refuses file writes. Execution runs
       // need edit permission; planning calls do not pass through executeRun.
       const permissionMode = request.permissionMode || (provider.id === "claude" ? "acceptEdits" : undefined);
-      handle = await provider.execute({ prompt: promptEnvelope.prompt, workspacePath, model: request.model, sandbox: request.sandbox, permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, cloudContextApproved: request.cloudContextApproved, timeoutMs: policy.timeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
+      handle = await provider.execute({ prompt: promptEnvelope.prompt, workspacePath, model: request.model, sandbox: request.sandbox, permissionMode, mode: request.mode, agent: request.agent, sessionId: request.sessionId, continue: request.continue, cloudContextApproved: request.cloudContextApproved, timeoutMs: executionTimeoutMs, onEvent: (event) => this.record(run.id, event.type, event) });
       this.activeRuns.set(run.id, handle);
       result = await handle.result;
     } catch (error) {
@@ -975,7 +1039,7 @@ class MaestroApplication {
       runId: run.id,
       commands,
       cwd: workspacePath,
-      timeoutMs: policy.timeoutMs,
+      timeoutMs: executionTimeoutMs,
       notApplicable: verificationApplicability,
       notApplicableReason: verificationReason
     });

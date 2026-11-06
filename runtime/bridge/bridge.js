@@ -2,6 +2,14 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const { buildBrief } = require("../../orquestrador/bin/context-brief");
+const { createScopedMemoryAPI } = require("./memory-api");
+const { createGuardedMemoryWriter } = require("./memory-write");
+const { validatePlanPreview } = require("./plan-validation");
+const { createComposePreview } = require("./project-compose");
+const { createRoutePreview } = require("./provider-route-preview");
+const { createRunObserver } = require("./run-observation");
+const { createSubmissionStatusReader } = require("./submission-status");
 
 const PROTOCOL_VERSION = 1;
 const JSON_RPC_VERSION = "2.0";
@@ -21,9 +29,34 @@ function createBridge(options = {}) {
 
   const projectRoot = path.resolve(options.projectRoot || process.cwd());
   const services = options.services || {};
+  const composer = createComposePreview({ projectRoot, application: services.runtime });
+  const routingProviders = services.runtime?.providers || services.providerRegistry;
+  const router = createRoutePreview({ projectRoot, providerRegistry: routingProviders });
+  const observer = createRunObserver({ projectRoot, runtime: services.runtime });
+  const submissions = createSubmissionStatusReader({ projectRoot, store: services.runStore });
+  const memory = createScopedMemoryAPI({ projectRoot, memory: services.memory });
+  const memoryWriteEnabled = options.memoryWriteEnabled === true ||
+    (options.memoryWriteEnabled === undefined && process.env.ORQUESTRADOR_MAESTRO_BRIDGE_MEMORY_WRITE === "1");
+  const writer = createGuardedMemoryWriter({ projectRoot, memory: services.memory, enabled: memoryWriteEnabled });
   const methods = {
-    initialize: (params) => initialize(params, protocolVersion),
+    initialize: (params) => initialize(params, protocolVersion, {
+      memoryWriteEnabled,
+      projectCompose: Boolean(services.runtime?.providers?.get),
+      plansRoutePreview: Boolean(routingProviders?.get),
+      runsObserve: Boolean(services.runtime?.inspectRun),
+      runsSubmissionsRead: Boolean(services.runStore?.listRunSubmissions),
+      runsSubmissionsCancel: Boolean(services.runStore?.requestRunSubmissionCancellation)
+    }),
     "project.inspect": (params) => inspectProject(params, projectRoot, services.projectInspector),
+    "project.context": (params) => projectContext(params, projectRoot, services.projectInspector),
+    "plans.validate": (params) => validatePlanPreview(params, projectRoot),
+    "project.compose": (params) => composer.compose(params),
+    "plans.routePreview": (params) => router.preview(params),
+    "context.brief": (params) => contextBrief(params, projectRoot),
+    "memory.search": (params) => memory.search(params),
+    "memory.get": (params) => memory.get(params),
+    "memory.timeline": (params) => memory.timeline(params),
+    "memory.record": (params) => writer.record(params),
     "projects.list": (params) => invokeList(services.runtime, "listProjects", params),
     "projects.get": (params) => invokeGet(services.runtime, "getProject", params, "projectId"),
     "projects.register": (params) => invokeCall(services.runtime, "registerProject", params),
@@ -36,7 +69,12 @@ function createBridge(options = {}) {
     "runs.list": (params) => invokeList(services.runStore, "listRuns", params),
     "runs.get": (params) => invokeGet(services.runStore, "getRun", params, "runId"),
     "runs.inspect": (params) => invokeGet(services.runtime, "inspectRun", params, "runId"),
+    "runs.observe": (params) => observer.observe(params),
+    "runs.submissions.list": (params) => submissions.list(params),
+    "runs.submissions.get": (params) => submissions.get(params),
+    "runs.submissions.cancel": (params) => submissions.cancel(params),
     "runs.create": (params) => invokeRunCreate(services.runtime, params),
+    "runs.submit": () => unsupported("Durable run worker is unavailable; admission ledger is internal only"),
     "resolution.get": (params) => invokeResolutionGet(services.runtime, params),
     "evidence.list": (params) => invokeList(services.runtime, "listEvidence", params),
     "evidence.get": (params) => invokeGet(services.runtime, "getEvidence", params, "evidenceId"),
@@ -51,7 +89,7 @@ function createBridge(options = {}) {
     "terminals.start": (params) => invokeCall(services.runtime, "startTerminal", params),
     "terminals.stop": (params) => invokeCall(services.runtime, "stopTerminal", params, "terminalId"),
     "terminals.input": (params) => invokeTerminalInput(services.runtime, params),
-    "events.subscribe": () => Object.freeze({ subscribed: true }),
+    "events.subscribe": () => unsupported("Push event subscriptions are unavailable; poll runs.observe"),
     "approvals.respond": () => unsupported("Approvals are not available in protocol version 1")
   };
 
@@ -107,7 +145,7 @@ function normalizeParams(params) {
   return params;
 }
 
-function initialize(params, protocolVersion) {
+function initialize(params, protocolVersion, capabilities = {}) {
   if (params.protocolVersion !== undefined && params.protocolVersion !== protocolVersion) {
     throw protocolError("Unsupported protocol version", {
       supportedProtocolVersions: [protocolVersion]
@@ -117,7 +155,75 @@ function initialize(params, protocolVersion) {
   return Object.freeze({
     protocolVersion,
     serverInfo: Object.freeze({ name: "maestro-bridge" }),
-    capabilities: Object.freeze({ subscriptions: true, approvals: false })
+    capabilities: Object.freeze({
+      subscriptions: false, approvals: false, contextBrief: true, projectContext: true,
+      plansValidate: true,
+      projectCompose: capabilities.projectCompose === true,
+      plansRoutePreview: capabilities.plansRoutePreview === true,
+      runsObserve: capabilities.runsObserve === true,
+      runsSubmissionsRead: capabilities.runsSubmissionsRead === true,
+      runsSubmissionsCancel: capabilities.runsSubmissionsCancel === true,
+      runsSubmit: false,
+      memory: Object.freeze({ version: 1, read: true, write: capabilities.memoryWriteEnabled === true, scoped: true })
+    })
+  });
+}
+
+// The Bridge exposes the *existing* canonical Maestro context builder. It
+// does not keep a parallel history, nor does a caller provide arbitrary paths
+// within a differently scoped project. Project scoping is set at Bridge launch.
+function contextBrief(params, projectRoot) {
+  if (params.projectPath !== undefined) {
+    requireNonEmptyString(params.projectPath, "projectPath");
+    if (path.resolve(params.projectPath) !== projectRoot) {
+      throw invalidParams("projectPath must match the Bridge project root");
+    }
+  }
+  if (params.task !== undefined && (typeof params.task !== "string" || params.task.length > 500)) {
+    throw invalidParams("task must be a string of at most 500 characters");
+  }
+  if (params.taskId !== undefined && (typeof params.taskId !== "string" || !/^[a-zA-Z0-9._:-]{1,128}$/.test(params.taskId))) {
+    throw invalidParams("taskId must be a safe project-scoped identifier");
+  }
+  if (params.since !== undefined && (typeof params.since !== "string" || !/^[A-Za-z0-9_./~^-]{1,80}$/.test(params.since))) {
+    throw invalidParams("since must be a git reference without spaces");
+  }
+  const maxChars = params.maxChars === undefined ? 16000 : params.maxChars;
+  if (!Number.isInteger(maxChars) || maxChars < 1000 || maxChars > 16000) {
+    throw invalidParams("maxChars must be an integer between 1000 and 16000");
+  }
+  return buildBrief({
+    projectPath: projectRoot,
+    task: params.task || "",
+    taskId: params.taskId || null,
+    since: params.since || null,
+    maxChars
+  });
+}
+
+/**
+ * Read-only projection of the existing canonical context and project identity.
+ * This is not an independent planner or memory store, and does not promise
+ * an atomic snapshot across Git, context files and the RunStore.
+ */
+async function projectContext(params, projectRoot, projectInspector) {
+  // Validate caller scope, budget, task and taskId via the same fail-closed
+  // canonical context contract before reading any project metadata.
+  const context = contextBrief(params, projectRoot);
+  const inspected = await inspectProject({ projectPath: projectRoot }, projectRoot, projectInspector);
+  if (!inspected || typeof inspected !== "object") {
+    throw new TypeError("project inspection unavailable");
+  }
+  return Object.freeze({
+    schemaVersion: 1,
+    authority: "MAESTRO",
+    project: Object.freeze({
+      id: typeof inspected.id === "string" ? inspected.id : null,
+      name: typeof inspected.name === "string" ? inspected.name : null,
+      known: inspected.known === true,
+      status: typeof inspected.status === "string" ? inspected.status : null
+    }),
+    context
   });
 }
 

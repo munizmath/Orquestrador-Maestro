@@ -3,12 +3,14 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { normalizeAdmission, validateID, validateWorker, isWorkspaceOccupied, validateAdmissionLedger, bad } = require("../runs/submission-admission");
 const { RunStore } = require("./run-store");
+const { normalizeExecutableManifest, validateStoredExecutableManifest } = require("../runs/executable-manifest");
 
-const COLLECTIONS = Object.freeze(["projects", "missions", "tasks", "runs", "steps", "executions", "events", "artifacts", "evidence", "verifications", "terminals", "projectSnapshots", "intentSessions", "missionBriefs", "taskGraphs", "attention", "leases", "autopilotAllocations", "autopilotWatches"]);
+const COLLECTIONS = Object.freeze(["projects", "missions", "tasks", "runs", "steps", "executions", "events", "artifacts", "evidence", "verifications", "terminals", "projectSnapshots", "intentSessions", "missionBriefs", "taskGraphs", "attention", "leases", "autopilotAllocations", "autopilotWatches", "runSubmissions", "executableManifests"]);
 
 function emptyState() {
-  return { version: 1, projects: [], missions: [], runs: [], tasks: [], steps: [], executions: [], events: [], artifacts: [], evidence: [], verifications: [], terminals: [], projectSnapshots: [], intentSessions: [], missionBriefs: [], taskGraphs: [], attention: [], leases: [], autopilotAllocations: [], autopilotWatches: [] };
+  return { version: 1, projects: [], missions: [], tasks: [], runs: [], steps: [], executions: [], events: [], artifacts: [], evidence: [], verifications: [], terminals: [], projectSnapshots: [], intentSessions: [], missionBriefs: [], taskGraphs: [], attention: [], leases: [], autopilotAllocations: [], autopilotWatches: [], runSubmissions: [], executableManifests: [] };
 }
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -201,6 +203,279 @@ class JsonFileRunStore extends RunStore {
       // lock while the protected operation is applied is what prevents an
       // older controller epoch from writing after a new epoch was issued.
       return callback(clone(lease));
+    });
+  }
+
+  // Admission is an operational queue ledger, not an executable Run. A
+  // provider cannot start without a separate fenced worker implementation.
+  // Immutable, metadata-only DAG manifests. Storing a manifest does NOT
+  // approve it, create a Run, or authorize provider side effects.
+  async putExecutableManifest(input) {
+    const manifest = normalizeExecutableManifest(input);
+    return this._mutate(async () => {
+      const previous = this._state.executableManifests.find((item) =>
+        item.projectId === manifest.projectId &&
+        item.planDigest === manifest.planDigest &&
+        item.artifactDigest === manifest.artifactDigest);
+      if (previous) {
+        if (previous.id !== manifest.id || previous.digest !== manifest.digest) {
+          throw bad("immutable plan/artifact manifest cannot be rebound", "EXECUTABLE_MANIFEST_CONFLICT");
+        }
+        return clone(previous);
+      }
+      const project = this._state.projects.find((item) => item.id === manifest.projectId);
+      if (!project) throw bad("executable manifest project is unregistered", "MANIFEST_PROJECT_NOT_FOUND");
+      this._state.executableManifests.push(clone(manifest));
+      await this._flush();
+      return clone(manifest);
+    });
+  }
+  async getExecutableManifest(id) { return this._get("executableManifests", id); }
+  async listExecutableManifests(filters = {}) {
+    return this._list("executableManifests", filters, ["projectId"]);
+  }
+
+  async admitRunSubmission(input) {
+    const spec = normalizeAdmission(input);
+    return this._mutate(async () => {
+      const existing = this._state.runSubmissions.find((row) =>
+        row.projectId === spec.projectId && row.clientKey === spec.clientKey);
+      if (existing) {
+        if (existing.requestDigest !== spec.requestDigest) {
+          throw bad("idempotency key reused for a different approved request", "RUN_SUBMISSION_CONFLICT");
+        }
+        return { submission: clone(existing), replayed: true };
+      }
+      const busy = this._state.runSubmissions.find((row) =>
+        row.workspaceFingerprint === spec.workspaceFingerprint &&
+        isWorkspaceOccupied(row.status));
+      if (busy) throw bad("workspace is already reserved by a pending or unresolved submission", "WORKSPACE_RESERVED");
+      const now = new Date().toISOString();
+      const submission = {
+        id: "submission-" + crypto.randomUUID(),
+        ...spec,
+        status: "PENDING_WORKER",
+        fence: 0,
+        workerId: null,
+        leaseExpiresAt: null,
+        runId: null,
+        preparedRunId: null,
+        createdAt: now,
+        updatedAt: now
+      };
+      this._state.runSubmissions.push(submission);
+      await this._flush();
+      return { submission: clone(submission), replayed: false };
+    });
+  }
+
+  async getRunSubmission(submissionId) { return this._get("runSubmissions", submissionId); }
+  async listRunSubmissions(filters = {}) {
+    return this._list("runSubmissions", filters, ["projectId", "status"]);
+  }
+
+  async claimRunSubmission(submissionId, { workerId, leaseMs = 30000 } = {}) {
+    validateID(submissionId, "submissionId");
+    validateWorker(workerId, undefined, leaseMs);
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      if (!row) return null;
+      if (row.status !== "PENDING_WORKER") {
+        throw bad("submission cannot be claimed from status " + row.status, "SUBMISSION_NOT_CLAIMABLE");
+      }
+      row.fence += 1;
+      row.status = "CLAIMED";
+      row.workerId = workerId;
+      row.leaseExpiresAt = new Date(Date.now() + leaseMs).toISOString();
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  async renewRunSubmissionLease(submissionId, { workerId, fence, leaseMs = 30000 } = {}) {
+    validateID(submissionId, "submissionId");
+    validateWorker(workerId, fence, leaseMs);
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      this._requireCurrentWorker(row, workerId, fence);
+      if (!["CLAIMED", "DISPATCHED", "CANCEL_REQUESTED"].includes(row.status)) {
+        throw bad("submission cannot renew lease in status " + row.status, "SUBMISSION_NOT_RUNNING");
+      }
+      row.leaseExpiresAt = new Date(Date.now() + leaseMs).toISOString();
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  _requireCurrentWorker(row, workerId, fence) {
+    if (!row || row.workerId !== workerId || row.fence !== fence ||
+        !row.leaseExpiresAt || Date.parse(row.leaseExpiresAt) <= Date.now()) {
+      throw bad("stale or expired worker fence", "STALE_SUBMISSION_FENCE");
+    }
+  }
+
+  // Bind a prepared (but never executed) Run to the fenced submission.
+  // This evidence is persisted before cancellation or provider dispatch, so
+  // a caller cannot cancel an unrelated pending Run in the same project.
+  async bindPreparedRunSubmission(submissionId, { workerId, fence, runId } = {}) {
+    validateID(submissionId, "submissionId");
+    validateWorker(workerId, fence);
+    validateID(runId, "runId");
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      this._requireCurrentWorker(row, workerId, fence);
+      if (!["CLAIMED", "CANCEL_REQUESTED"].includes(row.status) || row.runId !== null ||
+          (row.preparedRunId != null && row.preparedRunId !== runId)) {
+        throw bad("prepared Run cannot be rebound or attached after dispatch", "RUN_PROVENANCE_MISMATCH");
+      }
+      const preparedRun = this._state.runs.find((run) => run.id === runId);
+      const task = this._state.tasks.find((item) => item.id === preparedRun?.taskId);
+      const steps = this._state.steps.filter((step) => step.runId === runId);
+      if (!preparedRun || !task || task.projectId !== row.projectId ||
+          !row.providers.includes(preparedRun.providerId) || preparedRun.status !== "pending" ||
+          steps.length === 0 || steps.some((step) => step.status !== "pending") ||
+          this._state.executions.some((execution) => execution.runId === runId) ||
+          this._state.runSubmissions.some((other) =>
+            other.id !== row.id && (other.runId === runId || other.preparedRunId === runId))) {
+        throw bad("only an unexecuted Run of this submission may be bound", "RUN_PROVENANCE_MISMATCH");
+      }
+      row.preparedRunId = runId;
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  // DISPATCHED is only written after a real Maestro Run ID is known. This
+  // ledger does not create runs or call a provider by itself.
+  async markRunSubmissionDispatched(submissionId, { workerId, fence, runId } = {}) {
+    validateID(submissionId, "submissionId");
+    validateID(workerId, "workerId");
+    validateWorker(workerId, fence);
+    validateID(runId, "runId");
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      this._requireCurrentWorker(row, workerId, fence);
+      if (row.status !== "CLAIMED") throw bad("submission was already dispatched or cancelled", "SUBMISSION_NOT_CLAIMABLE");
+      if (row.preparedRunId != null && row.preparedRunId !== runId) {
+        throw bad("dispatch Run differs from the bound prepared Run", "RUN_PROVENANCE_MISMATCH");
+      }
+      const persistedRun = this._state.runs.find((run) => run.id === runId);
+      const persistedTask = this._state.tasks.find((task) => task.id === persistedRun?.taskId);
+      if (!persistedRun || !persistedTask ||
+          persistedTask.projectId !== row.projectId ||
+          !row.providers.includes(persistedRun.providerId) ||
+          persistedRun.status !== "pending") {
+        throw bad("dispatch requires a persisted matching pending Maestro Run", "RUN_PROVENANCE_MISMATCH");
+      }
+      row.runId = runId;
+      row.status = "DISPATCHED";
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  async finishRunSubmission(submissionId, { workerId, fence, status, preparedRunId } = {}) {
+    validateID(submissionId, "submissionId");
+    validateWorker(workerId, fence);
+    if (preparedRunId !== undefined) validateID(preparedRunId, "preparedRunId");
+    if (!["COMPLETED", "FAILED", "BLOCKED", "TIMED_OUT", "CANCELLED"].includes(status)) throw bad("unsupported submission terminal status");
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      this._requireCurrentWorker(row, workerId, fence);
+      if (row.status !== "DISPATCHED" && row.status !== "CANCEL_REQUESTED") {
+        throw bad("terminal status is not valid for the submission state", "SUBMISSION_INVALID_TRANSITION");
+      }
+      if (status === "CANCELLED" && row.status !== "CANCEL_REQUESTED") {
+        throw bad("cancellation must be requested before it is confirmed", "SUBMISSION_INVALID_TRANSITION");
+      }
+      const persistedRun = this._state.runs.find((run) => run.id === row.runId);
+      const runStatus = { COMPLETED: "completed", FAILED: "failed", BLOCKED: "blocked", TIMED_OUT: "timed_out", CANCELLED: "cancelled" }[status];
+      // The worker may acknowledge cancellation before it has created a Run.
+      // It is safe only while no dispatch was ever recorded. A late cancel
+      // after a completed Run must be recorded as COMPLETED, not fabricated as
+      // provider cancellation.
+      const cancelledBeforeDispatch = status === "CANCELLED" &&
+        row.status === "CANCEL_REQUESTED" && row.runId === null;
+      if (!cancelledBeforeDispatch && (!persistedRun || persistedRun.status !== runStatus)) {
+        throw bad("terminal submission status requires a matching persisted Maestro Run", "RUN_PROVENANCE_MISMATCH");
+      }
+      // When preparation persisted a Run but provider dispatch never began,
+      // atomically cancel that Run and its pending Steps with the submission.
+      // Otherwise a detached pending Run could be mistaken for resumable work.
+      if (preparedRunId !== undefined) {
+        if (row.preparedRunId !== preparedRunId) {
+          throw bad("prepared Run is not bound to this submission", "RUN_PROVENANCE_MISMATCH");
+        }
+        if (!cancelledBeforeDispatch) {
+          throw bad("preparedRunId is valid only for cancellation before dispatch", "SUBMISSION_INVALID_TRANSITION");
+        }
+        const preparedRun = this._state.runs.find((run) => run.id === preparedRunId);
+        const task = this._state.tasks.find((item) => item.id === preparedRun?.taskId);
+        const steps = this._state.steps.filter((step) => step.runId === preparedRunId);
+        if (!preparedRun || !task || task.projectId !== row.projectId ||
+            !row.providers.includes(preparedRun.providerId) ||
+            preparedRun.status !== "pending" || steps.length === 0 ||
+            steps.some((step) => step.status !== "pending") ||
+            this._state.executions.some((execution) => execution.runId === preparedRunId) ||
+            this._state.runSubmissions.some((other) => other.id !== row.id && other.runId === preparedRunId)) {
+          throw bad("prepared Run cannot be cancelled without matching pre-dispatch evidence", "RUN_PROVENANCE_MISMATCH");
+        }
+        const at = new Date().toISOString();
+        preparedRun.status = "cancelled";
+        preparedRun.completedAt = at;
+        for (const step of steps) {
+          step.status = "cancelled";
+          step.completedAt = at;
+        }
+      }
+      row.status = status;
+      row.workerId = null;
+      row.leaseExpiresAt = null;
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  async requestRunSubmissionCancellation(submissionId) {
+    validateID(submissionId, "submissionId");
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      if (!row) return null;
+      if (row.status === "PENDING_WORKER") {
+        row.status = "CANCELLED";
+      } else if (row.status === "CLAIMED" || row.status === "DISPATCHED") {
+        row.status = "CANCEL_REQUESTED"; // only worker can confirm actual cancellation
+      } else {
+        return clone(row); // completed, already cancelling, or reconciliation required
+      }
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
+    });
+  }
+
+  // On crash/restart, expired claims become operator-visible blockers rather
+  // than being automatically redispatched (external side effects unknown).
+  async quarantineExpiredRunSubmission(submissionId) {
+    validateID(submissionId, "submissionId");
+    return this._mutate(async () => {
+      const row = this._state.runSubmissions.find((record) => record.id === submissionId);
+      if (!row) return null;
+      if (!["CLAIMED", "DISPATCHED", "CANCEL_REQUESTED"].includes(row.status)) return clone(row);
+      if (!row.leaseExpiresAt || Date.parse(row.leaseExpiresAt) > Date.now()) {
+        throw bad("cannot quarantine an active worker lease", "SUBMISSION_LEASE_ACTIVE");
+      }
+      row.status = "RECONCILIATION_REQUIRED";
+      row.workerId = null;
+      row.leaseExpiresAt = null;
+      row.updatedAt = new Date().toISOString();
+      await this._flush();
+      return clone(row);
     });
   }
 
@@ -530,6 +805,16 @@ class JsonFileRunStore extends RunStore {
     if (!Array.isArray(state.leases)) state.leases = [];
     if (!Array.isArray(state.autopilotAllocations)) state.autopilotAllocations = [];
     if (!Array.isArray(state.autopilotWatches)) state.autopilotWatches = [];
+    if (state.runSubmissions === undefined) state.runSubmissions = [];
+    if (state.executableManifests === undefined) state.executableManifests = [];
+    if (!Array.isArray(state.executableManifests)) throw new Error("RunStore executable manifests are invalid");
+    const manifestIds = new Set();
+    for (const row of state.executableManifests) {
+      validateStoredExecutableManifest(row);
+      if (manifestIds.has(row.id)) throw new Error("RunStore has duplicate executable manifest");
+      manifestIds.add(row.id);
+    }
+    validateAdmissionLedger(state.runSubmissions);
     for (const collection of COLLECTIONS) {
       if (!Array.isArray(state[collection])) throw new Error(`RunStore data is missing collection: ${collection}`);
     }
